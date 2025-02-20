@@ -196,41 +196,43 @@ Item {
             }
         }
 
-        // Score and lives display
-        Text {
+        // HUD (moved to bottom, two lines)
+        Column {
             id: hud
-            text: "* " + score + "  ❤️ " + lives + "   lvl " + level
-            color: "white"
-            font.pixelSize: 20
             anchors {
                 top: parent.top
                 horizontalCenter: parent.horizontalCenter
                 margins: 10
             }
-            visible: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive  // Hide during transitions
+            spacing: 5
+            visible: !gameOver && !calibrating && !showingNow && !showingSurvive  // Show during pause
+
+            Text {
+                text: "lvl " + level
+                color: "white"
+                font.pixelSize: 20
+                font.bold: true  // Bold for level
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
         }
 
-        // Thrust gauge (speed indicator)
-        Rectangle {
-            id: thrustGauge
-            width: 50
-            height: 20
-            color: "black"
-            border.color: "white"
-            border.width: 1
+        Column {
+            id: hudBottom
             anchors {
                 bottom: parent.bottom
                 horizontalCenter: parent.horizontalCenter
                 margins: 10
             }
-            z: 2  // Above player and objects
-            visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
+            spacing: 5
+            visible: !gameOver && !calibrating && !showingNow && !showingSurvive  // Show during pause
 
             Text {
-                text: playerSpeed.toFixed(1)  // Display speed with 1 decimal place
+                text: "* " + score + "  ❤️ " + lives
                 color: "white"
-                font.pixelSize: 16
-                anchors.centerIn: parent
+                font.pixelSize: 20
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 
