@@ -40,12 +40,16 @@ Item {
     property bool paused: false    // Pause state
     property real speedChangeThreshold: 4  // Y-axis threshold for speed change
     property bool speedChanged: false // Track if speed is modified
+    property bool calibrating: true   // Calibration state
+    property real baselineX: 0        // Initial X-axis zero point
+    property real baselineY: 0        // Initial Y-axis zero point
+    property int calibrationTimer: 5  // Countdown for calibration (5 seconds)
 
     // Animation timer
     Timer {
         id: gameTimer
         interval: 16 // ~60fps
-        running: !gameOver && !paused  // Stop when paused or game over
+        running: !gameOver && !paused && !calibrating  // Stop during calibration
         repeat: true
         onTriggered: {
             updateGame()
@@ -75,6 +79,24 @@ Item {
         }
     }
 
+    // Calibration countdown timer
+    Timer {
+        id: calibrationCountdownTimer
+        interval: 1000  // 1-second updates
+        running: calibrating
+        repeat: true
+        onTriggered: {
+            calibrationTimer--
+            if (calibrationTimer <= 0) {
+                // End calibration, set baselines
+                baselineX = accelerometer.reading.x
+                baselineY = accelerometer.reading.y
+                calibrating = false
+                calibrationTimer = 5  // Reset for next use
+            }
+        }
+    }
+
     Item {
         id: gameArea
         anchors.fill: parent
@@ -95,6 +117,7 @@ Item {
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
             z: 1  // Ensure player is above asteroids
+            visible: !calibrating  // Hide during calibration
         }
 
         // Object container
@@ -102,6 +125,7 @@ Item {
             id: objectContainer
             width: parent.width
             height: parent.height
+            visible: !calibrating  // Hide during calibration
         }
 
         // Asteroid and item component
@@ -136,7 +160,7 @@ Item {
                 horizontalCenter: parent.horizontalCenter
                 margins: 10
             }
-            visible: !gameOver && !paused  // Hide during game over or pause
+            visible: !gameOver && !paused && !calibrating  // Hide during calibration
         }
 
         // Thrust gauge (speed indicator)
@@ -153,12 +177,43 @@ Item {
                 margins: 10
             }
             z: 2  // Above player and objects
+            visible: !calibrating  // Hide during calibration
 
             Text {
                 text: playerSpeed.toFixed(1)  // Display speed with 1 decimal place
                 color: "white"
                 font.pixelSize: 16
                 anchors.centerIn: parent
+            }
+        }
+
+        // Calibration message
+        Column {
+            id: calibrationText
+            anchors.centerIn: parent
+            spacing: 5
+            visible: calibrating
+
+            Text {
+                text: "Calibrating"
+                color: "white"
+                font.pixelSize: 24
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            Text {
+                text: "Please hold your watch comfy"
+                color: "white"
+                font.pixelSize: 16
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            Text {
+                text: calibrationTimer + "s"
+                color: "white"
+                font.pixelSize: 20
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 
@@ -169,7 +224,7 @@ Item {
             color: "white"
             font.pixelSize: 32
             anchors.centerIn: parent
-            visible: paused && !gameOver
+            visible: paused && !gameOver && !calibrating
         }
 
         // Game over text and Try Again button
@@ -220,16 +275,16 @@ Item {
             id: accelerometer
             active: true
             onReadingChanged: {
-                if (!gameOver && !paused) {
-                    // X-axis for steering
-                    var deltaX = accelerometer.reading.x * -2  // Adjust sensitivity
+                if (!gameOver && !paused && !calibrating) {
+                    // X-axis for steering, adjusted for baseline
+                    var deltaX = (accelerometer.reading.x - baselineX) * -2  // Adjust sensitivity from baseline
                     var newX = player.x + deltaX * playerSpeed
                     player.x = Math.max(0, Math.min(root.width - player.width, newX))
 
-                    // Y-axis for speed manipulation
-                    var yReading = accelerometer.reading.y
+                    // Y-axis for speed manipulation, adjusted for baseline
+                    var yReading = accelerometer.reading.y - baselineY
                     if (!speedChanged && Math.abs(yReading) > speedChangeThreshold) {
-                        // Slow down if tilted significantly forward (positive Y) or back (negative Y)
+                        // Slow down if tilted significantly forward or back from baseline
                         playerSpeed = Math.max(basePlayerSpeed * 0.6, basePlayerSpeed * (1 - 0.4 * Math.abs(yReading) / 10)) // Max 40% slowdown
                         speedChanged = true
                     }
@@ -240,7 +295,7 @@ Item {
         // Tap to pause/resume
         MouseArea {
             anchors.fill: parent
-            enabled: !gameOver
+            enabled: !gameOver && !calibrating
             onClicked: {
                 paused = !paused
             }
@@ -320,6 +375,9 @@ Item {
         playerHit = false
         playerSpeed = basePlayerSpeed  // Reset speed
         speedChanged = false
+        calibrating = true  // Restart calibration
+        baselineX = 0
+        baselineY = 0
         player.x = root.width / 2 - player.width / 2
         player.color = "white"
 

@@ -12,6 +12,7 @@ Features:
 - Player turns red when hit
 - Player turns blue when collecting a +1 life power up.
 - Game can be paused by taping the screen
+- Calibration start screen to ensure accelerometer values relative to a comfortable device position
 
 https://github.com/user-attachments/assets/14be49db-a2c0-466b-8402-caf0e3f773f0
 
