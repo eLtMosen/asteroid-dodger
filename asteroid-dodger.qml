@@ -27,7 +27,8 @@ Item {
 
     // Game properties
     property int scrollSpeed: 2    // Pixels per frame
-    property int playerSpeed: 1    // Pixels per accelerometer move
+    property int basePlayerSpeed: 1  // Base speed for accelerometer move
+    property real playerSpeed: basePlayerSpeed  // Dynamic speed, starts at base
     property int asteroidCount: 0  // Track passed asteroids
     property int score: 0          // Score based on passed asteroids
     property int lives: 2          // Starting lives
@@ -37,6 +38,8 @@ Item {
     property bool gameOver: false
     property bool playerHit: false // Track hit state
     property bool paused: false    // Pause state
+    property real speedChangeThreshold: 4  // Y-axis threshold for speed change
+    property bool speedChanged: false // Track if speed is modified
 
     // Animation timer
     Timer {
@@ -57,6 +60,18 @@ Item {
         onTriggered: {
             playerHit = false
             player.color = "white"
+        }
+    }
+
+    // Speed reset timer (4 seconds of slowdown)
+    Timer {
+        id: speedResetTimer
+        interval: 4000  // 4 seconds active duration
+        running: speedChanged
+        repeat: false
+        onTriggered: {
+            playerSpeed = basePlayerSpeed  // Reset to base speed
+            speedChanged = false
         }
     }
 
@@ -124,6 +139,29 @@ Item {
             visible: !gameOver && !paused  // Hide during game over or pause
         }
 
+        // Thrust gauge (speed indicator)
+        Rectangle {
+            id: thrustGauge
+            width: 50
+            height: 20
+            color: "black"
+            border.color: "white"
+            border.width: 1
+            anchors {
+                bottom: parent.bottom
+                horizontalCenter: parent.horizontalCenter
+                margins: 10
+            }
+            z: 2  // Above player and objects
+
+            Text {
+                text: playerSpeed.toFixed(1)  // Display speed with 1 decimal place
+                color: "white"
+                font.pixelSize: 16
+                anchors.centerIn: parent
+            }
+        }
+
         // Pause text
         Text {
             id: pauseText
@@ -183,9 +221,18 @@ Item {
             active: true
             onReadingChanged: {
                 if (!gameOver && !paused) {
+                    // X-axis for steering
                     var deltaX = accelerometer.reading.x * -2  // Adjust sensitivity
-                    var newX = player.x + deltaX
+                    var newX = player.x + deltaX * playerSpeed
                     player.x = Math.max(0, Math.min(root.width - player.width, newX))
+
+                    // Y-axis for speed manipulation
+                    var yReading = accelerometer.reading.y
+                    if (!speedChanged && Math.abs(yReading) > speedChangeThreshold) {
+                        // Slow down if tilted significantly forward (positive Y) or back (negative Y)
+                        playerSpeed = Math.max(basePlayerSpeed * 0.6, basePlayerSpeed * (1 - 0.4 * Math.abs(yReading) / 10)) // Max 40% slowdown
+                        speedChanged = true
+                    }
                 }
             }
         }
@@ -269,8 +316,10 @@ Item {
         scrollSpeed = 2
         asteroidDensity = 0.03
         gameOver = false
-        paused = false  // Reset pause state
+        paused = false
         playerHit = false
+        playerSpeed = basePlayerSpeed  // Reset speed
+        speedChanged = false
         player.x = root.width / 2 - player.width / 2
         player.color = "white"
 
