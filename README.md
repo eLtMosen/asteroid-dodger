@@ -14,6 +14,7 @@ Features:
 - Game can be paused by taping the screen
 - Calibration start screen to ensure accelerometer values relative to a comfortable device position
 - Game intro screen following the calibration as transition into the game
+- Grace period of 2 seconds after taking a hit to prevent instant double hits. Invincibility indicated by flashing red
 
 https://github.com/user-attachments/assets/14be49db-a2c0-466b-8402-caf0e3f773f0
 

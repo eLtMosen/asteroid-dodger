@@ -46,6 +46,7 @@ Item {
     property real baselineX: 0        // Initial X-axis zero point
     property real baselineY: 0        // Initial Y-axis zero point
     property int calibrationTimer: 5  // Countdown for calibration (5 seconds)
+    property bool invincible: false   // Grace period invincibility
 
     // Animation timer
     Timer {
@@ -58,7 +59,7 @@ Item {
         }
     }
 
-    // Flash timer
+    // Flash timer (hit effect)
     Timer {
         id: flashTimer
         interval: Math.max(500, 2000 / lives)  // 2s at 1 life, shorter with more lives, min 0.5s
@@ -66,6 +67,17 @@ Item {
         onTriggered: {
             playerHit = false
             player.color = "white"
+        }
+    }
+
+    // Grace period timer (2 seconds invincibility)
+    Timer {
+        id: graceTimer
+        interval: 2000  // 2 seconds
+        running: invincible
+        repeat: false
+        onTriggered: {
+            invincible = false
         }
     }
 
@@ -139,12 +151,20 @@ Item {
             id: player
             width: 20
             height: 20
-            color: playerHit ? "red" : "white"  // Flash red when hit
+            color: playerHit ? "red" : "white"  // Flash red when hit, overridden by grace period
             rotation: 45
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
             z: 1  // Ensure player is above asteroids
             visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
+
+            // Blinking animation during grace period
+            SequentialAnimation on color {
+                running: invincible
+                loops: Animation.Infinite
+                ColorAnimation { from: "white"; to: "red"; duration: 250 }
+                ColorAnimation { from: "red"; to: "white"; duration: 250 }
+            }
         }
 
         // Object container
@@ -386,11 +406,12 @@ Item {
             var obj = objectContainer.children[i]
             obj.y += scrollSpeed
 
-            // Check collision with player
-            if (obj.isAsteroid && isColliding(player, obj)) {
+            // Check collision with player, skip if invincible
+            if (obj.isAsteroid && isColliding(player, obj) && !invincible) {
                 lives--
                 playerHit = true  // Trigger flash
                 player.color = "red"
+                invincible = true  // Start grace period
                 obj.destroy()
                 if (lives <= 0) {
                     gameOver = true
@@ -398,7 +419,7 @@ Item {
                 continue
             }
 
-            // Collect life item
+            // Collect life item (not affected by invincibility)
             if (!obj.isAsteroid && isColliding(player, obj)) {
                 lives++
                 playerHit = true  // Trigger flash
@@ -451,6 +472,7 @@ Item {
         gameOver = false
         paused = false
         playerHit = false
+        invincible = false  // Reset invincibility
         playerSpeed = basePlayerSpeed  // Reset speed
         speedChanged = false
         calibrating = true  // Restart calibration
