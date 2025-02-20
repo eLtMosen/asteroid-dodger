@@ -8,7 +8,7 @@ Features:
 - Successive increase of speed and density of the field per level
 - Hud displays score, amount of lives and current level
 - Asteroids sparkle from grey to white to simulate spinning
-- Accelerometer control of the X-Axis
+- Accelerometer control of the X-Axis for horizontal movement and Y-Axis for speed decrease
 - Player turns red when hit
 - Player turns blue when collecting a +1 life power up.
 - Game can be paused by taping the screen
