@@ -41,6 +41,8 @@ Item {
     property real speedChangeThreshold: 4  // Y-axis threshold for speed change
     property bool speedChanged: false // Track if speed is modified
     property bool calibrating: true   // Calibration state
+    property bool showingNow: false   // "NOW" screen state
+    property bool showingSurvive: false  // "SURVIVE" screen state
     property real baselineX: 0        // Initial X-axis zero point
     property real baselineY: 0        // Initial Y-axis zero point
     property int calibrationTimer: 5  // Countdown for calibration (5 seconds)
@@ -49,7 +51,7 @@ Item {
     Timer {
         id: gameTimer
         interval: 16 // ~60fps
-        running: !gameOver && !paused && !calibrating  // Stop during calibration
+        running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive  // Stop during transitions
         repeat: true
         onTriggered: {
             updateGame()
@@ -88,12 +90,37 @@ Item {
         onTriggered: {
             calibrationTimer--
             if (calibrationTimer <= 0) {
-                // End calibration, set baselines
+                // End calibration, set baselines, transition to "NOW"
                 baselineX = accelerometer.reading.x
                 baselineY = accelerometer.reading.y
                 calibrating = false
-                calibrationTimer = 5  // Reset for next use
+                showingNow = true
+                nowTransition.start()
             }
+        }
+    }
+
+    // "NOW" to "SURVIVE" transition timer
+    Timer {
+        id: nowToSurviveTimer
+        interval: 1500  // 1.5s for "NOW" screen
+        running: showingNow
+        repeat: false
+        onTriggered: {
+            showingNow = false
+            showingSurvive = true
+            surviveTransition.start()
+        }
+    }
+
+    // "SURVIVE" to game transition timer
+    Timer {
+        id: surviveToGameTimer
+        interval: 1500  // 1.5s for "SURVIVE" screen
+        running: showingSurvive
+        repeat: false
+        onTriggered: {
+            showingSurvive = false
         }
     }
 
@@ -117,7 +144,7 @@ Item {
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
             z: 1  // Ensure player is above asteroids
-            visible: !calibrating  // Hide during calibration
+            visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
         }
 
         // Object container
@@ -125,7 +152,7 @@ Item {
             id: objectContainer
             width: parent.width
             height: parent.height
-            visible: !calibrating  // Hide during calibration
+            visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
         }
 
         // Asteroid and item component
@@ -160,7 +187,7 @@ Item {
                 horizontalCenter: parent.horizontalCenter
                 margins: 10
             }
-            visible: !gameOver && !paused && !calibrating  // Hide during calibration
+            visible: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive  // Hide during transitions
         }
 
         // Thrust gauge (speed indicator)
@@ -177,7 +204,7 @@ Item {
                 margins: 10
             }
             z: 2  // Above player and objects
-            visible: !calibrating  // Hide during calibration
+            visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
 
             Text {
                 text: playerSpeed.toFixed(1)  // Display speed with 1 decimal place
@@ -193,6 +220,14 @@ Item {
             anchors.centerIn: parent
             spacing: 5
             visible: calibrating
+            opacity: showingNow ? 0 : 1  // Fade out when transitioning to "NOW"
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 500  // 0.5s fade to "NOW"
+                    easing.type: Easing.InOutQuad
+                }
+            }
 
             Text {
                 text: "Calibrating"
@@ -217,6 +252,49 @@ Item {
             }
         }
 
+        // "NOW" screen
+        Text {
+            id: nowText
+            text: "NOW"
+            color: "white"
+            font.pixelSize: 48  // Start large
+            anchors.centerIn: parent
+            visible: showingNow
+            opacity: 0  // Start invisible
+
+            SequentialAnimation {
+                id: nowTransition
+                running: false
+                NumberAnimation { target: nowText; property: "opacity"; from: 0; to: 1; duration: 500 }  // Fade in
+                ParallelAnimation {
+                    NumberAnimation { target: nowText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }  // Enlarge
+                    NumberAnimation { target: nowText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }  // Fade out
+                }
+            }
+        }
+
+        // "SURVIVE" screen
+        Text {
+            id: surviveText
+            text: "SURVIVE"
+            color: "orange"
+            font.pixelSize: 48  // Start large
+            font.bold: true  // Thick text
+            anchors.centerIn: parent
+            visible: showingSurvive
+            opacity: 0  // Start invisible
+
+            SequentialAnimation {
+                id: surviveTransition
+                running: false
+                NumberAnimation { target: surviveText; property: "opacity"; from: 0; to: 1; duration: 500 }  // Fade in
+                ParallelAnimation {
+                    NumberAnimation { target: surviveText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }  // Enlarge
+                    NumberAnimation { target: surviveText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }  // Fade out
+                }
+            }
+        }
+
         // Pause text
         Text {
             id: pauseText
@@ -224,7 +302,7 @@ Item {
             color: "white"
             font.pixelSize: 32
             anchors.centerIn: parent
-            visible: paused && !gameOver && !calibrating
+            visible: paused && !gameOver && !calibrating && !showingNow && !showingSurvive
         }
 
         // Game over text and Try Again button
@@ -275,7 +353,7 @@ Item {
             id: accelerometer
             active: true
             onReadingChanged: {
-                if (!gameOver && !paused && !calibrating) {
+                if (!gameOver && !paused && !calibrating && !showingNow && !showingSurvive) {
                     // X-axis for steering, adjusted for baseline
                     var deltaX = (accelerometer.reading.x - baselineX) * -2  // Adjust sensitivity from baseline
                     var newX = player.x + deltaX * playerSpeed
@@ -295,7 +373,7 @@ Item {
         // Tap to pause/resume
         MouseArea {
             anchors.fill: parent
-            enabled: !gameOver && !calibrating
+            enabled: !gameOver && !calibrating && !showingNow && !showingSurvive
             onClicked: {
                 paused = !paused
             }
@@ -376,8 +454,15 @@ Item {
         playerSpeed = basePlayerSpeed  // Reset speed
         speedChanged = false
         calibrating = true  // Restart calibration
+        calibrationTimer = 5  // Reset calibration timer to 5s
         baselineX = 0
         baselineY = 0
+        showingNow = false
+        showingSurvive = false
+        nowText.font.pixelSize = 48  // Reset "NOW" size
+        nowText.opacity = 0          // Reset "NOW" opacity
+        surviveText.font.pixelSize = 48  // Reset "SURVIVE" size
+        surviveText.opacity = 0          // Reset "SURVIVE" opacity
         player.x = root.width / 2 - player.width / 2
         player.color = "white"
 
