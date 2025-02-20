@@ -27,7 +27,7 @@ Item {
 
     // Game properties
     property int scrollSpeed: 2    // Pixels per frame
-    property int playerSpeed: 1    // Pixels per key press or mouse move
+    property int playerSpeed: 1    // Pixels per accelerometer move
     property int asteroidCount: 0  // Track passed asteroids
     property int score: 0          // Score based on passed asteroids
     property int lives: 2          // Starting lives
@@ -36,12 +36,13 @@ Item {
     property real asteroidDensity: 0.03 + (level - 1) * 0.01  // Increase density per level
     property bool gameOver: false
     property bool playerHit: false // Track hit state
+    property bool paused: false    // Pause state
 
     // Animation timer
     Timer {
         id: gameTimer
         interval: 16 // ~60fps
-        running: !gameOver
+        running: !gameOver && !paused  // Stop when paused or game over
         repeat: true
         onTriggered: {
             updateGame()
@@ -120,7 +121,17 @@ Item {
                 horizontalCenter: parent.horizontalCenter
                 margins: 10
             }
-            visible: !gameOver  // Hide during game over
+            visible: !gameOver && !paused  // Hide during game over or pause
+        }
+
+        // Pause text
+        Text {
+            id: pauseText
+            text: "Paused"
+            color: "white"
+            font.pixelSize: 32
+            anchors.centerIn: parent
+            visible: paused && !gameOver
         }
 
         // Game over text and Try Again button
@@ -166,15 +177,25 @@ Item {
             }
         }
 
+        // Accelerometer controls
         Accelerometer {
             id: accelerometer
             active: true
             onReadingChanged: {
-                if (!gameOver) {
+                if (!gameOver && !paused) {
                     var deltaX = accelerometer.reading.x * -2  // Adjust sensitivity
                     var newX = player.x + deltaX
                     player.x = Math.max(0, Math.min(root.width - player.width, newX))
                 }
+            }
+        }
+
+        // Tap to pause/resume
+        MouseArea {
+            anchors.fill: parent
+            enabled: !gameOver
+            onClicked: {
+                paused = !paused
             }
         }
     }
@@ -248,6 +269,7 @@ Item {
         scrollSpeed = 2
         asteroidDensity = 0.03
         gameOver = false
+        paused = false  // Reset pause state
         playerHit = false
         player.x = root.width / 2 - player.width / 2
         player.color = "white"
