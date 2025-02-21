@@ -3,6 +3,7 @@ A simple game for [AsteroidOS](http://asteroidos.org/)
 
 Features:
 - Random generation of the asteroid field and power ups
+- Parallax effect with slower, non colliding larger asteroids for added visual depth
 - Exact crash detection for the player character
 - Vibration and animated feedback when taking damage
 - New level every survived 100th asteroid

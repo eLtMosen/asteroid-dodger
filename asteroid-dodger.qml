@@ -36,6 +36,7 @@ Item {
     property int level: 1          // Current level
     property int asteroidsPerLevel: 100  // Level completion requirement
     property real asteroidDensity: 0.03 + (level - 1) * 0.01  // Increase density per level
+    property real largeAsteroidDensity: asteroidDensity / 2  // Less frequent large asteroids
     property bool gameOver: false
     property bool playerHit: false // Track hit state
     property bool paused: false    // Pause state
@@ -48,7 +49,6 @@ Item {
     property real baselineY: 0        // Initial Y-axis zero point
     property int calibrationTimer: 5  // Countdown for calibration (5 seconds)
     property bool invincible: false   // Grace period invincibility
-
 
     NonGraphicalFeedback {
         id: feedback
@@ -160,6 +160,27 @@ Item {
             }
         }
 
+        // Large asteroid layer (parallax background)
+        Item {
+            id: largeAsteroidContainer
+            width: parent.width
+            height: parent.height
+            z: 0  // Below small asteroids and player
+            visible: !calibrating && !showingNow && !showingSurvive
+        }
+
+        // Large asteroid component
+        Component {
+            id: largeAsteroidComponent
+            Text {
+                text: "●"  // Larger asteroid character
+                color: "#222222"  // Much darker gray
+                font.pixelSize: 24 + Math.random() * 16  // Random size between 24px and 40px
+                x: Math.random() * (root.width - width)
+                y: -height  // Start above screen
+            }
+        }
+
         // Player (diamond shape using rotated square)
         Rectangle {
             id: player
@@ -169,7 +190,7 @@ Item {
             rotation: 45
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
-            z: 1  // Ensure player is above asteroids
+            z: 2  // Above both asteroid layers
             visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
 
             // Blinking animation during grace period
@@ -181,15 +202,16 @@ Item {
             }
         }
 
-        // Object container
+        // Small asteroid layer (foreground)
         Item {
             id: objectContainer
             width: parent.width
             height: parent.height
+            z: 1  // Above large asteroids, below player
             visible: !calibrating && !showingNow && !showingSurvive  // Hide during transitions
         }
 
-        // Asteroid and item component
+        // Small asteroid and item component
         Component {
             id: objectComponent
             Text {
@@ -210,7 +232,7 @@ Item {
             }
         }
 
-        // HUD (moved to bottom, two lines)
+        // HUD (top: level)
         Column {
             id: hud
             anchors {
@@ -231,6 +253,7 @@ Item {
             }
         }
 
+        // HUD (bottom: score and lives)
         Column {
             id: hudBottom
             anchors {
@@ -417,8 +440,19 @@ Item {
     }
 
     function updateGame() {
-        // Scroll objects
-        for (var i = objectContainer.children.length - 1; i >= 0; i--) {
+        // Scroll large asteroids (1/5 speed)
+        for (var i = largeAsteroidContainer.children.length - 1; i >= 0; i--) {
+            var largeObj = largeAsteroidContainer.children[i]
+            largeObj.y += scrollSpeed / 5  // Much slower movement (e.g., 0.4px/frame at level 1)
+
+            // Remove large asteroids off-screen
+            if (largeObj.y >= root.height) {
+                largeObj.destroy()
+            }
+        }
+
+        // Scroll small asteroids and items
+        for (i = objectContainer.children.length - 1; i >= 0; i--) {
             var obj = objectContainer.children[i]
             obj.y += scrollSpeed
 
@@ -429,10 +463,10 @@ Item {
                 player.color = "red"
                 invincible = true  // Start grace period
                 obj.destroy()
+                feedback.play()
                 if (lives <= 0) {
                     gameOver = true
                 }
-                feedback.play()
                 continue
             }
 
@@ -458,7 +492,12 @@ Item {
             }
         }
 
-        // Spawn new objects
+        // Spawn new large asteroids
+        if (Math.random() < largeAsteroidDensity) {
+            var largeAsteroid = largeAsteroidComponent.createObject(largeAsteroidContainer)
+        }
+
+        // Spawn new small asteroids or items
         if (Math.random() < asteroidDensity) {
             var isAsteroid = Math.random() < 0.9  // 90% chance asteroid, 10% life
             var obj = objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid})
@@ -509,19 +548,32 @@ Item {
         for (var i = objectContainer.children.length - 1; i >= 0; i--) {
             objectContainer.children[i].destroy()
         }
+        for (i = largeAsteroidContainer.children.length - 1; i >= 0; i--) {
+            largeAsteroidContainer.children[i].destroy()
+        }
 
-        // Respawn initial asteroids
+        // Respawn initial asteroids (small)
         for (var j = 0; j < 5; j++) {
             var obj = objectComponent.createObject(objectContainer, {isAsteroid: true})
             obj.y = -Math.random() * root.height
         }
+        // Respawn initial large asteroids
+        for (j = 0; j < 3; j++) {
+            var largeAsteroid = largeAsteroidComponent.createObject(largeAsteroidContainer)
+            largeAsteroid.y = -Math.random() * root.height
+        }
     }
 
     Component.onCompleted: {
-        // Initial spawn
+        // Initial spawn (small asteroids)
         for (var i = 0; i < 5; i++) {
             var obj = objectComponent.createObject(objectContainer, {isAsteroid: true})
             obj.y = -Math.random() * root.height  // Random start above screen
+        }
+        // Initial spawn (large asteroids)
+        for (i = 0; i < 3; i++) {
+            var largeAsteroid = largeAsteroidComponent.createObject(largeAsteroidContainer)
+            largeAsteroid.y = -Math.random() * root.height
         }
     }
 }
