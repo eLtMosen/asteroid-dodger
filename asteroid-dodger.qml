@@ -40,13 +40,10 @@ Item {
     property bool gameOver: false
     property bool playerHit: false // Track hit state
     property bool paused: false    // Pause state
-    property real speedChangeThreshold: 4  // Y-axis threshold for speed change
-    property bool speedChanged: false // Track if speed is modified
     property bool calibrating: true   // Calibration state
     property bool showingNow: false   // "NOW" screen state
     property bool showingSurvive: false  // "SURVIVE" screen state
     property real baselineX: 0        // Initial X-axis zero point
-    property real baselineY: 0        // Initial Y-axis zero point
     property int calibrationTimer: 5  // Countdown for calibration (5 seconds)
     property bool invincible: false   // Grace period invincibility
 
@@ -77,26 +74,14 @@ Item {
         }
     }
 
-    // Grace period timer (2 seconds invincibility)
+    // Grace period timer (1 second invincibility)
     Timer {
         id: graceTimer
-        interval: 2000  // 2 seconds
+        interval: 1000  // 1 second
         running: invincible
         repeat: false
         onTriggered: {
             invincible = false
-        }
-    }
-
-    // Speed reset timer (4 seconds of slowdown)
-    Timer {
-        id: speedResetTimer
-        interval: 4000  // 4 seconds active duration
-        running: speedChanged
-        repeat: false
-        onTriggered: {
-            playerSpeed = basePlayerSpeed  // Reset to base speed
-            speedChanged = false
         }
     }
 
@@ -111,7 +96,6 @@ Item {
             if (calibrationTimer <= 0) {
                 // End calibration, set baselines, transition to "NOW"
                 baselineX = accelerometer.reading.x
-                baselineY = accelerometer.reading.y
                 calibrating = false
                 showingNow = true
                 feedback.play()
@@ -123,7 +107,7 @@ Item {
     // "NOW" to "SURVIVE" transition timer
     Timer {
         id: nowToSurviveTimer
-        interval: 1500  // 1.5s for "NOW" screen
+        interval: 1000  // 1.5s for "NOW" screen
         running: showingNow
         repeat: false
         onTriggered: {
@@ -136,7 +120,7 @@ Item {
     // "SURVIVE" to game transition timer
     Timer {
         id: surviveToGameTimer
-        interval: 1500  // 1.5s for "SURVIVE" screen
+        interval: 1000  // 1.5s for "SURVIVE" screen
         running: showingSurvive
         repeat: false
         onTriggered: {
@@ -151,12 +135,12 @@ Item {
         // Background
         Rectangle {
             anchors.fill: parent
-            color: playerHit ? "#050030" : "black"
+            color: playerHit ? "#001729" : "black"
             SequentialAnimation on color {
                 running: invincible
                 loops: Animation.Infinite
-                ColorAnimation { from: "black"; to: "#300000"; duration: 200 }
-                ColorAnimation { from: "#300000"; to: "black"; duration: 200 }
+                ColorAnimation { from: "black"; to: "#200000"; duration: 250 }
+                ColorAnimation { from: "#200000"; to: "black"; duration: 250 }
             }
         }
 
@@ -248,8 +232,7 @@ Item {
             Text {
                 id: levelText
                 text: "lvl " + level
-                color: "white"
-                opacity: 0.9  // 90% opacity
+                color: "#dddddd"
                 font.pixelSize: 20
                 font.bold: true  // Bold for level
                 horizontalAlignment: Text.AlignHCenter
@@ -270,8 +253,8 @@ Item {
                         ColorAnimation {
                             target: levelText
                             property: "color"
-                            from: Qt.rgba(1, 1, 1, 0.9)  // White at 90% opacity
-                            to: Qt.rgba(1, 0.843, 0, 0.9)  // Gold (#FFD700) at 90% opacity
+                            from: "#dddddd"  // White at 90% opacity
+                            to: Qt.rgba(1, 0.843, 0, 1)  // Gold (#FFD700) at 90% opacity
                             duration: 250
                             easing.type: Easing.OutQuad
                         }
@@ -288,8 +271,8 @@ Item {
                         ColorAnimation {
                             target: levelText
                             property: "color"
-                            from: Qt.rgba(1, 0.843, 0, 0.9)  // Gold at 90% opacity
-                            to: Qt.rgba(1, 1, 1, 0.9)  // White at 90% opacity
+                            from: Qt.rgba(1, 0.843, 0, 1)  // Gold at 90% opacity
+                            to: "#dddddd"
                             duration: 250
                             easing.type: Easing.InQuad
                         }
@@ -311,20 +294,18 @@ Item {
 
             Text {
                 text: "❤️ " + lives  // Heart only
-                color: "white"
-                opacity: 0.9  // 90% opacity
+                color: "#dddddd"
                 font.pixelSize: 20
                 horizontalAlignment: Text.AlignHCenter
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 
-        // Score HUD (attached to player position, upright, optimized)
+        // Score HUD (attached to player position)
         Text {
             id: scoreText
-            text: score  // No "*" symbol
-            color: "white"
-            opacity: 0.9  // 90% opacity
+            text: score
+            color: "#dddddd"
             font.pixelSize: 20
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive
             z: 2  // Match player layer
@@ -367,7 +348,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
             Text {
-                text: "Please hold your watch comfy"
+                text: "Hold your watch comfy"
                 color: "white"
                 font.pixelSize: 16
                 horizontalAlignment: Text.AlignHCenter
@@ -464,7 +445,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Text {
-                        text: "Try Again"
+                        text: "Die Again"
                         color: "white"
                         font.pixelSize: 20
                         anchors.centerIn: parent
@@ -598,7 +579,6 @@ Item {
         calibrating = true  // Restart calibration
         calibrationTimer = 5  // Reset calibration timer to 5s
         baselineX = 0
-        baselineY = 0
         showingNow = false
         showingSurvive = false
         nowText.font.pixelSize = 48  // Reset "NOW" size
