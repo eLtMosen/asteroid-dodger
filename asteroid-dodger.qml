@@ -19,6 +19,7 @@
 
 import QtQuick 2.15
 import QtSensors 5.15
+import Nemo.Ngf 1.0
 
 Item {
     id: root
@@ -47,6 +48,12 @@ Item {
     property real baselineY: 0        // Initial Y-axis zero point
     property int calibrationTimer: 5  // Countdown for calibration (5 seconds)
     property bool invincible: false   // Grace period invincibility
+
+
+    NonGraphicalFeedback {
+        id: feedback
+        event: "press"
+    }
 
     // Animation timer
     Timer {
@@ -107,6 +114,7 @@ Item {
                 baselineY = accelerometer.reading.y
                 calibrating = false
                 showingNow = true
+                feedback.play()
                 nowTransition.start()
             }
         }
@@ -418,6 +426,7 @@ Item {
                 if (lives <= 0) {
                     gameOver = true
                 }
+                feedback.play()
                 continue
             }
 
