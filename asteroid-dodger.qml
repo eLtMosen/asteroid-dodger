@@ -249,6 +249,7 @@ Item {
                 id: levelText
                 text: "lvl " + level
                 color: "white"
+                opacity: 0.9  // 90% opacity
                 font.pixelSize: 20
                 font.bold: true  // Bold for level
                 horizontalAlignment: Text.AlignHCenter
@@ -269,8 +270,8 @@ Item {
                         ColorAnimation {
                             target: levelText
                             property: "color"
-                            from: "white"
-                            to: "#FFD700"  // Bright yellow/gold
+                            from: Qt.rgba(1, 1, 1, 0.9)  // White at 90% opacity
+                            to: Qt.rgba(1, 0.843, 0, 0.9)  // Gold (#FFD700) at 90% opacity
                             duration: 250
                             easing.type: Easing.OutQuad
                         }
@@ -287,8 +288,8 @@ Item {
                         ColorAnimation {
                             target: levelText
                             property: "color"
-                            from: "#FFD700"
-                            to: "white"  // Back to white
+                            from: Qt.rgba(1, 0.843, 0, 0.9)  // Gold at 90% opacity
+                            to: Qt.rgba(1, 1, 1, 0.9)  // White at 90% opacity
                             duration: 250
                             easing.type: Easing.InQuad
                         }
@@ -297,7 +298,7 @@ Item {
             }
         }
 
-        // HUD (bottom: score and lives)
+        // HUD (bottom: lives only)
         Column {
             id: hudBottom
             anchors {
@@ -309,12 +310,25 @@ Item {
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive  // Show during pause
 
             Text {
-                text: "* " + score + "  ❤️ " + lives
+                text: "❤️ " + lives  // Heart only
                 color: "white"
+                opacity: 0.9  // 90% opacity
                 font.pixelSize: 20
                 horizontalAlignment: Text.AlignHCenter
                 anchors.horizontalCenter: parent.horizontalCenter
             }
+        }
+
+        // Score HUD (attached to player position, upright)
+        Text {
+            id: scoreText
+            text: score  // No "*" symbol
+            color: "white"
+            opacity: 0.9  // 90% opacity
+            font.pixelSize: 20
+            x: player.x + player.width / 2 - width / 2  // Center below player
+            y: player.y + player.height + 5  // 5px below player
+            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
         }
 
         // Calibration message
