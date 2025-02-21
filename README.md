@@ -5,7 +5,7 @@ Features:
 - Random generation of the asteroid field and power ups
 - Parallax effect with slower, non colliding larger asteroids for added visual depth
 - Exact crash detection for the player character
-- Vibration and animated feedback when taking damage
+- Vibration and animated feedback when taking damage and advancing levels
 - New level every survived 100th asteroid
 - Successive increase of speed and density of the field per level
 - Hud displays score, amount of lives and current level

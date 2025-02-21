@@ -246,12 +246,54 @@ Item {
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive  // Show during pause
 
             Text {
+                id: levelText
                 text: "lvl " + level
                 color: "white"
                 font.pixelSize: 20
                 font.bold: true  // Bold for level
                 horizontalAlignment: Text.AlignHCenter
                 anchors.horizontalCenter: parent.horizontalCenter
+
+                SequentialAnimation {
+                    id: levelBumpAnimation
+                    running: false
+                    ParallelAnimation {
+                        NumberAnimation {
+                            target: levelText
+                            property: "font.pixelSize"
+                            from: 20
+                            to: 80  // 4x original size
+                            duration: 250
+                            easing.type: Easing.OutQuad
+                        }
+                        ColorAnimation {
+                            target: levelText
+                            property: "color"
+                            from: "white"
+                            to: "#FFD700"  // Bright yellow/gold
+                            duration: 250
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                    ParallelAnimation {
+                        NumberAnimation {
+                            target: levelText
+                            property: "font.pixelSize"
+                            from: 80
+                            to: 20  // Return to original size
+                            duration: 250
+                            easing.type: Easing.InQuad
+                        }
+                        ColorAnimation {
+                            target: levelText
+                            property: "color"
+                            from: "#FFD700"
+                            to: "white"  // Back to white
+                            duration: 250
+                            easing.type: Easing.InQuad
+                        }
+                    }
+                }
             }
         }
 
@@ -517,6 +559,7 @@ Item {
         asteroidCount = 0
         level++
         scrollSpeed += 0.5  // Slight speed increase per level
+        levelBumpAnimation.start()  // Trigger level bump animation
     }
 
     function restartGame() {
