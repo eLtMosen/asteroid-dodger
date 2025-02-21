@@ -319,16 +319,29 @@ Item {
             }
         }
 
-        // Score HUD (attached to player position, upright)
+        // Score HUD (attached to player position, upright, optimized)
         Text {
             id: scoreText
             text: score  // No "*" symbol
             color: "white"
             opacity: 0.9  // 90% opacity
             font.pixelSize: 20
-            x: player.x + player.width / 2 - width / 2  // Center below player
-            y: player.y + player.height + 5  // 5px below player
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+            z: 2  // Match player layer
+
+            // Optimized bindings
+            Binding {
+                target: scoreText
+                property: "x"
+                value: player.x + player.width / 2 - scoreText.width / 2
+                when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+            }
+            Binding {
+                target: scoreText
+                property: "y"
+                value: player.y + player.height + 5
+                when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+            }
         }
 
         // Calibration message
