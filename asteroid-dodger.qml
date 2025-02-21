@@ -174,7 +174,8 @@ Item {
             id: largeAsteroidComponent
             Text {
                 text: "●"  // Larger asteroid character
-                color: "#222222"  // Much darker gray
+                property real shade: 34/255 - Math.random() * (26/255)  // Single random factor for gray
+                color: Qt.rgba(shade, shade, shade, 1)  // #222222 to #080808, uniform gray
                 font.pixelSize: 24 + Math.random() * 16  // Random size between 24px and 40px
                 x: Math.random() * (root.width - width)
                 y: -height  // Start above screen
@@ -219,6 +220,7 @@ Item {
                 text: isAsteroid ? "*" : "!"
                 color: isAsteroid ? "gray" : "yellow"
                 font.pixelSize: 16
+                font.bold: !isAsteroid  // Bold for "!" (power-up)
                 x: Math.random() * (root.width - width)
                 y: -height  // Start above screen
 
