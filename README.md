@@ -2,9 +2,9 @@
 A simple game for [AsteroidOS](http://asteroidos.org/)
 
 Features:
-- Random generation of the asteroid field
+- Random generation of the asteroid field and power ups
 - Exact crash detection for the player character
-- Vibration feedback when taking damage
+- Vibration and animated feedback when taking damage
 - New level every survived 100th asteroid
 - Successive increase of speed and density of the field per level
 - Hud displays score, amount of lives and current level

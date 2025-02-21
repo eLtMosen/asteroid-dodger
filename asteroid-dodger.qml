@@ -151,7 +151,13 @@ Item {
         // Background
         Rectangle {
             anchors.fill: parent
-            color: "black"
+            color: playerHit ? "#050030" : "black"
+            SequentialAnimation on color {
+                running: invincible
+                loops: Animation.Infinite
+                ColorAnimation { from: "black"; to: "#300000"; duration: 200 }
+                ColorAnimation { from: "#300000"; to: "black"; duration: 200 }
+            }
         }
 
         // Player (diamond shape using rotated square)
