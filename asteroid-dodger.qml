@@ -488,14 +488,6 @@ Item {
                     var deltaX = (accelerometer.reading.x - baselineX) * -2  // Adjust sensitivity from baseline
                     var newX = player.x + deltaX * playerSpeed
                     player.x = Math.max(0, Math.min(root.width - player.width, newX))
-
-                    // Y-axis for speed manipulation, adjusted for baseline
-                    var yReading = accelerometer.reading.y - baselineY
-                    if (!speedChanged && Math.abs(yReading) > speedChangeThreshold) {
-                        // Slow down if tilted significantly forward or back from baseline
-                        playerSpeed = Math.max(basePlayerSpeed * 0.6, basePlayerSpeed * (1 - 0.4 * Math.abs(yReading) / 10)) // Max 40% slowdown
-                        speedChanged = true
-                    }
                 }
             }
         }
