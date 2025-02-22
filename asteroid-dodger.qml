@@ -27,7 +27,7 @@ Item {
     anchors.fill: parent
     visible: true
 
-    property int scrollSpeed: 2
+    property real scrollSpeed: 2
     property int basePlayerSpeed: 1
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
@@ -35,7 +35,7 @@ Item {
     property int lives: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.03 + (level - 1) * 0.01
+    property real asteroidDensity: 0.045 + (level - 1) * 0.005  // Increased from 0.03 to 0.045
     property real largeAsteroidDensity: asteroidDensity / 2
     property bool gameOver: false
     property bool playerHit: false
@@ -155,7 +155,7 @@ Item {
             id: particleText
             property int points: 1
             text: "+" + points
-            color: points === 1 ? "#FFD700" : "#00CC00"  // Golden for +1, darker green for +2+
+            color: points === 1 ? "#FFD700" : "#00CC00"
             font.pixelSize: 16
             z: 3
             opacity: 1
@@ -508,6 +508,7 @@ Item {
         Item {
             id: gameOverScreen
             anchors.centerIn: parent
+            z: 3
             visible: gameOver
 
             Column {
@@ -669,7 +670,7 @@ Item {
     function levelUp() {
         asteroidCount = 0
         level++
-        scrollSpeed += 0.5
+        scrollSpeed += 0.01
         levelBumpAnimation.start()
     }
 
@@ -679,7 +680,7 @@ Item {
         level = 1
         asteroidCount = 0
         scrollSpeed = 2
-        asteroidDensity = 0.03
+        asteroidDensity = 0.045  // Increased from 0.03 to 0.045
         gameOver = false
         paused = false
         playerHit = false
