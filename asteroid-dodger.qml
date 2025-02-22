@@ -46,8 +46,19 @@ Item {
     property real baselineX: 0
     property int calibrationTimer: 5
     property bool invincible: false
-    property real closePassThreshold: 30
+    property real closePassThreshold: 40
     property string flashColor: ""
+    property int comboCount: 0
+    property real lastDodgeTime: 0
+    property bool comboActive: false
+
+    onPausedChanged: {
+        if (paused && comboActive) {
+            comboMeterAnimation.pause()
+        } else if (!paused && comboActive) {
+            comboMeterAnimation.resume()
+        }
+    }
 
     ConfigurationValue {
         id: highScore
@@ -127,13 +138,24 @@ Item {
         }
     }
 
+    Timer {
+        id: comboTimer
+        interval: 2000
+        running: comboActive && !paused
+        repeat: false
+        onTriggered: {
+            comboCount = 0
+            comboActive = false
+        }
+    }
+
     Component {
         id: scoreParticleComponent
         Text {
             id: particleText
             property int points: 1
             text: "+" + points
-            color: points === 1 ? "lightgreen" : "yellow"
+            color: points === 1 ? "#FFD700" : "#00CC00"  // Golden for +1, darker green for +2+
             font.pixelSize: 16
             z: 3
             opacity: 1
@@ -223,8 +245,8 @@ Item {
 
         Image {
             id: player
-            width: 32
-            height: 32
+            width: 34
+            height: 34
             source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
@@ -245,7 +267,7 @@ Item {
             Item {
                 property bool isAsteroid: true
                 property bool passed: false
-                width: isAsteroid ? 10 : 16  // Match SVG size for asteroids, Text size for power-ups
+                width: isAsteroid ? 10 : 16
                 height: isAsteroid ? 10 : 16
                 x: Math.random() * (root.width - width)
                 y: -height
@@ -347,24 +369,59 @@ Item {
             }
         }
 
-        Text {
-            id: scoreText
-            text: score
-            color: "#dddddd"
-            font.pixelSize: 20
-            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+        Item {
+            id: scoreArea
             z: 2
+            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
             Binding {
-                target: scoreText
+                target: scoreArea
                 property: "x"
                 value: player.x + player.width / 2 - scoreText.width / 2
                 when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
             }
             Binding {
-                target: scoreText
+                target: scoreArea
                 property: "y"
                 value: player.y + player.height + 5
                 when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+            }
+
+            Rectangle {
+                id: comboMeter
+                property int maxWidth: scoreText.width * 1.5
+                height: 3
+                width: 0
+                color: "green"
+                radius: height / 2
+                x: (scoreText.width - width) / 2
+                y: -height + 2
+                SequentialAnimation {
+                    id: comboMeterAnimation
+                    running: comboActive && !paused
+                    NumberAnimation {
+                        target: comboMeter
+                        property: "width"
+                        from: 0
+                        to: comboMeter.maxWidth
+                        duration: 100
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        target: comboMeter
+                        property: "width"
+                        from: comboMeter.maxWidth
+                        to: 0
+                        duration: 2000
+                        easing.type: Easing.Linear
+                    }
+                }
+            }
+
+            Text {
+                id: scoreText
+                text: score
+                color: "#dddddd"
+                font.pixelSize: 20
             }
         }
 
@@ -533,6 +590,8 @@ Item {
                 lives--
                 playerHit = true
                 flashColor = "red"
+                comboCount = 0
+                comboActive = false
                 invincible = true
                 obj.destroy()
                 feedback.play()
@@ -546,6 +605,8 @@ Item {
                 lives++
                 playerHit = true
                 flashColor = "blue"
+                comboCount = 0
+                comboActive = false
                 obj.destroy()
                 continue
             }
@@ -554,13 +615,28 @@ Item {
                 asteroidCount++
                 obj.passed = true
                 var distance = Math.abs((obj.x + obj.width / 2) - (player.x + player.width / 2))
-                var points = distance <= closePassThreshold ? 2 : 1
-                score += points
+                var basePoints = distance <= closePassThreshold ? 2 : 1
+                var currentTime = Date.now()
+
+                if (distance <= closePassThreshold) {
+                    if (currentTime - lastDodgeTime <= 2000) {
+                        comboCount++
+                    } else {
+                        comboCount = 1
+                    }
+                    lastDodgeTime = currentTime
+                    comboActive = true
+                    comboTimer.restart()
+                    comboMeterAnimation.restart()
+                    score += basePoints * Math.pow(2, comboCount - 1)
+                } else {
+                    score += basePoints
+                }
 
                 var particle = scoreParticleComponent.createObject(gameArea, {
                     "x": obj.x,
                     "y": obj.y,
-                    "points": points
+                    "points": distance <= closePassThreshold ? basePoints * Math.pow(2, comboCount - 1) : basePoints
                 })
 
                 if (asteroidCount >= asteroidsPerLevel) {
@@ -614,6 +690,9 @@ Item {
         baselineX = 0
         showingNow = false
         showingSurvive = false
+        comboCount = 0
+        comboActive = false
+        lastDodgeTime = 0
         nowText.font.pixelSize = 48
         nowText.opacity = 0
         surviveText.font.pixelSize = 48

@@ -5,7 +5,8 @@ Features:
 - Random generation of the asteroid field and power ups
 - Parallax effect with slower, non colliding larger asteroids for added visual depth
 - Particles for the scoring asteroids
-- Dodging asteroids in a near miss gives +2
+- Combo system, dodging asteroids in a near miss gives exponentially more score points on each successive dodge in a 2 sec time window
+- Green Combo indicator meter, runs down to indicate the combo period
 - Exact crash detection for the player character
 - Vibration and animated feedback when taking damage and advancing levels
 - New level every survived 100th asteroid
