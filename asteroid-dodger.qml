@@ -379,6 +379,9 @@ Item {
                         duration: 2000
                         easing.type: Easing.Linear
                     }
+                    onStopped: {  // Added to reset width when animation stops
+                        comboMeter.width = 0
+                    }
                 }
             }
 
@@ -558,6 +561,8 @@ Item {
                 flashColor = "red"
                 comboCount = 0
                 comboActive = false
+                comboTimer.stop()  // Added to stop combo period
+                comboMeterAnimation.stop()  // Added to stop and reset animation
                 invincible = true
                 obj.destroy()
                 feedback.play()
@@ -573,6 +578,8 @@ Item {
                 flashColor = "blue"
                 comboCount = 0
                 comboActive = false
+                comboTimer.stop()  // Added to stop combo period
+                comboMeterAnimation.stop()  // Added to stop and reset animation
                 obj.destroy()
                 continue
             }
