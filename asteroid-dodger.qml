@@ -35,7 +35,7 @@ Item {
     property int lives: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.045 + (level - 1) * 0.005  // Increased from 0.03 to 0.045
+    property real asteroidDensity: 0.045 + (level - 1) * 0.005
     property real largeAsteroidDensity: asteroidDensity / 2
     property bool gameOver: false
     property bool playerHit: false
@@ -267,8 +267,8 @@ Item {
             Item {
                 property bool isAsteroid: true
                 property bool passed: false
-                width: isAsteroid ? 10 : 16
-                height: isAsteroid ? 10 : 16
+                width: isAsteroid ? 10 : 18
+                height: isAsteroid ? 10 : 18
                 x: Math.random() * (root.width - width)
                 y: -height
 
@@ -283,71 +283,35 @@ Item {
                 Text {
                     visible: !isAsteroid
                     text: "!"
-                    color: "yellow"
-                    font.pixelSize: 16
+                    color: "#0087ff"
+                    font.pixelSize: 18
                     font.bold: true
                     anchors.centerIn: parent
                 }
             }
         }
 
-        Column {
-            id: hud
+        Rectangle {
+            id: levelProgressBar
+            width: 100
+            height: 6
+            radius: 3  // Pill-shaped
+            color: "#8B6914"  // Dark gold background
+            opacity: 0.6
             anchors {
                 top: parent.top
                 horizontalCenter: parent.horizontalCenter
-                margins: 10
+                margins: 14
             }
-            spacing: 5
+            z: 2
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-            Text {
-                id: levelText
-                text: "lvl " + level
-                color: "#dddddd"
-                font.pixelSize: 20
-                font.bold: true
-                horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-                SequentialAnimation {
-                    id: levelBumpAnimation
-                    running: false
-                    ParallelAnimation {
-                        NumberAnimation {
-                            target: levelText
-                            property: "font.pixelSize"
-                            from: 20
-                            to: 60
-                            duration: 250
-                            easing.type: Easing.OutQuad
-                        }
-                        ColorAnimation {
-                            target: levelText
-                            property: "color"
-                            from: "#dddddd"
-                            to: Qt.rgba(1, 0.843, 0, 1)
-                            duration: 250
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-                    ParallelAnimation {
-                        NumberAnimation {
-                            target: levelText
-                            property: "font.pixelSize"
-                            from: 60
-                            to: 20
-                            duration: 250
-                            easing.type: Easing.InQuad
-                        }
-                        ColorAnimation {
-                            target: levelText
-                            property: "color"
-                            from: Qt.rgba(1, 0.843, 0, 1)
-                            to: "#dddddd"
-                            duration: 250
-                            easing.type: Easing.InQuad
-                        }
-                    }
-                }
+
+            Rectangle {
+                id: progressFill
+                width: asteroidCount  // 1px per asteroid, max 100
+                height: parent.height
+                color: "#FFD700"  // Golden fill, same as +1 particles
+                radius: 3
             }
         }
 
@@ -356,7 +320,7 @@ Item {
             anchors {
                 bottom: parent.bottom
                 horizontalCenter: parent.horizontalCenter
-                margins: 10
+                margins: 6
             }
             spacing: 5
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive
@@ -421,7 +385,7 @@ Item {
                 id: scoreText
                 text: score
                 color: "#dddddd"
-                font.pixelSize: 20
+                font.pixelSize: 18
             }
         }
 
@@ -437,7 +401,7 @@ Item {
             Text {
                 text: "Calibrating"
                 color: "white"
-                font.pixelSize: 24
+                font.pixelSize: 26
                 horizontalAlignment: Text.AlignHCenter
                 anchors.horizontalCenter: parent.horizontalCenter
             }
@@ -517,7 +481,7 @@ Item {
 
                 Text {
                     id: gameOverText
-                    text: "Game Over!\nFinal Score: " + score + "\nHigh Score: " + highScore.value
+                    text: "Game Over!\nScore " + score + "\nHighest " + highScore.value
                     color: "red"
                     font.pixelSize: 32
                     horizontalAlignment: Text.AlignHCenter
@@ -525,8 +489,8 @@ Item {
 
                 Rectangle {
                     id: tryAgainButton
-                    width: 120
-                    height: 40
+                    width: 150
+                    height: 50
                     color: "green"
                     border.color: "white"
                     border.width: 2
@@ -671,7 +635,7 @@ Item {
         asteroidCount = 0
         level++
         scrollSpeed += 0.01
-        levelBumpAnimation.start()
+        // No levelBumpAnimation anymore
     }
 
     function restartGame() {
@@ -680,7 +644,7 @@ Item {
         level = 1
         asteroidCount = 0
         scrollSpeed = 2
-        asteroidDensity = 0.045  // Increased from 0.03 to 0.045
+        asteroidDensity = 0.045
         gameOver = false
         paused = false
         playerHit = false
