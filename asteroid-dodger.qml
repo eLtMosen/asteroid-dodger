@@ -201,6 +201,7 @@ Item {
             id: objectComponent
             Text {
                 property bool isAsteroid: true  // Default to true
+                property bool passed: false     // New property to track if scored
                 text: isAsteroid ? "*" : "!"
                 color: isAsteroid ? "gray" : "yellow"
                 font.pixelSize: 16
@@ -217,7 +218,6 @@ Item {
                 }
             }
         }
-
         // HUD (top: level)
         Column {
             id: hud
@@ -523,15 +523,18 @@ Item {
                 continue
             }
 
-            // Count passed asteroids and remove off-screen objects
-            if (obj.y >= root.height) {
-                if (obj.isAsteroid) {
-                    asteroidCount++
-                    score++
-                    if (asteroidCount >= asteroidsPerLevel) {
-                        levelUp()
-                    }
+            // Count passed asteroids when they pass the player
+            if (obj.isAsteroid && obj.y > player.y + player.height && !obj.passed) {
+                asteroidCount++
+                score++
+                obj.passed = true  // Mark as passed to avoid double-counting
+                if (asteroidCount >= asteroidsPerLevel) {
+                    levelUp()
                 }
+            }
+
+            // Remove off-screen objects
+            if (obj.y >= root.height) {
                 obj.destroy()
             }
         }
