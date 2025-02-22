@@ -82,10 +82,11 @@ Item {
     Timer {
         id: flashTimer
         interval: Math.max(500, 2000 / lives)
-        running: playerHit
+        running: playerHit || flashColor === "#8B6914"
         onTriggered: {
             playerHit = false
             flashColor = ""
+            flashOverlay.opacity = 0  // Added to ensure overlay resets fully
         }
     }
 
@@ -214,11 +215,11 @@ Item {
         Rectangle {
             id: flashOverlay
             anchors.fill: parent
-            color: flashColor
+            color: flashColor ? flashColor : "transparent"
             opacity: 0
             z: 4
             SequentialAnimation on opacity {
-                running: playerHit
+                running: playerHit || flashColor === "#8B6914"
                 NumberAnimation { from: 0.5; to: 0; duration: 500; easing.type: Easing.OutQuad }
             }
         }
@@ -635,7 +636,7 @@ Item {
         asteroidCount = 0
         level++
         scrollSpeed += 0.01
-        // No levelBumpAnimation anymore
+        flashColor = "#8B6914"
     }
 
     function restartGame() {
