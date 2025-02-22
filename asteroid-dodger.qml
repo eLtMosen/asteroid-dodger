@@ -20,6 +20,7 @@
 import QtQuick 2.15
 import QtSensors 5.15
 import Nemo.Ngf 1.0
+import Nemo.Configuration 1.0
 
 Item {
     id: root
@@ -46,6 +47,12 @@ Item {
     property int calibrationTimer: 5
     property bool invincible: false
     property real closePassThreshold: 30
+
+    ConfigurationValue {
+        id: highScore
+        key: "/asteroid-dodger/highScore"
+        defaultValue: 0
+    }
 
     NonGraphicalFeedback {
         id: feedback
@@ -408,16 +415,19 @@ Item {
             id: gameOverScreen
             anchors.centerIn: parent
             visible: gameOver
+
             Column {
                 spacing: 20
                 anchors.centerIn: parent
+
                 Text {
                     id: gameOverText
-                    text: "Game Over!\nFinal Score: " + score
+                    text: "Game Over!\nFinal Score: " + score + "\nHigh Score: " + highScore.value
                     color: "red"
                     font.pixelSize: 32
                     horizontalAlignment: Text.AlignHCenter
                 }
+
                 Rectangle {
                     id: tryAgainButton
                     width: 120
@@ -427,15 +437,22 @@ Item {
                     border.width: 2
                     radius: 5
                     anchors.horizontalCenter: parent.horizontalCenter
+
                     Text {
                         text: "Die Again"
                         color: "white"
                         font.pixelSize: 20
                         anchors.centerIn: parent
                     }
+
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: restartGame()
+                        onClicked: {
+                            if (score > highScore.value) {
+                                highScore.value = score
+                            }
+                            restartGame()
+                        }
                     }
                 }
             }

@@ -5,10 +5,12 @@ Features:
 - Random generation of the asteroid field and power ups
 - Parallax effect with slower, non colliding larger asteroids for added visual depth
 - Particles for the scoring asteroids
+- Dodging asteroids in a near miss gives +2
 - Exact crash detection for the player character
 - Vibration and animated feedback when taking damage and advancing levels
 - New level every survived 100th asteroid
 - Successive increase of speed and density of the field per level
+- Highscore keeping in persistent ConfigurationValue
 - Hud displays score, amount of lives and current level
 - Asteroids sparkle from grey to white to simulate spinning
 - Accelerometer control of the X-Axis for horizontal movement
