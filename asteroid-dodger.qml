@@ -281,12 +281,40 @@ Item {
                     id: levelBumpAnimation
                     running: false
                     ParallelAnimation {
-                        NumberAnimation { target: levelText; property: "font.pixelSize"; from: 20; to: 80; duration: 250; easing.type: Easing.OutQuad }
-                        ColorAnimation { target: levelText; property: "color"; from: "#dddddd"; to: Qt.rgba(1, 0.843, 0, 1); duration: 250; easing.type: Easing.OutQuad }
+                        NumberAnimation {
+                            target: levelText
+                            property: "font.pixelSize"
+                            from: 20
+                            to: 60  // Changed from 80 to 60 (3x size)
+                            duration: 250
+                            easing.type: Easing.OutQuad
+                        }
+                        ColorAnimation {
+                            target: levelText
+                            property: "color"
+                            from: "#dddddd"
+                            to: Qt.rgba(1, 0.843, 0, 1)
+                            duration: 250
+                            easing.type: Easing.OutQuad
+                        }
                     }
                     ParallelAnimation {
-                        NumberAnimation { target: levelText; property: "font.pixelSize"; from: 80; to: 20; duration: 250; easing.type: Easing.InQuad }
-                        ColorAnimation { target: levelText; property: "color"; from: Qt.rgba(1, 0.843, 0, 1); to: "#dddddd"; duration: 250; easing.type: Easing.InQuad }
+                        NumberAnimation {
+                            target: levelText
+                            property: "font.pixelSize"
+                            from: 60  // Changed from 80 to 60
+                            to: 20
+                            duration: 250
+                            easing.type: Easing.InQuad
+                        }
+                        ColorAnimation {
+                            target: levelText
+                            property: "color"
+                            from: Qt.rgba(1, 0.843, 0, 1)
+                            to: "#dddddd"
+                            duration: 250
+                            easing.type: Easing.InQuad
+                        }
                     }
                 }
             }
@@ -536,7 +564,7 @@ Item {
             }
         }
 
-        if (Math.random() < largeAsteroidDensity) {
+        if (Math.random() < largeAsteroidDensity / 2) {  // Reduced by 50%
             largeAsteroidComponent.createObject(largeAsteroidContainer)
         }
 
