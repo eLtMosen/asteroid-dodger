@@ -21,6 +21,7 @@ import QtQuick 2.15
 import QtSensors 5.15
 import Nemo.Ngf 1.0
 import Nemo.Configuration 1.0
+import QtGraphicalEffects 1.15
 
 Item {
     id: root
@@ -66,6 +67,12 @@ Item {
         defaultValue: 0
     }
 
+    ConfigurationValue {
+        id: highLevel
+        key: "/asteroid-dodger/highLevel"
+        defaultValue: 1
+    }
+
     NonGraphicalFeedback {
         id: feedback
         event: "press"
@@ -86,7 +93,7 @@ Item {
         onTriggered: {
             playerHit = false
             flashColor = ""
-            flashOverlay.opacity = 0  // Added to ensure overlay resets fully
+            flashOverlay.opacity = 0
         }
     }
 
@@ -212,24 +219,392 @@ Item {
             color: "black"
         }
 
-        Rectangle {
-            id: flashOverlay
+        Item {
+            id: gameContent
             anchors.fill: parent
-            color: flashColor ? flashColor : "transparent"
-            opacity: 0
-            z: 4
-            SequentialAnimation on opacity {
-                running: playerHit || flashColor === "#8B6914"
-                NumberAnimation { from: 0.5; to: 0; duration: 500; easing.type: Easing.OutQuad }
+            layer.enabled: true
+            layer.effect: FastBlur {
+                id: blurEffect
+                radius: gameOver ? 16 : 0
+                Behavior on radius {
+                    NumberAnimation { duration: 250 }
+                }
+            }
+
+            Rectangle {
+                id: flashOverlay
+                anchors.fill: parent
+                color: flashColor ? flashColor : "transparent"
+                opacity: 0
+                z: 4
+                SequentialAnimation on opacity {
+                    running: playerHit || flashColor === "#8B6914"
+                    NumberAnimation { from: 0.5; to: 0; duration: 500; easing.type: Easing.OutQuad }
+                }
+            }
+
+            Item {
+                id: largeAsteroidContainer
+                width: parent.width
+                height: parent.height
+                z: 0
+                visible: !calibrating && !showingNow && !showingSurvive
+            }
+
+            Image {
+                id: player
+                width: 34
+                height: 34
+                source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
+                x: root.width / 2 - width / 2
+                y: root.height * 0.75 - height / 2
+                z: 2
+                visible: !calibrating && !showingNow && !showingSurvive
+            }
+
+            Item {
+                id: objectContainer
+                width: parent.width
+                height: parent.height
+                z: 1
+                visible: !calibrating && !showingNow && !showingSurvive
+            }
+
+            Rectangle {
+                id: levelProgressBar
+                width: 100
+                height: 6
+                radius: 3
+                color: "#8B6914"
+                opacity: 0.5
+                anchors {
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                    margins: 22
+                }
+                z: 2
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+
+                Rectangle {
+                    id: progressFill
+                    width: asteroidCount
+                    height: parent.height
+                    color: "#FFD700"
+                    radius: 3
+                }
+            }
+
+            Column {
+                id: hudBottom
+                anchors {
+                    bottom: parent.bottom
+                    horizontalCenter: parent.horizontalCenter
+                    margins: 6
+                }
+                spacing: 5
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+                Text {
+                    text: "❤️ " + lives
+                    color: "#dddddd"
+                    font.pixelSize: 20
+                    horizontalAlignment: Text.AlignHCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+
+            Item {
+                id: scoreArea
+                z: 2
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+                Binding {
+                    target: scoreArea
+                    property: "x"
+                    value: player.x + player.width / 2 - scoreText.width / 2
+                    when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+                }
+                Binding {
+                    target: scoreArea
+                    property: "y"
+                    value: player.y + player.height + 5
+                    when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+                }
+
+                Rectangle {
+                    id: comboMeter
+                    property int maxWidth: scoreText.width * 1.5
+                    height: 3
+                    width: 0
+                    color: "green"
+                    radius: height / 2
+                    x: (scoreText.width - width) / 2
+                    y: -height + 2
+                    SequentialAnimation {
+                        id: comboMeterAnimation
+                        running: comboActive && !paused
+                        NumberAnimation {
+                            target: comboMeter
+                            property: "width"
+                            from: 0
+                            to: comboMeter.maxWidth
+                            duration: 100
+                            easing.type: Easing.OutQuad
+                        }
+                        NumberAnimation {
+                            target: comboMeter
+                            property: "width"
+                            from: comboMeter.maxWidth
+                            to: 0
+                            duration: 2000
+                            easing.type: Easing.Linear
+                        }
+                        onStopped: {
+                            comboMeter.width = 0
+                        }
+                    }
+                }
+
+                Text {
+                    id: scoreText
+                    text: score
+                    color: "#dddddd"
+                    font.pixelSize: 18
+                }
+            }
+
+            Column {
+                id: calibrationText
+                anchors.centerIn: parent
+                spacing: 5
+                visible: calibrating
+                opacity: showingNow ? 0 : 1
+                Behavior on opacity {
+                    NumberAnimation { duration: 500; easing.type: Easing.InOutQuad }
+                }
+                Text {
+                    text: "Calibrating"
+                    color: "white"
+                    font.pixelSize: 26
+                    horizontalAlignment: Text.AlignHCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                Text {
+                    text: "Hold your watch comfy"
+                    color: "white"
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                Text {
+                    text: calibrationTimer + "s"
+                    color: "white"
+                    font.pixelSize: 20
+                    horizontalAlignment: Text.AlignHCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+
+            Text {
+                id: nowText
+                text: "NOW"
+                color: "white"
+                font.pixelSize: 48
+                anchors.centerIn: parent
+                visible: showingNow
+                opacity: 0
+                SequentialAnimation {
+                    id: nowTransition
+                    running: false
+                    NumberAnimation { target: nowText; property: "opacity"; from: 0; to: 1; duration: 500 }
+                    ParallelAnimation {
+                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: nowText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
+                    }
+                }
+            }
+
+            Text {
+                id: surviveText
+                text: "SURVIVE"
+                color: "orange"
+                font.pixelSize: 48
+                font.bold: true
+                anchors.centerIn: parent
+                visible: showingSurvive
+                opacity: 0
+                SequentialAnimation {
+                    id: surviveTransition
+                    running: false
+                    NumberAnimation { target: surviveText; property: "opacity"; from: 0; to: 1; duration: 500 }
+                    ParallelAnimation {
+                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: surviveText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
+                    }
+                }
+            }
+
+            Text {
+                id: pauseText
+                text: "Paused"
+                color: "white"
+                font.pixelSize: 32
+                anchors.centerIn: parent
+                visible: paused && !gameOver && !calibrating && !showingNow && !showingSurvive
+            }
+
+            Text {
+                id: levelNumber
+                text: level
+                color: "#dddddd"
+                font.pixelSize: 14
+                font.bold: true
+                anchors {
+                    bottom: levelProgressBar.top
+                    horizontalCenter: parent.horizontalCenter
+                    bottomMargin: 4
+                }
+                z: 2
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
             }
         }
 
         Item {
-            id: largeAsteroidContainer
-            width: parent.width
-            height: parent.height
-            z: 0
-            visible: !calibrating && !showingNow && !showingSurvive
+            id: gameOverScreen
+            anchors.centerIn: parent
+            z: 3
+            visible: gameOver
+            opacity: 0
+            Behavior on opacity {
+                NumberAnimation { duration: 250 }
+            }
+            onVisibleChanged: {
+                if (visible) {
+                    opacity = 1
+                }
+            }
+
+            Column {
+                spacing: 20
+                anchors.centerIn: parent
+
+                Text {
+                    id: gameOverText
+                    text: "Game Over!"
+                    color: "red"
+                    font.pixelSize: 28
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Column {
+                    spacing: 4
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    Row {
+                        spacing: 8
+                        Text {
+                            text: "Score";  // Removed colon
+                            color: "#dddddd";
+                            font.pixelSize: 16;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 80
+                        }
+                        Text {
+                            text: score;
+                            color: "white";
+                            font.pixelSize: 18;
+                            font.bold: true;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 40
+                        }
+                    }
+                    Row {
+                        spacing: 8
+                        Text {
+                            text: "Level";
+                            color: "#dddddd";
+                            font.pixelSize: 16;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 80
+                        }
+                        Text {
+                            text: level;
+                            color: "white";
+                            font.pixelSize: 18;
+                            font.bold: true;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 40
+                        }
+                    }
+                    Row {
+                        spacing: 8
+                        Text {
+                            text: "High Score";  // Removed colon
+                            color: "#dddddd";
+                            font.pixelSize: 16;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 80
+                        }
+                        Text {
+                            text: highScore.value;
+                            color: "white";
+                            font.pixelSize: 18;
+                            font.bold: true;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 40
+                        }
+                    }
+                    Row {
+                        spacing: 8
+                        Text {
+                            text: "Max Level";  // Removed colon
+                            color: "#dddddd";
+                            font.pixelSize: 16;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 80
+                        }
+                        Text {
+                            text: highLevel.value;
+                            color: "white";
+                            font.pixelSize: 18;
+                            font.bold: true;
+                            horizontalAlignment: Text.AlignHCenter;
+                            width: 40
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: tryAgainButton
+                    width: 150
+                    height: 50
+                    color: "green"
+                    border.color: "white"
+                    border.width: 2
+                    radius: 10
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    Text {
+                        text: "Die Again"
+                        color: "white"
+                        font.pixelSize: 20
+                        font.bold: true;
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            if (score > highScore.value) {
+                                highScore.value = score
+                            }
+                            if (level > highLevel.value) {
+                                highLevel.value = level
+                            }
+                            restartGame()
+                        }
+                    }
+                }
+            }
         }
 
         Component {
@@ -242,25 +617,6 @@ Item {
                 x: Math.random() * (root.width - width)
                 y: -height
             }
-        }
-
-        Image {
-            id: player
-            width: 34
-            height: 34
-            source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
-            x: root.width / 2 - width / 2
-            y: root.height * 0.75 - height / 2
-            z: 2
-            visible: !calibrating && !showingNow && !showingSurvive
-        }
-
-        Item {
-            id: objectContainer
-            width: parent.width
-            height: parent.height
-            z: 1
-            visible: !calibrating && !showingNow && !showingSurvive
         }
 
         Component {
@@ -288,250 +644,6 @@ Item {
                     font.pixelSize: 18
                     font.bold: true
                     anchors.centerIn: parent
-                }
-            }
-        }
-
-        Text {
-            id: levelNumber
-            text: level
-            color: "#dddddd"  // Matches scoreText color
-            font.pixelSize: 14
-            font.bold: true
-            anchors {
-                bottom: levelProgressBar.top
-                horizontalCenter: parent.horizontalCenter
-                bottomMargin: 4  // 4px margin below the text, above progress bar
-            }
-            z: 2
-            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-        }
-
-        Rectangle {
-            id: levelProgressBar
-            width: 100
-            height: 6
-            radius: 3  // Pill-shaped
-            color: "#8B6914"  // Dark gold background
-            opacity: 0.5
-            anchors {
-                top: parent.top
-                horizontalCenter: parent.horizontalCenter
-                margins: 22
-            }
-            z: 2
-            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-
-            Rectangle {
-                id: progressFill
-                width: asteroidCount  // 1px per asteroid, max 100
-                height: parent.height
-                color: "#FFD700"  // Golden fill, same as +1 particles
-                radius: 3
-            }
-        }
-
-        Column {
-            id: hudBottom
-            anchors {
-                bottom: parent.bottom
-                horizontalCenter: parent.horizontalCenter
-                margins: 6
-            }
-            spacing: 5
-            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-            Text {
-                text: "❤️ " + lives
-                color: "#dddddd"
-                font.pixelSize: 20
-                horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-
-        Item {
-            id: scoreArea
-            z: 2
-            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-            Binding {
-                target: scoreArea
-                property: "x"
-                value: player.x + player.width / 2 - scoreText.width / 2
-                when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
-            }
-            Binding {
-                target: scoreArea
-                property: "y"
-                value: player.y + player.height + 5
-                when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
-            }
-
-            Rectangle {
-                id: comboMeter
-                property int maxWidth: scoreText.width * 1.5
-                height: 3
-                width: 0
-                color: "green"
-                radius: height / 2
-                x: (scoreText.width - width) / 2
-                y: -height + 2
-                SequentialAnimation {
-                    id: comboMeterAnimation
-                    running: comboActive && !paused
-                    NumberAnimation {
-                        target: comboMeter
-                        property: "width"
-                        from: 0
-                        to: comboMeter.maxWidth
-                        duration: 100
-                        easing.type: Easing.OutQuad
-                    }
-                    NumberAnimation {
-                        target: comboMeter
-                        property: "width"
-                        from: comboMeter.maxWidth
-                        to: 0
-                        duration: 2000
-                        easing.type: Easing.Linear
-                    }
-                    onStopped: {  // Added to reset width when animation stops
-                        comboMeter.width = 0
-                    }
-                }
-            }
-
-            Text {
-                id: scoreText
-                text: score
-                color: "#dddddd"
-                font.pixelSize: 18
-            }
-        }
-
-        Column {
-            id: calibrationText
-            anchors.centerIn: parent
-            spacing: 5
-            visible: calibrating
-            opacity: showingNow ? 0 : 1
-            Behavior on opacity {
-                NumberAnimation { duration: 500; easing.type: Easing.InOutQuad }
-            }
-            Text {
-                text: "Calibrating"
-                color: "white"
-                font.pixelSize: 26
-                horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            Text {
-                text: "Hold your watch comfy"
-                color: "white"
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            Text {
-                text: calibrationTimer + "s"
-                color: "white"
-                font.pixelSize: 20
-                horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-
-        Text {
-            id: nowText
-            text: "NOW"
-            color: "white"
-            font.pixelSize: 48
-            anchors.centerIn: parent
-            visible: showingNow
-            opacity: 0
-            SequentialAnimation {
-                id: nowTransition
-                running: false
-                NumberAnimation { target: nowText; property: "opacity"; from: 0; to: 1; duration: 500 }
-                ParallelAnimation {
-                    NumberAnimation { target: nowText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }
-                    NumberAnimation { target: nowText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
-                }
-            }
-        }
-
-        Text {
-            id: surviveText
-            text: "SURVIVE"
-            color: "orange"
-            font.pixelSize: 48
-            font.bold: true
-            anchors.centerIn: parent
-            visible: showingSurvive
-            opacity: 0
-            SequentialAnimation {
-                id: surviveTransition
-                running: false
-                NumberAnimation { target: surviveText; property: "opacity"; from: 0; to: 1; duration: 500 }
-                ParallelAnimation {
-                    NumberAnimation { target: surviveText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }
-                    NumberAnimation { target: surviveText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
-                }
-            }
-        }
-
-        Text {
-            id: pauseText
-            text: "Paused"
-            color: "white"
-            font.pixelSize: 32
-            anchors.centerIn: parent
-            visible: paused && !gameOver && !calibrating && !showingNow && !showingSurvive
-        }
-
-        Item {
-            id: gameOverScreen
-            anchors.centerIn: parent
-            z: 3
-            visible: gameOver
-
-            Column {
-                spacing: 20
-                anchors.centerIn: parent
-
-                Text {
-                    id: gameOverText
-                    text: "Game Over!\nScore " + score + "\nHighest " + highScore.value
-                    color: "red"
-                    font.pixelSize: 32
-                    horizontalAlignment: Text.AlignHCenter
-                }
-
-                Rectangle {
-                    id: tryAgainButton
-                    width: 150
-                    height: 50
-                    color: "green"
-                    border.color: "white"
-                    border.width: 2
-                    radius: 5
-                    anchors.horizontalCenter: parent.horizontalCenter
-
-                    Text {
-                        text: "Die Again"
-                        color: "white"
-                        font.pixelSize: 20
-                        anchors.centerIn: parent
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            if (score > highScore.value) {
-                                highScore.value = score
-                            }
-                            restartGame()
-                        }
-                    }
                 }
             }
         }
@@ -576,8 +688,8 @@ Item {
                 flashColor = "red"
                 comboCount = 0
                 comboActive = false
-                comboTimer.stop()  // Added to stop combo period
-                comboMeterAnimation.stop()  // Added to stop and reset animation
+                comboTimer.stop()
+                comboMeterAnimation.stop()
                 invincible = true
                 obj.destroy()
                 feedback.play()
@@ -593,8 +705,8 @@ Item {
                 flashColor = "blue"
                 comboCount = 0
                 comboActive = false
-                comboTimer.stop()  // Added to stop combo period
-                comboMeterAnimation.stop()  // Added to stop and reset animation
+                comboTimer.stop()
+                comboMeterAnimation.stop()
                 obj.destroy()
                 continue
             }
@@ -686,6 +798,7 @@ Item {
         surviveText.font.pixelSize = 48
         surviveText.opacity = 0
         player.x = root.width / 2 - player.width / 2
+        gameOverScreen.opacity = 0
 
         for (var i = objectContainer.children.length - 1; i >= 0; i--) {
             objectContainer.children[i].destroy()
