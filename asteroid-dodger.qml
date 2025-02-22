@@ -47,6 +47,7 @@ Item {
     property int calibrationTimer: 5
     property bool invincible: false
     property real closePassThreshold: 30
+    property string flashColor: ""  // New property for flash color
 
     ConfigurationValue {
         id: highScore
@@ -73,7 +74,7 @@ Item {
         running: playerHit
         onTriggered: {
             playerHit = false
-            player.color = "white"
+            flashColor = ""
         }
     }
 
@@ -185,12 +186,18 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: playerHit ? "#001729" : "black"
-            SequentialAnimation on color {
-                running: invincible
-                loops: Animation.Infinite
-                ColorAnimation { from: "black"; to: "#200000"; duration: 250 }
-                ColorAnimation { from: "#200000"; to: "black"; duration: 250 }
+            color: "black"  // Static black, no animation
+        }
+
+        Rectangle {
+            id: flashOverlay
+            anchors.fill: parent
+            color: flashColor
+            opacity: 0
+            z: 4  // Above all game elements except HUD
+            SequentialAnimation on opacity {
+                running: playerHit
+                NumberAnimation { from: 0.5; to: 0; duration: 500; easing.type: Easing.OutQuad }
             }
         }
 
@@ -218,18 +225,12 @@ Item {
             id: player
             width: 20
             height: 20
-            color: playerHit ? "red" : "white"
+            color: "white"  // Static white, no animation
             rotation: 45
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
             z: 2
             visible: !calibrating && !showingNow && !showingSurvive
-            SequentialAnimation on color {
-                running: invincible
-                loops: Animation.Infinite
-                ColorAnimation { from: "white"; to: "red"; duration: 250 }
-                ColorAnimation { from: "red"; to: "white"; duration: 250 }
-            }
         }
 
         Item {
@@ -285,7 +286,7 @@ Item {
                             target: levelText
                             property: "font.pixelSize"
                             from: 20
-                            to: 60  // Changed from 80 to 60 (3x size)
+                            to: 60
                             duration: 250
                             easing.type: Easing.OutQuad
                         }
@@ -302,7 +303,7 @@ Item {
                         NumberAnimation {
                             target: levelText
                             property: "font.pixelSize"
-                            from: 60  // Changed from 80 to 60
+                            from: 60
                             to: 20
                             duration: 250
                             easing.type: Easing.InQuad
@@ -523,7 +524,7 @@ Item {
             if (obj.isAsteroid && isColliding(player, obj) && !invincible) {
                 lives--
                 playerHit = true
-                player.color = "red"
+                flashColor = "red"  // Red flash on impact
                 invincible = true
                 obj.destroy()
                 feedback.play()
@@ -536,7 +537,7 @@ Item {
             if (!obj.isAsteroid && isColliding(player, obj)) {
                 lives++
                 playerHit = true
-                player.color = "blue"
+                flashColor = "blue"  // Blue flash on power-up
                 obj.destroy()
                 continue
             }
@@ -564,7 +565,7 @@ Item {
             }
         }
 
-        if (Math.random() < largeAsteroidDensity / 2) {  // Reduced by 50%
+        if (Math.random() < largeAsteroidDensity / 2) {
             largeAsteroidComponent.createObject(largeAsteroidContainer)
         }
 
