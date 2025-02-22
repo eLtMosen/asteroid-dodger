@@ -47,7 +47,7 @@ Item {
     property int calibrationTimer: 5
     property bool invincible: false
     property real closePassThreshold: 30
-    property string flashColor: ""  // New property for flash color
+    property string flashColor: ""
 
     ConfigurationValue {
         id: highScore
@@ -186,7 +186,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: "black"  // Static black, no animation
+            color: "black"
         }
 
         Rectangle {
@@ -194,7 +194,7 @@ Item {
             anchors.fill: parent
             color: flashColor
             opacity: 0
-            z: 4  // Above all game elements except HUD
+            z: 4
             SequentialAnimation on opacity {
                 running: playerHit
                 NumberAnimation { from: 0.5; to: 0; duration: 500; easing.type: Easing.OutQuad }
@@ -221,12 +221,11 @@ Item {
             }
         }
 
-        Rectangle {
+        Image {
             id: player
-            width: 20
-            height: 20
-            color: "white"  // Static white, no animation
-            rotation: 45
+            width: 32  // Increased from 30 to 32
+            height: 32  // Increased from 30 to 32
+            source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
             z: 2
@@ -524,7 +523,7 @@ Item {
             if (obj.isAsteroid && isColliding(player, obj) && !invincible) {
                 lives--
                 playerHit = true
-                flashColor = "red"  // Red flash on impact
+                flashColor = "red"
                 invincible = true
                 obj.destroy()
                 feedback.play()
@@ -537,7 +536,7 @@ Item {
             if (!obj.isAsteroid && isColliding(player, obj)) {
                 lives++
                 playerHit = true
-                flashColor = "blue"  // Blue flash on power-up
+                flashColor = "blue"
                 obj.destroy()
                 continue
             }
@@ -611,7 +610,6 @@ Item {
         surviveText.font.pixelSize = 48
         surviveText.opacity = 0
         player.x = root.width / 2 - player.width / 2
-        player.color = "white"
 
         for (var i = objectContainer.children.length - 1; i >= 0; i--) {
             objectContainer.children[i].destroy()
