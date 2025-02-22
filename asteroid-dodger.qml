@@ -215,7 +215,7 @@ Item {
                 text: "●"
                 property real shade: 34/255 - Math.random() * (26/255)
                 color: Qt.rgba(shade, shade, shade, 1)
-                font.pixelSize: 24 + Math.random() * 16
+                font.pixelSize: 26 + Math.random() * 18
                 x: Math.random() * (root.width - width)
                 y: -height
             }
@@ -223,8 +223,8 @@ Item {
 
         Image {
             id: player
-            width: 32  // Increased from 30 to 32
-            height: 32  // Increased from 30 to 32
+            width: 32
+            height: 32
             source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
             x: root.width / 2 - width / 2
             y: root.height * 0.75 - height / 2
@@ -242,20 +242,29 @@ Item {
 
         Component {
             id: objectComponent
-            Text {
+            Item {
                 property bool isAsteroid: true
                 property bool passed: false
-                text: isAsteroid ? "*" : "!"
-                color: isAsteroid ? "gray" : "yellow"
-                font.pixelSize: 16
-                font.bold: !isAsteroid
+                width: isAsteroid ? 10 : 16  // Match SVG size for asteroids, Text size for power-ups
+                height: isAsteroid ? 10 : 16
                 x: Math.random() * (root.width - width)
                 y: -height
-                SequentialAnimation on color {
-                    running: isAsteroid
-                    loops: Animation.Infinite
-                    ColorAnimation { from: "gray"; to: "white"; duration: 500 + Math.random() * 1000; easing.type: Easing.InOutQuad }
-                    ColorAnimation { from: "white"; to: "gray"; duration: 500 + Math.random() * 1000; easing.type: Easing.InOutQuad }
+
+                Image {
+                    visible: isAsteroid
+                    width: 10
+                    height: 10
+                    source: "asteroid-dodger-star.svg"
+                    anchors.centerIn: parent
+                }
+
+                Text {
+                    visible: !isAsteroid
+                    text: "!"
+                    color: "yellow"
+                    font.pixelSize: 16
+                    font.bold: true
+                    anchors.centerIn: parent
                 }
             }
         }
