@@ -292,17 +292,32 @@ Item {
             }
         }
 
+        Text {
+            id: levelNumber
+            text: level
+            color: "#dddddd"  // Matches scoreText color
+            font.pixelSize: 14
+            font.bold: true
+            anchors {
+                bottom: levelProgressBar.top
+                horizontalCenter: parent.horizontalCenter
+                bottomMargin: 4  // 4px margin below the text, above progress bar
+            }
+            z: 2
+            visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+        }
+
         Rectangle {
             id: levelProgressBar
             width: 100
             height: 6
             radius: 3  // Pill-shaped
             color: "#8B6914"  // Dark gold background
-            opacity: 0.6
+            opacity: 0.5
             anchors {
                 top: parent.top
                 horizontalCenter: parent.horizontalCenter
-                margins: 14
+                margins: 22
             }
             z: 2
             visible: !gameOver && !calibrating && !showingNow && !showingSurvive
