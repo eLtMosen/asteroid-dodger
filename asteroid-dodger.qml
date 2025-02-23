@@ -292,70 +292,81 @@ Item {
                 visible: !calibrating && !showingNow && !showingSurvive
             }
 
-Item {
-    id: playerContainer
-    x: root.width / 2
-    y: root.height * 0.75
-    z: 2
-    visible: !calibrating && !showingNow && !showingSurvive
+            Item {
+                id: playerContainer
+                x: root.width / 2
+                y: root.height * 0.75
+                z: 2
+                visible: !calibrating && !showingNow && !showingSurvive
 
-    Image {
-        id: player
-        width: 36
-        height: 36
-        source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
-        anchors.centerIn: parent
-    }
+                Image {
+                    id: player
+                    width: 36
+                    height: 36
+                    source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
+                    anchors.centerIn: parent
 
-    Shape {
-        id: playerHitbox
-        width: 50 // Set to 50px
-        height: 50 // Set to 50px
-        anchors.centerIn: parent
-        visible: false // Debug off
+                    SequentialAnimation on opacity {
+                        running: invincible
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 1.0; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.2; to: 1.0; duration: 500; easing.type: Easing.InOutSine }
+                        onStopped: {
+                            player.opacity = 1.0 // Reset to full opacity when invincibility ends
+                        }
+                    }
+                    opacity: 1.0 // Default state
+                }
 
-        ShapePath {
-            strokeWidth: 0 // No visible outline
-            fillColor: "transparent"
-            startX: 25; startY: 0 // Adjusted for 50/2
-            PathLine { x: 50; y: 25 }
-            PathLine { x: 25; y: 50 }
-            PathLine { x: 0; y: 25 }
-            PathLine { x: 25; y: 0 } // Matches startX
-        }
-    }
+                Shape {
+                    id: playerHitbox
+                    width: 50
+                    height: 50
+                    anchors.centerIn: parent
+                    visible: false
 
-    Shape {
-        id: comboHitbox
-        width: 144
-        height: 144
-        anchors.centerIn: parent
-        visible: comboActive
+                    ShapePath {
+                        strokeWidth: 0
+                        fillColor: "transparent"
+                        startX: 25; startY: 0
+                        PathLine { x: 50; y: 25 }
+                        PathLine { x: 25; y: 50 }
+                        PathLine { x: 0; y: 25 }
+                        PathLine { x: 25; y: 0 }
+                    }
+                }
 
-        ShapePath {
-            strokeWidth: 2
-            strokeColor: "#00CC00"
-            fillColor: "transparent"
-            startX: 72; startY: 36
-            PathLine { x: 108; y: 72 }
-            PathLine { x: 72; y: 108 }
-            PathLine { x: 36; y: 72 }
-            PathLine { x: 72; y: 36 }
-        }
+                Shape {
+                    id: comboHitbox
+                    width: 144
+                    height: 144
+                    anchors.centerIn: parent
+                    visible: comboActive
 
-        SequentialAnimation on opacity {
-            id: comboHitboxAnimation
-            running: comboActive
-            loops: Animation.Infinite
-            NumberAnimation { from: 0.1; to: 0.3; duration: 500; easing.type: Easing.InOutSine }
-            NumberAnimation { from: 0.3; to: 0.1; duration: 500; easing.type: Easing.InOutSine }
-            onStopped: {
-                comboHitbox.opacity = 0
+                    ShapePath {
+                        strokeWidth: 2
+                        strokeColor: "#00CC00"
+                        fillColor: "transparent"
+                        startX: 72; startY: 36
+                        PathLine { x: 108; y: 72 }
+                        PathLine { x: 72; y: 108 }
+                        PathLine { x: 36; y: 72 }
+                        PathLine { x: 72; y: 36 }
+                    }
+
+                    SequentialAnimation on opacity {
+                        id: comboHitboxAnimation
+                        running: comboActive
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.1; to: 0.3; duration: 500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.3; to: 0.1; duration: 500; easing.type: Easing.InOutSine }
+                        onStopped: {
+                            comboHitbox.opacity = 0
+                        }
+                    }
+                    opacity: 0
+                }
             }
-        }
-        opacity: 0
-    }
-}
 
             Item {
                 id: objectContainer
