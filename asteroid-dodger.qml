@@ -28,7 +28,7 @@ Item {
     anchors.fill: parent
     visible: true
 
-    property real scrollSpeed: 2
+    property real scrollSpeed: 1.6
     property int basePlayerSpeed: 1
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
@@ -36,7 +36,7 @@ Item {
     property int lives: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.045 + (level - 1) * 0.005
+    property real asteroidDensity: 0.044 + (level - 1) * 0.002
     property real largeAsteroidDensity: asteroidDensity / 2
     property bool gameOver: false
     property bool playerHit: false
@@ -754,7 +754,7 @@ Item {
         }
 
         if (Math.random() < asteroidDensity) {
-            var isAsteroid = Math.random() < 0.9
+            var isAsteroid = Math.random() < 0.96
             objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid})
         }
     }
@@ -769,7 +769,7 @@ Item {
     function levelUp() {
         asteroidCount = 0
         level++
-        scrollSpeed += 0.01
+        scrollSpeed += 0.1
         flashColor = "#8B6914"
     }
 
@@ -778,8 +778,8 @@ Item {
         lives = 2
         level = 1
         asteroidCount = 0
-        scrollSpeed = 2
-        asteroidDensity = 0.045
+        scrollSpeed = 1.6
+        asteroidDensity = 0.044
         gameOver = false
         paused = false
         playerHit = false
