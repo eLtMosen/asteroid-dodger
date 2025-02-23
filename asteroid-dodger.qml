@@ -361,7 +361,7 @@ Item {
                     color: "green"
                     radius: height / 2
                     x: (scoreText.width - width) / 2
-                    y: -height +3 // Positioned just above scoreText, 5 pixels gap
+                    y: -height + 3
                     SequentialAnimation {
                         id: comboMeterAnimation
                         running: comboActive && !paused
@@ -752,7 +752,7 @@ Item {
                     comboActive = true
                     comboTimer.restart()
                     comboMeterAnimation.restart()
-                    score += basePoints * Math.pow(2, comboCount - 1)
+                    score += basePoints * comboCount // Linear growth: 2, 4, 6, 8, 10, etc.
                 } else {
                     score += basePoints
                 }
@@ -760,7 +760,7 @@ Item {
                 var particle = scoreParticleComponent.createObject(gameArea, {
                     "x": obj.x,
                     "y": obj.y,
-                    "points": distance <= closePassThreshold ? basePoints * Math.pow(2, comboCount - 1) : basePoints
+                    "points": distance <= closePassThreshold ? basePoints * comboCount : basePoints
                 })
 
                 if (asteroidCount >= asteroidsPerLevel) {
