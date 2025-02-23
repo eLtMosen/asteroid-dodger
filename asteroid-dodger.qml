@@ -22,6 +22,7 @@ import QtSensors 5.15
 import Nemo.Ngf 1.0
 import Nemo.Configuration 1.0
 import QtGraphicalEffects 1.15
+import QtQuick.Shapes 1.15
 
 Item {
     id: root
@@ -47,7 +48,7 @@ Item {
     property real baselineX: 0
     property int calibrationTimer: 5
     property bool invincible: false
-    property real closePassThreshold: 40
+    property real closePassThreshold: 36
     property string flashColor: ""
     property int comboCount: 0
     property real lastDodgeTime: 0
@@ -251,15 +252,38 @@ Item {
                 visible: !calibrating && !showingNow && !showingSurvive
             }
 
-            Image {
-                id: player
-                width: 34
-                height: 34
-                source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
-                x: root.width / 2 - width / 2
-                y: root.height * 0.75 - height / 2
+            Item {
+                id: playerContainer
+                x: root.width / 2
+                y: root.height * 0.75
                 z: 2
                 visible: !calibrating && !showingNow && !showingSurvive
+
+                Image {
+                    id: player
+                    width: 36
+                    height: 36
+                    source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
+                    anchors.centerIn: parent
+                }
+
+                Shape {
+                    id: playerHitbox
+                    width: 36
+                    height: 36
+                    anchors.centerIn: parent
+                    visible: false
+
+                    ShapePath {
+                        strokeWidth: 0
+                        fillColor: "transparent"
+                        startX: 17; startY: 0
+                        PathLine { x: 36; y: 18 }
+                        PathLine { x: 18; y: 36 }
+                        PathLine { x: 0; y: 18 }
+                        PathLine { x: 18; y: 0 }
+                    }
+                }
             }
 
             Item {
@@ -319,13 +343,13 @@ Item {
                 Binding {
                     target: scoreArea
                     property: "x"
-                    value: player.x + player.width / 2 - scoreText.width / 2
+                    value: playerContainer.x + playerContainer.width / 2 - scoreText.width / 2
                     when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
                 }
                 Binding {
                     target: scoreArea
                     property: "y"
-                    value: player.y + player.height + 5
+                    value: playerContainer.y + playerContainer.height + 20
                     when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
                 }
 
@@ -337,7 +361,7 @@ Item {
                     color: "green"
                     radius: height / 2
                     x: (scoreText.width - width) / 2
-                    y: -height + 2
+                    y: -height +3 // Positioned just above scoreText, 5 pixels gap
                     SequentialAnimation {
                         id: comboMeterAnimation
                         running: comboActive && !paused
@@ -502,72 +526,72 @@ Item {
                     Row {
                         spacing: 8
                         Text {
-                            text: "Score";  // Removed colon
-                            color: "#dddddd";
-                            font.pixelSize: 16;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: "Score"
+                            color: "#dddddd"
+                            font.pixelSize: 16
+                            horizontalAlignment: Text.AlignHCenter
                             width: 80
                         }
                         Text {
-                            text: score;
-                            color: "white";
-                            font.pixelSize: 18;
-                            font.bold: true;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: score
+                            color: "white"
+                            font.pixelSize: 18
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
                             width: 40
                         }
                     }
                     Row {
                         spacing: 8
                         Text {
-                            text: "Level";
-                            color: "#dddddd";
-                            font.pixelSize: 16;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: "Level"
+                            color: "#dddddd"
+                            font.pixelSize: 16
+                            horizontalAlignment: Text.AlignHCenter
                             width: 80
                         }
                         Text {
-                            text: level;
-                            color: "white";
-                            font.pixelSize: 18;
-                            font.bold: true;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: level
+                            color: "white"
+                            font.pixelSize: 18
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
                             width: 40
                         }
                     }
                     Row {
                         spacing: 8
                         Text {
-                            text: "High Score";  // Removed colon
-                            color: "#dddddd";
-                            font.pixelSize: 16;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: "High Score"
+                            color: "#dddddd"
+                            font.pixelSize: 16
+                            horizontalAlignment: Text.AlignHCenter
                             width: 80
                         }
                         Text {
-                            text: highScore.value;
-                            color: "white";
-                            font.pixelSize: 18;
-                            font.bold: true;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: highScore.value
+                            color: "white"
+                            font.pixelSize: 18
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
                             width: 40
                         }
                     }
                     Row {
                         spacing: 8
                         Text {
-                            text: "Max Level";  // Removed colon
-                            color: "#dddddd";
-                            font.pixelSize: 16;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: "Max Level"
+                            color: "#dddddd"
+                            font.pixelSize: 16
+                            horizontalAlignment: Text.AlignHCenter
                             width: 80
                         }
                         Text {
-                            text: highLevel.value;
-                            color: "white";
-                            font.pixelSize: 18;
-                            font.bold: true;
-                            horizontalAlignment: Text.AlignHCenter;
+                            text: highLevel.value
+                            color: "white"
+                            font.pixelSize: 18
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
                             width: 40
                         }
                     }
@@ -587,7 +611,7 @@ Item {
                         text: "Die Again"
                         color: "white"
                         font.pixelSize: 20
-                        font.bold: true;
+                        font.bold: true
                         anchors.centerIn: parent
                     }
 
@@ -654,8 +678,8 @@ Item {
             onReadingChanged: {
                 if (!gameOver && !paused && !calibrating && !showingNow && !showingSurvive) {
                     var deltaX = (accelerometer.reading.x - baselineX) * -2
-                    var newX = player.x + deltaX * playerSpeed
-                    player.x = Math.max(0, Math.min(root.width - player.width, newX))
+                    var newX = playerContainer.x + deltaX * playerSpeed
+                    playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
                 }
             }
         }
@@ -682,7 +706,7 @@ Item {
             var obj = objectContainer.children[i]
             obj.y += scrollSpeed
 
-            if (obj.isAsteroid && isColliding(player, obj) && !invincible) {
+            if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
                 lives--
                 playerHit = true
                 flashColor = "red"
@@ -699,7 +723,7 @@ Item {
                 continue
             }
 
-            if (!obj.isAsteroid && isColliding(player, obj)) {
+            if (!obj.isAsteroid && isColliding(playerHitbox, obj)) {
                 lives++
                 playerHit = true
                 flashColor = "blue"
@@ -711,10 +735,10 @@ Item {
                 continue
             }
 
-            if (obj.isAsteroid && obj.y > player.y + player.height && !obj.passed) {
+            if (obj.isAsteroid && obj.y > playerContainer.y + player.height && !obj.passed) {
                 asteroidCount++
                 obj.passed = true
-                var distance = Math.abs((obj.x + obj.width / 2) - (player.x + player.width / 2))
+                var distance = Math.abs((obj.x + obj.width / 2) - (playerContainer.x + player.width / 2))
                 var basePoints = distance <= closePassThreshold ? 2 : 1
                 var currentTime = Date.now()
 
@@ -759,11 +783,18 @@ Item {
         }
     }
 
-    function isColliding(rect, text) {
-        return (rect.x < text.x + text.width &&
-                rect.x + rect.width > text.x &&
-                rect.y < text.y + text.height &&
-                rect.y + rect.height > text.y)
+    function isColliding(hitbox, asteroid) {
+        var hitboxX = hitbox.x + playerContainer.x
+        var hitboxY = hitbox.y + playerContainer.y
+        var halfSize = hitbox.width / 2
+
+        var asteroidCenterX = asteroid.x + asteroid.width / 2
+        var asteroidCenterY = asteroid.y + asteroid.height / 2
+
+        var dx = asteroidCenterX - (hitboxX + halfSize)
+        var dy = asteroidCenterY - (hitboxY + halfSize)
+
+        return (Math.abs(dx) + Math.abs(dy) <= halfSize)
     }
 
     function levelUp() {
@@ -797,7 +828,7 @@ Item {
         nowText.opacity = 0
         surviveText.font.pixelSize = 48
         surviveText.opacity = 0
-        player.x = root.width / 2 - player.width / 2
+        playerContainer.x = root.width / 2 - player.width / 2
         gameOverScreen.opacity = 0
 
         for (var i = objectContainer.children.length - 1; i >= 0; i--) {
