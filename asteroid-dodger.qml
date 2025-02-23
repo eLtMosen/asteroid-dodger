@@ -329,6 +329,7 @@ Item {
                     source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
                     anchors.centerIn: parent
 
+                    // Invincibility fade
                     SequentialAnimation on opacity {
                         running: invincible
                         loops: Animation.Infinite
@@ -339,6 +340,24 @@ Item {
                         }
                     }
                     opacity: 1.0
+
+                    // Speed boost wobble
+                    SequentialAnimation on rotation {
+                        running: speedBoostTimer.running
+                        loops: Animation.Infinite
+                        NumberAnimation { from: -5; to: 5; duration: 200; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 5; to: -5; duration: 200; easing.type: Easing.InOutSine }
+                        onStopped: {
+                            player.rotation = 0
+                        }
+                    }
+
+                    ColorOverlay {
+                        anchors.fill: parent
+                        source: player
+                        color: "#FFFF0080" // Yellow tint with 50% opacity
+                        visible: speedBoostTimer.running // Show only when active
+                    }
                 }
 
                 Shape {
@@ -872,10 +891,6 @@ Item {
             }
         }
 
-        if (scoreMultiplierTimer.running) {
-            scoreMultiplierElapsed += gameTimer.interval / 1000
-        }
-
         if (Math.random() < largeAsteroidDensity / 2) {
             largeAsteroidComponent.createObject(largeAsteroidContainer)
         }
@@ -885,15 +900,15 @@ Item {
             objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid, isPowerup: !isAsteroid})
         }
 
-        if (Math.random() < 0.002) {
+        if (Math.random() < 0.0001) {
             objectComponent.createObject(objectContainer, {isAsteroid: false, isInvincibility: true})
         }
 
-        if (Math.random() < 0.0015) { // Your halved rate
+        if (Math.random() < 0.0005) {
             objectComponent.createObject(objectContainer, {isAsteroid: false, isSpeedBoost: true})
         }
 
-        if (Math.random() < 0.0005) { // Your halved rate
+        if (Math.random() < 0.0005) {
             objectComponent.createObject(objectContainer, {isAsteroid: false, isScoreMultiplier: true})
         }
     }
