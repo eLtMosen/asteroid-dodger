@@ -48,7 +48,7 @@ Item {
     property real baselineX: 0
     property int calibrationTimer: 5
     property bool invincible: false
-    property real closePassThreshold: 36
+    property real closePassThreshold: 36 // Kept for reference, not used
     property string flashColor: ""
     property int comboCount: 0
     property real lastDodgeTime: 0
@@ -296,6 +296,33 @@ Item {
                         PathLine { x: 0; y: 18 }
                         PathLine { x: 18; y: 0 }
                     }
+                }
+
+                Shape {
+                    id: comboHitbox
+                    width: 144
+                    height: 144
+                    anchors.centerIn: parent
+                    visible: comboActive // Only show when combo is active
+
+                    ShapePath {
+                        strokeWidth: 2
+                        strokeColor: "#00CC00" // Green to match combo theme
+                        fillColor: "transparent"
+                        startX: 72; startY: 36
+                        PathLine { x: 108; y: 72 }
+                        PathLine { x: 72; y: 108 }
+                        PathLine { x: 36; y: 72 }
+                        PathLine { x: 72; y: 36 }
+                    }
+
+                    SequentialAnimation on opacity {
+                        running: comboActive
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.1; to: 0.3; duration: 500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.3; to: 0.1; duration: 500; easing.type: Easing.InOutSine }
+                    }
+                    opacity: 0 // Default to 0 when not animating
                 }
             }
 
@@ -741,14 +768,14 @@ Item {
                 continue
             }
 
-            if (obj.isAsteroid && (obj.y + obj.height / 2) > playerContainer.y && !obj.passed) {
+            if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                 asteroidCount++
                 obj.passed = true
-                var distance = Math.abs((obj.x + obj.width / 2) - (playerContainer.x + player.width / 2))
-                var basePoints = distance <= closePassThreshold ? 2 : 1
+                var isCombo = isColliding(comboHitbox, obj)
+                var basePoints = isCombo ? 2 : 1
                 var currentTime = Date.now()
 
-                if (distance <= closePassThreshold) {
+                if (isCombo) {
                     if (currentTime - lastDodgeTime <= 2000) {
                         comboCount++
                     } else {
@@ -795,18 +822,21 @@ Item {
         }
     }
 
-    function isColliding(hitbox, asteroid) {
-        var hitboxX = hitbox.x + playerContainer.x
-        var hitboxY = hitbox.y + playerContainer.y
-        var halfSize = hitbox.width / 2
+    function isColliding(hitbox, obj) {
+        // Adjusted to use the hitbox's center correctly
+        var hitboxCenterX = hitbox.x + playerContainer.x + hitbox.width / 2
+        var hitboxCenterY = hitbox.y + playerContainer.y + hitbox.height / 2
+        var halfWidth = hitbox.width / 2
+        var halfHeight = hitbox.height / 2
 
-        var asteroidCenterX = asteroid.x + asteroid.width / 2
-        var asteroidCenterY = asteroid.y + asteroid.height / 2
+        var objCenterX = obj.x + obj.width / 2
+        var objCenterY = obj.y + obj.height / 2
 
-        var dx = asteroidCenterX - (hitboxX + halfSize)
-        var dy = asteroidCenterY - (hitboxY + halfSize)
+        var dx = Math.abs(objCenterX - hitboxCenterX)
+        var dy = Math.abs(objCenterY - hitboxCenterY)
 
-        return (Math.abs(dx) + Math.abs(dy) <= halfSize)
+        // Manhattan distance for diamond shape
+        return (dx / halfWidth + dy / halfHeight) <= 1
     }
 
     function levelUp() {
