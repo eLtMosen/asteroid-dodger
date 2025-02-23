@@ -55,6 +55,7 @@ Item {
     property bool comboActive: false
     property real scoreMultiplier: 1.0
     property real scoreMultiplierElapsed: 0
+    property real preSlowSpeed: 0 // Temporary storage for slow motion
 
     onPausedChanged: {
         if (paused && comboActive) {
@@ -123,6 +124,17 @@ Item {
     }
 
     Timer {
+        id: slowMoFlashTimer
+        interval: 4000
+        running: flashColor === "#00FFFF"
+        repeat: false
+        onTriggered: {
+            flashColor = ""
+            flashOverlay.opacity = 0
+        }
+    }
+
+    Timer {
         id: graceTimer
         interval: 1000
         running: invincible
@@ -144,12 +156,22 @@ Item {
 
     Timer {
         id: scoreMultiplierTimer
-        interval: 10000 // 10 seconds as per your tweak
+        interval: 10000
         running: false
         repeat: false
         onTriggered: {
             scoreMultiplier = 1.0
             scoreMultiplierElapsed = 0
+        }
+    }
+
+    Timer {
+        id: slowMoTimer
+        interval: 4000
+        running: false
+        repeat: false
+        onTriggered: {
+            scrollSpeed = preSlowSpeed
         }
     }
 
@@ -269,6 +291,16 @@ Item {
         }
     }
 
+    Component {
+        id: shrinkAnimationComponent
+        ParallelAnimation {
+            NumberAnimation { target: player; property: "width"; to: 36; duration: 8000; easing.type: Easing.Linear }
+            NumberAnimation { target: player; property: "height"; to: 36; duration: 8000; easing.type: Easing.Linear }
+            NumberAnimation { target: playerHitbox; property: "width"; to: 50; duration: 8000; easing.type: Easing.Linear }
+            NumberAnimation { target: playerHitbox; property: "height"; to: 50; duration: 8000; easing.type: Easing.Linear }
+        }
+    }
+
     Item {
         id: gameArea
         anchors.fill: parent
@@ -297,11 +329,11 @@ Item {
                 opacity: 0
                 z: 4
                 SequentialAnimation on opacity {
-                    running: playerHit || flashColor === "#8B6914"
+                    running: playerHit || flashColor === "#8B6914" || flashColor === "#00FFFF"
                     NumberAnimation {
                         from: 0.5
                         to: 0
-                        duration: flashColor === "#8B6914" ? 4000 : 500
+                        duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 4000 : 500
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -329,7 +361,6 @@ Item {
                     source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
                     anchors.centerIn: parent
 
-                    // Invincibility fade
                     SequentialAnimation on opacity {
                         running: invincible
                         loops: Animation.Infinite
@@ -341,7 +372,6 @@ Item {
                     }
                     opacity: 1.0
 
-                    // Speed boost wobble
                     SequentialAnimation on rotation {
                         running: speedBoostTimer.running
                         loops: Animation.Infinite
@@ -355,8 +385,8 @@ Item {
                     ColorOverlay {
                         anchors.fill: parent
                         source: player
-                        color: "#FFFF0080" // Yellow tint with 50% opacity
-                        visible: speedBoostTimer.running // Show only when active
+                        color: "#FFFF0080"
+                        visible: speedBoostTimer.running
                     }
                 }
 
@@ -482,7 +512,7 @@ Item {
                     property int maxWidth: scoreText.width * 1.5
                     height: 3
                     width: 0
-                    color: "green" // Already green
+                    color: "green"
                     radius: height / 2
                     x: (scoreText.width - width) / 2
                     y: -height + 3
@@ -514,7 +544,7 @@ Item {
                 Text {
                     id: scoreText
                     text: score
-                    color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd" // Green when active, was #800080
+                    color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd"
                     font.pixelSize: 18
                     font.bold: scoreMultiplierTimer.running
                 }
@@ -718,6 +748,8 @@ Item {
                 property bool isInvincibility: false
                 property bool isSpeedBoost: false
                 property bool isScoreMultiplier: false
+                property bool isShrink: false
+                property bool isSlowMo: false
                 property bool passed: false
                 width: isAsteroid ? 10 : 18
                 height: isAsteroid ? 10 : 18
@@ -738,7 +770,9 @@ Item {
                     color: {
                         if (isInvincibility) return "#FF69B4"
                         if (isSpeedBoost) return "#FFFF00"
-                        if (isScoreMultiplier) return "#00CC00" // Changed from #800080 to green
+                        if (isScoreMultiplier) return "#00CC00"
+                        if (isShrink) return "#FFA500"
+                        if (isSlowMo) return "#00FFFF"
                         return "#0087ff"
                     }
                     font.pixelSize: 18
@@ -847,6 +881,35 @@ Item {
                 continue
             }
 
+            if (obj.isShrink && isColliding(playerHitbox, obj)) {
+                player.width = 18
+                player.height = 18
+                playerHitbox.width = 25
+                playerHitbox.height = 25
+                playerHit = true
+                flashColor = "#FFA500"
+                comboCount = 0
+                comboActive = false
+                comboTimer.stop()
+                comboMeterAnimation.stop()
+                shrinkAnimationComponent.createObject(root).start()
+                obj.destroy()
+                continue
+            }
+
+            if (obj.isSlowMo && isColliding(playerHitbox, obj)) {
+                preSlowSpeed = scrollSpeed
+                scrollSpeed = scrollSpeed / 2
+                slowMoTimer.restart()
+                flashColor = "#00FFFF"
+                comboCount = 0
+                comboActive = false
+                comboTimer.stop()
+                comboMeterAnimation.stop()
+                obj.destroy()
+                continue
+            }
+
             if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                 asteroidCount++
                 obj.passed = true
@@ -891,6 +954,10 @@ Item {
             }
         }
 
+        if (scoreMultiplierTimer.running) {
+            scoreMultiplierElapsed += gameTimer.interval / 1000
+        }
+
         if (Math.random() < largeAsteroidDensity / 2) {
             largeAsteroidComponent.createObject(largeAsteroidContainer)
         }
@@ -910,6 +977,14 @@ Item {
 
         if (Math.random() < 0.0005) {
             objectComponent.createObject(objectContainer, {isAsteroid: false, isScoreMultiplier: true})
+        }
+
+        if (Math.random() < 0.0005) {
+            objectComponent.createObject(objectContainer, {isAsteroid: false, isShrink: true})
+        }
+
+        if (Math.random() < 0.0003) {
+            objectComponent.createObject(objectContainer, {isAsteroid: false, isSlowMo: true})
         }
     }
 
@@ -956,6 +1031,7 @@ Item {
         lastDodgeTime = 0
         scoreMultiplier = 1.0
         scoreMultiplierElapsed = 0
+        preSlowSpeed = 0
         nowText.font.pixelSize = 48
         nowText.opacity = 0
         surviveText.font.pixelSize = 48

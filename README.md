@@ -17,7 +17,13 @@ Features:
 - Asteroids sparkle from grey to white to simulate spinning
 - Accelerometer control of the X-Axis for horizontal movement
 - Player opacity blinks when hit to indicate 1 second invincible grace period
-- Power-up potions in blue for additional lives and pink for 4 seconds of invincibility
+- Power-up potions in 
+	blue for additional lives
+	pink for 4 seconds of invincibility
+	yellow for 4 sec speed boost
+	green for 2x score multiplyer over 10 seconds
+	cyan for 4 seconds freeze slow down of the playfield
+	orange for player shrink to 50% and grow back to original size in 8 seconds
 - Game can be paused by taping the screen
 - Calibration start screen to ensure accelerometer values relative to a comfortable device position
 - Game intro screen following the calibration as transition into the game
