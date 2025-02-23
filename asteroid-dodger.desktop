@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Asteroid Dodger
+Exec=asteroid-dodger
+Icon=asteroid-dodger
+X-Asteroid-Needs-Repaint=true
+Comment=A fun dodging game for AsteroidOS

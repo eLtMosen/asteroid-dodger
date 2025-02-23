@@ -1,0 +1,6 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/">
+    <file>asteroid-dodger.qml</file>
+</qresource>
+</RCC>
