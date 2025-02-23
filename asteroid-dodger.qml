@@ -62,6 +62,17 @@ Item {
         }
     }
 
+    onGameOverChanged: {
+        if (gameOver) {
+            if (score > highScore.value) {
+                highScore.value = score
+            }
+            if (level > highLevel.value) {
+                highLevel.value = level
+            }
+        }
+    }
+
     ConfigurationValue {
         id: highScore
         key: "/asteroid-dodger/highScore"
@@ -585,75 +596,23 @@ Item {
 
                     Row {
                         spacing: 8
-                        Text {
-                            text: "Score"
-                            color: "#dddddd"
-                            font.pixelSize: 16
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 80
-                        }
-                        Text {
-                            text: score
-                            color: "white"
-                            font.pixelSize: 18
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 40
-                        }
+                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: score; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
                         spacing: 8
-                        Text {
-                            text: "Level"
-                            color: "#dddddd"
-                            font.pixelSize: 16
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 80
-                        }
-                        Text {
-                            text: level
-                            color: "white"
-                            font.pixelSize: 18
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 40
-                        }
+                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: level; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
                         spacing: 8
-                        Text {
-                            text: "High Score"
-                            color: "#dddddd"
-                            font.pixelSize: 16
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 80
-                        }
-                        Text {
-                            text: highScore.value
-                            color: "white"
-                            font.pixelSize: 18
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 40
-                        }
+                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highScore.value; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
                         spacing: 8
-                        Text {
-                            text: "Max Level"
-                            color: "#dddddd"
-                            font.pixelSize: 16
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 80
-                        }
-                        Text {
-                            text: highLevel.value
-                            color: "white"
-                            font.pixelSize: 18
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            width: 40
-                        }
+                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highLevel.value; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
                     }
                 }
 
@@ -678,13 +637,7 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            if (score > highScore.value) {
-                                highScore.value = score
-                            }
-                            if (level > highLevel.value) {
-                                highLevel.value = level
-                            }
-                            restartGame()
+                            restartGame() // No need to save here anymore
                         }
                     }
                 }
