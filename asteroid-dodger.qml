@@ -53,6 +53,7 @@ Item {
     property int comboCount: 0
     property real lastDodgeTime: 0
     property bool comboActive: false
+    property real scoreMultiplier: 1.0 // Default multiplier
 
     onPausedChanged: {
         if (paused && comboActive) {
@@ -189,6 +190,26 @@ Item {
             var deltaX = (accelerometer.reading.x - baselineX) * -2
             var newX = playerContainer.x + deltaX * playerSpeed
             playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
+        }
+    }
+
+    Timer {
+        id: speedBoostTimer
+        interval: 3000 // 3 seconds
+        running: false
+        repeat: false
+        onTriggered: {
+            playerSpeed = basePlayerSpeed // Reset to normal
+        }
+    }
+
+    Timer {
+        id: scoreMultiplierTimer
+        interval: 6000 // 6 seconds
+        running: false
+        repeat: false
+        onTriggered: {
+            scoreMultiplier = 1.0 // Reset to normal
         }
     }
 
@@ -671,8 +692,10 @@ Item {
             id: objectComponent
             Item {
                 property bool isAsteroid: true
-                property bool isPowerup: false // Life power-up
-                property bool isInvincibility: false // New invincibility power-up
+                property bool isPowerup: false // Life
+                property bool isInvincibility: false // Invincibility
+                property bool isSpeedBoost: false // Speed boost
+                property bool isScoreMultiplier: false // Score multiplier
                 property bool passed: false
                 width: isAsteroid ? 10 : 18
                 height: isAsteroid ? 10 : 18
@@ -690,7 +713,12 @@ Item {
                 Text {
                     visible: !isAsteroid
                     text: "!"
-                    color: isInvincibility ? "#FF69B4" : "#0087ff" // Pink for invincibility, blue for life
+                    color: {
+                        if (isInvincibility) return "#FF69B4" // Pink
+                        if (isSpeedBoost) return "#FFFF00" // Yellow
+                        if (isScoreMultiplier) return "#800080" // Purple
+                        return "#0087ff" // Blue for life
+                    }
                     font.pixelSize: 18
                     font.bold: true
                     anchors.centerIn: parent
@@ -734,7 +762,7 @@ Item {
                 comboTimer.stop()
                 comboMeterAnimation.stop()
                 invincible = true
-                graceTimer.interval = 1000 // Reset to default for collision
+                graceTimer.interval = 1000
                 graceTimer.restart()
                 obj.destroy()
                 feedback.play()
@@ -758,10 +786,36 @@ Item {
 
             if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
                 invincible = true
-                graceTimer.interval = 4000 // 4 seconds for invincibility power-up
+                graceTimer.interval = 4000
                 graceTimer.restart()
                 playerHit = true
-                flashColor = "#FF69B4" // Pink flash to match
+                flashColor = "#FF69B4"
+                comboCount = 0
+                comboActive = false
+                comboTimer.stop()
+                comboMeterAnimation.stop()
+                obj.destroy()
+                continue
+            }
+
+            if (obj.isSpeedBoost && isColliding(playerHitbox, obj)) {
+                playerSpeed = basePlayerSpeed * 2
+                speedBoostTimer.restart()
+                playerHit = true
+                flashColor = "#FFFF00"
+                comboCount = 0
+                comboActive = false
+                comboTimer.stop()
+                comboMeterAnimation.stop()
+                obj.destroy()
+                continue
+            }
+
+            if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
+                scoreMultiplier = 2.0
+                scoreMultiplierTimer.restart()
+                playerHit = true
+                flashColor = "#800080"
                 comboCount = 0
                 comboActive = false
                 comboTimer.stop()
@@ -787,19 +841,19 @@ Item {
                     comboActive = true
                     comboTimer.restart()
                     comboMeterAnimation.restart()
-                    score += basePoints * comboCount
+                    score += basePoints * comboCount * scoreMultiplier
                     var particle = scoreParticleComponent.createObject(gameArea, {
                         "x": obj.x,
                         "y": playerContainer.y,
-                        "points": basePoints * comboCount,
+                        "points": basePoints * comboCount * scoreMultiplier,
                         "isCombo": true
                     })
                 } else {
-                    score += basePoints
+                    score += basePoints * scoreMultiplier
                     var particle = scoreParticleComponent.createObject(gameArea, {
                         "x": obj.x,
                         "y": playerContainer.y,
-                        "points": basePoints,
+                        "points": basePoints * scoreMultiplier,
                         "isCombo": false
                     })
                 }
@@ -823,8 +877,16 @@ Item {
             objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid, isPowerup: !isAsteroid})
         }
 
-        if (Math.random() < 0.0004) { // Invincibility power-up spawn rate
+        if (Math.random() < 0.0006) {
             objectComponent.createObject(objectContainer, {isAsteroid: false, isInvincibility: true})
+        }
+
+        if (Math.random() < 0.003) { // 0.3% chance
+            objectComponent.createObject(objectContainer, {isAsteroid: false, isSpeedBoost: true})
+        }
+
+        if (Math.random() < 0.001) { // 0.1% chance
+            objectComponent.createObject(objectContainer, {isAsteroid: false, isScoreMultiplier: true})
         }
     }
 
