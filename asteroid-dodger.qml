@@ -175,8 +175,9 @@ Item {
         Text {
             id: particleText
             property int points: 1
+            property bool isCombo: false
             text: "+" + points
-            color: points === 1 ? "#FFD700" : "#00CC00"
+            color: isCombo ? "#00CC00" : "#FFD700"
             font.pixelSize: 16
             z: 3
             opacity: 1
@@ -195,9 +196,9 @@ Item {
                 ParallelAnimation {
                     NumberAnimation {
                         target: particleText
-                        property: "y"
-                        from: y - 2
-                        to: y + 40
+                        property: isCombo ? "x" : "y"
+                        from: isCombo ? x : (y - 2)
+                        to: isCombo ? (x + (x < playerContainer.x ? -80 : 80)) : (y + 40)
                         duration: 900
                         easing.type: Easing.InQuad
                     }
@@ -740,7 +741,7 @@ Item {
                 continue
             }
 
-            if (obj.isAsteroid && obj.y > playerContainer.y + player.height && !obj.passed) {
+            if (obj.isAsteroid && (obj.y + obj.height / 2) > playerContainer.y && !obj.passed) {
                 asteroidCount++
                 obj.passed = true
                 var distance = Math.abs((obj.x + obj.width / 2) - (playerContainer.x + player.width / 2))
@@ -758,15 +759,21 @@ Item {
                     comboTimer.restart()
                     comboMeterAnimation.restart()
                     score += basePoints * comboCount
+                    var particle = scoreParticleComponent.createObject(gameArea, {
+                        "x": obj.x,
+                        "y": playerContainer.y,
+                        "points": basePoints * comboCount,
+                        "isCombo": true
+                    })
                 } else {
                     score += basePoints
+                    var particle = scoreParticleComponent.createObject(gameArea, {
+                        "x": obj.x,
+                        "y": playerContainer.y,
+                        "points": basePoints,
+                        "isCombo": false
+                    })
                 }
-
-                var particle = scoreParticleComponent.createObject(gameArea, {
-                    "x": obj.x,
-                    "y": obj.y,
-                    "points": distance <= closePassThreshold ? basePoints * comboCount : basePoints
-                })
 
                 if (asteroidCount >= asteroidsPerLevel) {
                     levelUp()
