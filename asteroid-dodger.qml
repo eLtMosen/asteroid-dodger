@@ -53,7 +53,8 @@ Item {
     property int comboCount: 0
     property real lastDodgeTime: 0
     property bool comboActive: false
-    property real scoreMultiplier: 1.0 // Default multiplier
+    property real scoreMultiplier: 1.0
+    property real scoreMultiplierElapsed: 0
 
     onPausedChanged: {
         if (paused && comboActive) {
@@ -102,7 +103,7 @@ Item {
     Timer {
         id: flashTimer
         interval: Math.max(500, 2000 / lives)
-        running: playerHit // Only runs for playerHit (red or blue flashes)
+        running: playerHit
         onTriggered: {
             playerHit = false
             flashColor = ""
@@ -112,7 +113,7 @@ Item {
 
     Timer {
         id: levelFlashTimer
-        interval: 4000 // 4x the typical 1000ms
+        interval: 4000
         running: flashColor === "#8B6914"
         repeat: false
         onTriggered: {
@@ -128,6 +129,27 @@ Item {
         repeat: false
         onTriggered: {
             invincible = false
+        }
+    }
+
+    Timer {
+        id: speedBoostTimer
+        interval: 3000
+        running: false
+        repeat: false
+        onTriggered: {
+            playerSpeed = basePlayerSpeed
+        }
+    }
+
+    Timer {
+        id: scoreMultiplierTimer
+        interval: 10000 // 10 seconds as per your tweak
+        running: false
+        repeat: false
+        onTriggered: {
+            scoreMultiplier = 1.0
+            scoreMultiplierElapsed = 0
         }
     }
 
@@ -183,33 +205,13 @@ Item {
 
     Timer {
         id: accelerometerTimer
-        interval: 12 // 80 Hz (~12.5ms, rounded to 12)
+        interval: 12
         running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
         repeat: true
         onTriggered: {
             var deltaX = (accelerometer.reading.x - baselineX) * -2
             var newX = playerContainer.x + deltaX * playerSpeed
             playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
-        }
-    }
-
-    Timer {
-        id: speedBoostTimer
-        interval: 3000 // 3 seconds
-        running: false
-        repeat: false
-        onTriggered: {
-            playerSpeed = basePlayerSpeed // Reset to normal
-        }
-    }
-
-    Timer {
-        id: scoreMultiplierTimer
-        interval: 6000 // 6 seconds
-        running: false
-        repeat: false
-        onTriggered: {
-            scoreMultiplier = 1.0 // Reset to normal
         }
     }
 
@@ -297,9 +299,9 @@ Item {
                 SequentialAnimation on opacity {
                     running: playerHit || flashColor === "#8B6914"
                     NumberAnimation {
-                        from: 0.5;
-                        to: 0;
-                        duration: flashColor === "#8B6914" ? 4000 : 500 // Match levelFlashTimer
+                        from: 0.5
+                        to: 0
+                        duration: flashColor === "#8B6914" ? 4000 : 500
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -333,10 +335,10 @@ Item {
                         NumberAnimation { from: 1.0; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 0.2; to: 1.0; duration: 500; easing.type: Easing.InOutSine }
                         onStopped: {
-                            player.opacity = 1.0 // Reset to full opacity when invincibility ends
+                            player.opacity = 1.0
                         }
                     }
-                    opacity: 1.0 // Default state
+                    opacity: 1.0
                 }
 
                 Shape {
@@ -493,8 +495,9 @@ Item {
                 Text {
                     id: scoreText
                     text: score
-                    color: "#dddddd"
+                    color: scoreMultiplierTimer.running ? "#800080" : "#dddddd" // Purple when active
                     font.pixelSize: 18
+                    font.bold: scoreMultiplierTimer.running // Bold when active
                 }
             }
 
@@ -669,7 +672,7 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            restartGame() // No need to save here anymore
+                            restartGame()
                         }
                     }
                 }
@@ -692,10 +695,10 @@ Item {
             id: objectComponent
             Item {
                 property bool isAsteroid: true
-                property bool isPowerup: false // Life
-                property bool isInvincibility: false // Invincibility
-                property bool isSpeedBoost: false // Speed boost
-                property bool isScoreMultiplier: false // Score multiplier
+                property bool isPowerup: false
+                property bool isInvincibility: false
+                property bool isSpeedBoost: false
+                property bool isScoreMultiplier: false
                 property bool passed: false
                 width: isAsteroid ? 10 : 18
                 height: isAsteroid ? 10 : 18
@@ -714,10 +717,10 @@ Item {
                     visible: !isAsteroid
                     text: "!"
                     color: {
-                        if (isInvincibility) return "#FF69B4" // Pink
-                        if (isSpeedBoost) return "#FFFF00" // Yellow
-                        if (isScoreMultiplier) return "#800080" // Purple
-                        return "#0087ff" // Blue for life
+                        if (isInvincibility) return "#FF69B4"
+                        if (isSpeedBoost) return "#FFFF00"
+                        if (isScoreMultiplier) return "#800080"
+                        return "#0087ff"
                     }
                     font.pixelSize: 18
                     font.bold: true
@@ -813,6 +816,7 @@ Item {
 
             if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
                 scoreMultiplier = 2.0
+                scoreMultiplierElapsed = 0
                 scoreMultiplierTimer.restart()
                 playerHit = true
                 flashColor = "#800080"
@@ -868,6 +872,10 @@ Item {
             }
         }
 
+        if (scoreMultiplierTimer.running) {
+            scoreMultiplierElapsed += gameTimer.interval / 1000
+        }
+
         if (Math.random() < largeAsteroidDensity / 2) {
             largeAsteroidComponent.createObject(largeAsteroidContainer)
         }
@@ -877,21 +885,20 @@ Item {
             objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid, isPowerup: !isAsteroid})
         }
 
-        if (Math.random() < 0.0006) {
+        if (Math.random() < 0.002) {
             objectComponent.createObject(objectContainer, {isAsteroid: false, isInvincibility: true})
         }
 
-        if (Math.random() < 0.003) { // 0.3% chance
+        if (Math.random() < 0.0015) { // Your halved rate
             objectComponent.createObject(objectContainer, {isAsteroid: false, isSpeedBoost: true})
         }
 
-        if (Math.random() < 0.001) { // 0.1% chance
+        if (Math.random() < 0.0005) { // Your halved rate
             objectComponent.createObject(objectContainer, {isAsteroid: false, isScoreMultiplier: true})
         }
     }
 
     function isColliding(hitbox, obj) {
-        // Adjusted to use the hitbox's center correctly
         var hitboxCenterX = hitbox.x + playerContainer.x + hitbox.width / 2
         var hitboxCenterY = hitbox.y + playerContainer.y + hitbox.height / 2
         var halfWidth = hitbox.width / 2
@@ -903,7 +910,6 @@ Item {
         var dx = Math.abs(objCenterX - hitboxCenterX)
         var dy = Math.abs(objCenterY - hitboxCenterY)
 
-        // Manhattan distance for diamond shape
         return (dx / halfWidth + dy / halfHeight) <= 1
     }
 
@@ -933,6 +939,8 @@ Item {
         comboCount = 0
         comboActive = false
         lastDodgeTime = 0
+        scoreMultiplier = 1.0
+        scoreMultiplierElapsed = 0
         nowText.font.pixelSize = 48
         nowText.opacity = 0
         surviveText.font.pixelSize = 48
