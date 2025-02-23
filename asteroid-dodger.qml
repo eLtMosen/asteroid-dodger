@@ -671,6 +671,8 @@ Item {
             id: objectComponent
             Item {
                 property bool isAsteroid: true
+                property bool isPowerup: false // Life power-up
+                property bool isInvincibility: false // New invincibility power-up
                 property bool passed: false
                 width: isAsteroid ? 10 : 18
                 height: isAsteroid ? 10 : 18
@@ -688,7 +690,7 @@ Item {
                 Text {
                     visible: !isAsteroid
                     text: "!"
-                    color: "#0087ff"
+                    color: isInvincibility ? "#FF69B4" : "#0087ff" // Pink for invincibility, blue for life
                     font.pixelSize: 18
                     font.bold: true
                     anchors.centerIn: parent
@@ -732,6 +734,8 @@ Item {
                 comboTimer.stop()
                 comboMeterAnimation.stop()
                 invincible = true
+                graceTimer.interval = 1000 // Reset to default for collision
+                graceTimer.restart()
                 obj.destroy()
                 feedback.play()
                 if (lives <= 0) {
@@ -740,10 +744,24 @@ Item {
                 continue
             }
 
-            if (!obj.isAsteroid && isColliding(playerHitbox, obj)) {
+            if (obj.isPowerup && isColliding(playerHitbox, obj)) {
                 lives++
                 playerHit = true
                 flashColor = "blue"
+                comboCount = 0
+                comboActive = false
+                comboTimer.stop()
+                comboMeterAnimation.stop()
+                obj.destroy()
+                continue
+            }
+
+            if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
+                invincible = true
+                graceTimer.interval = 4000 // 4 seconds for invincibility power-up
+                graceTimer.restart()
+                playerHit = true
+                flashColor = "#FF69B4" // Pink flash to match
                 comboCount = 0
                 comboActive = false
                 comboTimer.stop()
@@ -802,7 +820,11 @@ Item {
 
         if (Math.random() < asteroidDensity) {
             var isAsteroid = Math.random() < 0.96
-            objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid})
+            objectComponent.createObject(objectContainer, {isAsteroid: isAsteroid, isPowerup: !isAsteroid})
+        }
+
+        if (Math.random() < 0.0004) { // Invincibility power-up spawn rate
+            objectComponent.createObject(objectContainer, {isAsteroid: false, isInvincibility: true})
         }
     }
 
