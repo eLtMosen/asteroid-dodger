@@ -482,7 +482,7 @@ Item {
                     property int maxWidth: scoreText.width * 1.5
                     height: 3
                     width: 0
-                    color: "green"
+                    color: "green" // Already green
                     radius: height / 2
                     x: (scoreText.width - width) / 2
                     y: -height + 3
@@ -514,9 +514,9 @@ Item {
                 Text {
                     id: scoreText
                     text: score
-                    color: scoreMultiplierTimer.running ? "#800080" : "#dddddd" // Purple when active
+                    color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd" // Green when active, was #800080
                     font.pixelSize: 18
-                    font.bold: scoreMultiplierTimer.running // Bold when active
+                    font.bold: scoreMultiplierTimer.running
                 }
             }
 
@@ -738,7 +738,7 @@ Item {
                     color: {
                         if (isInvincibility) return "#FF69B4"
                         if (isSpeedBoost) return "#FFFF00"
-                        if (isScoreMultiplier) return "#800080"
+                        if (isScoreMultiplier) return "#00CC00" // Changed from #800080 to green
                         return "#0087ff"
                     }
                     font.pixelSize: 18
@@ -838,7 +838,7 @@ Item {
                 scoreMultiplierElapsed = 0
                 scoreMultiplierTimer.restart()
                 playerHit = true
-                flashColor = "#800080"
+                flashColor = "#00CC00"
                 comboCount = 0
                 comboActive = false
                 comboTimer.stop()
