@@ -90,9 +90,20 @@ Item {
     Timer {
         id: flashTimer
         interval: Math.max(500, 2000 / lives)
-        running: playerHit || flashColor === "#8B6914"
+        running: playerHit // Only runs for playerHit (red or blue flashes)
         onTriggered: {
             playerHit = false
+            flashColor = ""
+            flashOverlay.opacity = 0
+        }
+    }
+
+    Timer {
+        id: levelFlashTimer
+        interval: 4000 // 4x the typical 1000ms
+        running: flashColor === "#8B6914"
+        repeat: false
+        onTriggered: {
             flashColor = ""
             flashOverlay.opacity = 0
         }
@@ -253,7 +264,12 @@ Item {
                 z: 4
                 SequentialAnimation on opacity {
                     running: playerHit || flashColor === "#8B6914"
-                    NumberAnimation { from: 0.5; to: 0; duration: 500; easing.type: Easing.OutQuad }
+                    NumberAnimation {
+                        from: 0.5;
+                        to: 0;
+                        duration: flashColor === "#8B6914" ? 4000 : 500 // Match levelFlashTimer
+                        easing.type: Easing.OutQuad
+                    }
                 }
             }
 
