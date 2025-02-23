@@ -42,7 +42,7 @@ Item {
     property bool gameOver: false
     property bool playerHit: false
     property bool paused: false
-    property bool calibrating: false // Initial state is false, triggered only on start
+    property bool calibrating: false
     property bool showingNow: false
     property bool showingSurvive: false
     property real baselineX: 0
@@ -155,6 +155,18 @@ Item {
         onTriggered: {
             comboCount = 0
             comboActive = false
+        }
+    }
+
+    Timer {
+        id: accelerometerTimer
+        interval: 12 // 80 Hz (~12.5ms, rounded to 12)
+        running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+        repeat: true
+        onTriggered: {
+            var deltaX = (accelerometer.reading.x - baselineX) * -2
+            var newX = playerContainer.x + deltaX * playerSpeed
+            playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
         }
     }
 
@@ -675,13 +687,6 @@ Item {
         Accelerometer {
             id: accelerometer
             active: true
-            onReadingChanged: {
-                if (!gameOver && !paused && !calibrating && !showingNow && !showingSurvive) {
-                    var deltaX = (accelerometer.reading.x - baselineX) * -2
-                    var newX = playerContainer.x + deltaX * playerSpeed
-                    playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
-                }
-            }
         }
 
         MouseArea {
@@ -816,11 +821,10 @@ Item {
         playerHit = false
         invincible = false
         playerSpeed = basePlayerSpeed
-        calibrating = false // Skip calibration on restart
+        calibrating = false
         calibrationTimer = 5
-        // baselineX retains its value from initial calibration
-        showingNow = false // Skip "NOW"
-        showingSurvive = false // Skip "SURVIVE"
+        showingNow = false
+        showingSurvive = false
         comboCount = 0
         comboActive = false
         lastDodgeTime = 0
@@ -849,7 +853,7 @@ Item {
     }
 
     Component.onCompleted: {
-        calibrating = true // Trigger calibration only on initial start
+        calibrating = true
         for (var i = 0; i < 5; i++) {
             var obj = objectComponent.createObject(objectContainer, {isAsteroid: true})
             obj.y = -Math.random() * root.height
