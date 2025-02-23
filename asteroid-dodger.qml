@@ -42,7 +42,7 @@ Item {
     property bool gameOver: false
     property bool playerHit: false
     property bool paused: false
-    property bool calibrating: true
+    property bool calibrating: false // Initial state is false, triggered only on start
     property bool showingNow: false
     property bool showingSurvive: false
     property real baselineX: 0
@@ -752,7 +752,7 @@ Item {
                     comboActive = true
                     comboTimer.restart()
                     comboMeterAnimation.restart()
-                    score += basePoints * comboCount // Linear growth: 2, 4, 6, 8, 10, etc.
+                    score += basePoints * comboCount
                 } else {
                     score += basePoints
                 }
@@ -816,11 +816,11 @@ Item {
         playerHit = false
         invincible = false
         playerSpeed = basePlayerSpeed
-        calibrating = true
+        calibrating = false // Skip calibration on restart
         calibrationTimer = 5
-        baselineX = 0
-        showingNow = false
-        showingSurvive = false
+        // baselineX retains its value from initial calibration
+        showingNow = false // Skip "NOW"
+        showingSurvive = false // Skip "SURVIVE"
         comboCount = 0
         comboActive = false
         lastDodgeTime = 0
@@ -849,6 +849,7 @@ Item {
     }
 
     Component.onCompleted: {
+        calibrating = true // Trigger calibration only on initial start
         for (var i = 0; i < 5; i++) {
             var obj = objectComponent.createObject(objectContainer, {isAsteroid: true})
             obj.y = -Math.random() * root.height
