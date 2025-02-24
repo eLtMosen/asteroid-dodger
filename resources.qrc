@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource prefix="/">
-    <file>asteroid-dodger.qml</file>
+    <file>main.qml</file>
+    <file>asteroid-dodger-star.svg</file>
 </qresource>
 </RCC>

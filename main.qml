@@ -760,7 +760,7 @@ Item {
                     visible: isAsteroid
                     width: 10
                     height: 10
-                    source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-dodger-star.svg"
+                    source: "qrc:/asteroid-dodger-star.svg"
                     anchors.centerIn: parent
                 }
 
