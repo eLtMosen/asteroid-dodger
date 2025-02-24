@@ -4,7 +4,8 @@
 Dive into *Asteroid Dodger*, a thrilling survival game for [AsteroidOS](http://asteroidos.org/) where you tilt your watch to surf through an ever-denser asteroid field, nailing asteroid surfing combos for big points. Master the art of near-misses, and grab rare power-up potions to shrink, speed up, or freeze the cosmic chaos—all while the challenge ramps up with each level. With its retro arcade flair, vibrant visuals, and accelerometer-driven action, this game turns your wrist into a playground of skill and reflexes.
 Ready to ride the asteroid waves and claim the high score?
 
-**Features:**
+### 1.0 Release video:
+https://github.com/user-attachments/assets/99b8f8c5-eea0-4c35-812b-8c7f61858872
 
 ### Gameplay Mechanics
 - Random generation of the asteroid field and power-ups for endless variety.
@@ -38,5 +39,7 @@ Ready to ride the asteroid waves and claim the high score?
 - Calibration start screen adjusts accelerometer to your comfortable position.
 - Game intro screen transitions smoothly from calibration to action.
 
+
+### Initial commit gameplay:
 https://github.com/user-attachments/assets/14be49db-a2c0-466b-8402-caf0e3f773f0
 
