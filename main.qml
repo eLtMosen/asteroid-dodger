@@ -388,7 +388,7 @@ Item {
                     visible: false
 
                     ShapePath {
-                        strokeWidth: 0
+                        strokeWidth: -1
                         fillColor: "transparent"
                         startX: 25; startY: 0
                         PathLine { x: 50; y: 25 }
@@ -420,8 +420,8 @@ Item {
                         id: comboHitboxAnimation
                         running: comboActive
                         loops: Animation.Infinite
-                        NumberAnimation { from: 0.1; to: 0.3; duration: 500; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: 0.3; to: 0.1; duration: 500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.1; to: 0.3; duration: 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.3; to: 0.1; duration: 1000; easing.type: Easing.InOutSine }
                         onStopped: {
                             comboHitbox.opacity = 0
                         }
@@ -757,7 +757,7 @@ Item {
                     anchors.centerIn: parent
 
                     ShapePath {
-                        strokeWidth: 0
+                        strokeWidth: -1
                         fillColor: {
                             var base = 230 // #e6e6e6 base
                             var delta = Math.round(base * 0.2) // ±20% = ±46
