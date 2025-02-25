@@ -24,4 +24,4 @@ install(TARGETS asteroid-dodger DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES asteroid-dodger.desktop
         DESTINATION /usr/share/applications/)
 install(FILES asteroid-dodger.svg
-        DESTINATION /usr/share/icons/)
+        DESTINATION /usr/share/icons/asteroid/)
