@@ -720,13 +720,14 @@ Item {
 
         Component {
             id: largeAsteroidComponent
-            Text {
-                text: "●"
-                property real shade: 34/255 - Math.random() * (26/255)
-                color: Qt.rgba(shade, shade, shade, 1)
-                font.pixelSize: 26 + Math.random() * 18
+            Rectangle {
+                width: 30 + Math.random() * 30
+                height: width
                 x: Math.random() * (root.width - width)
                 y: -height
+                color: "#0e003d"
+                opacity: 1 - Math.random() * 0.7
+                radius: 180
             }
         }
 
@@ -825,7 +826,7 @@ Item {
     function updateGame() {
         for (var i = largeAsteroidContainer.children.length - 1; i >= 0; i--) {
             var largeObj = largeAsteroidContainer.children[i]
-            largeObj.y += scrollSpeed / 5
+            largeObj.y += scrollSpeed / 3
             if (largeObj.y >= root.height) {
                 largeObj.destroy()
             }
