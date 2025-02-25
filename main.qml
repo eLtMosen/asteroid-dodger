@@ -30,6 +30,7 @@ Item {
     visible: true
 
     property real scrollSpeed: 1.6
+    property real savedScrollSpeed: 0  // Store speed when pausing
     property int basePlayerSpeed: 1
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
@@ -70,10 +71,18 @@ Item {
     property real lastFrameTime: 0
 
     onPausedChanged: {
-        if (paused && comboActive) {
-            comboMeterAnimation.pause()
-        } else if (!paused && comboActive) {
-            comboMeterAnimation.resume()
+        console.log("Paused state changed to:", paused)
+        if (paused) {
+            savedScrollSpeed = scrollSpeed
+            scrollSpeed = 0  // Stop movement
+            if (comboActive) {
+                comboMeterAnimation.pause()
+            }
+        } else {
+            scrollSpeed = savedScrollSpeed  // Restore movement
+            if (comboActive) {
+                comboMeterAnimation.resume()
+            }
         }
     }
 
@@ -108,7 +117,7 @@ Item {
     Timer {
         id: gameTimer
         interval: 16
-        running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
+        running: !gameOver && !calibrating && !showingNow && !showingSurvive
         repeat: true
         onTriggered: {
             var currentTime = Date.now()
@@ -121,7 +130,7 @@ Item {
     Timer {
         id: graceTimer
         interval: 1000
-        running: invincible
+        running: invincible && !paused
         repeat: false
         onTriggered: {
             invincible = false
@@ -131,7 +140,7 @@ Item {
     Timer {
         id: speedBoostTimer
         interval: 3000
-        running: false
+        running: isSpeedBoostActive && !paused
         repeat: false
         onTriggered: {
             playerSpeed = basePlayerSpeed
@@ -142,7 +151,7 @@ Item {
     Timer {
         id: scoreMultiplierTimer
         interval: 10000
-        running: false
+        running: scoreMultiplier > 1.0 && !paused
         repeat: false
         onTriggered: {
             scoreMultiplier = 1.0
@@ -153,10 +162,11 @@ Item {
     Timer {
         id: slowMoTimer
         interval: 6000
-        running: false
+        running: isSlowMoActive && !paused
         repeat: false
         onTriggered: {
             scrollSpeed = preSlowSpeed
+            savedScrollSpeed = preSlowSpeed  // Update saved speed too
             isSlowMoActive = false
         }
     }
@@ -236,7 +246,7 @@ Item {
 
             SequentialAnimation {
                 id: particleAnimation
-                running: true
+                running: !root.paused
                 ParallelAnimation {
                     NumberAnimation {
                         target: particleText
@@ -286,6 +296,7 @@ Item {
     Component {
         id: shrinkAnimationComponent
         ParallelAnimation {
+            running: !root.paused
             NumberAnimation { target: player; property: "width"; to: 36; duration: 6000; easing.type: Easing.Linear }
             NumberAnimation { target: player; property: "height"; to: 36; duration: 6000; easing.type: Easing.Linear }
             NumberAnimation { target: playerHitbox; property: "width"; to: 50; duration: 6000; easing.type: Easing.Linear }
@@ -320,7 +331,7 @@ Item {
                 anchors.fill: parent
                 color: flashColor ? flashColor : "transparent"
                 opacity: 0
-                z: 4
+                z: 5
                 SequentialAnimation {
                     id: flashAnimation
                     running: false
@@ -355,7 +366,7 @@ Item {
                 id: playerContainer
                 x: root.width / 2
                 y: root.height * 0.75
-                z: 2
+                z: 1
                 visible: !calibrating && !showingNow && !showingSurvive
 
                 Image {
@@ -366,7 +377,7 @@ Item {
                     anchors.centerIn: parent
 
                     SequentialAnimation on opacity {
-                        running: invincible
+                        running: invincible && !root.paused
                         loops: Animation.Infinite
                         NumberAnimation { from: 1.0; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 0.2; to: 1.0; duration: 500; easing.type: Easing.InOutSine }
@@ -377,7 +388,7 @@ Item {
                     opacity: 1.0
 
                     SequentialAnimation on rotation {
-                        running: speedBoostTimer.running
+                        running: speedBoostTimer.running && !root.paused
                         loops: Animation.Infinite
                         NumberAnimation { from: -5; to: 5; duration: 200; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 5; to: -5; duration: 200; easing.type: Easing.InOutSine }
@@ -453,7 +464,7 @@ Item {
                     horizontalCenter: parent.horizontalCenter
                     margins: 22
                 }
-                z: 2
+                z: 4
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
 
                 Rectangle {
@@ -511,7 +522,7 @@ Item {
                     y: -height + 3
                     SequentialAnimation {
                         id: comboMeterAnimation
-                        running: comboActive && !paused
+                        running: comboActive && !root.paused
                         NumberAnimation {
                             target: comboMeter
                             property: "width"
@@ -642,7 +653,7 @@ Item {
         Item {
             id: gameOverScreen
             anchors.centerIn: parent
-            z: 3
+            z: 5
             visible: gameOver
             opacity: 0
             Behavior on opacity {
@@ -832,13 +843,12 @@ Item {
         var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
 
-        // Pre-calculate player hitbox center for distance checks
         var playerCenterX = playerContainer.x + playerHitbox.x + playerHitbox.width / 2
         var playerCenterY = playerContainer.y + playerHitbox.y + playerHitbox.height / 2
         var comboCenterX = playerContainer.x + comboHitbox.x + comboHitbox.width / 2
         var comboCenterY = playerContainer.y + comboHitbox.y + comboHitbox.height / 2
-        var maxDistanceSquared = (playerHitbox.width + 18) * (playerHitbox.width + 18)  // Rough max hitbox size (player + largest asteroid/power-up)
-        var comboDistanceSquared = (comboHitbox.width + 18) * (comboHitbox.width + 18)  // Larger radius for combo hitbox
+        var maxDistanceSquared = (playerHitbox.width + 18) * (playerHitbox.width + 18)
+        var comboDistanceSquared = (comboHitbox.width + 18) * (comboHitbox.width + 18)
 
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
@@ -855,7 +865,6 @@ Item {
             if (obj.visible) {
                 obj.y += adjustedScrollSpeed
 
-                // Quick distance check for player hitbox
                 var objCenterX = obj.x + obj.width / 2
                 var objCenterY = obj.y + obj.height / 2
                 var dx = objCenterX - playerCenterX
@@ -871,7 +880,6 @@ Item {
                         comboTimer.stop()
                         comboMeterAnimation.stop()
                         invincible = true
-                        graceTimer.interval = 1000
                         graceTimer.restart()
                         obj.visible = false
                         feedback.play()
@@ -950,6 +958,7 @@ Item {
                     if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
                         preSlowSpeed = scrollSpeed
                         scrollSpeed = scrollSpeed / 2
+                        savedScrollSpeed = scrollSpeed  // Update saved speed
                         isSlowMoActive = true
                         slowMoTimer.restart()
                         flashOverlay.triggerFlash("#00FFFF")
@@ -962,7 +971,6 @@ Item {
                     }
                 }
 
-                // Combo hitbox check (only if close enough)
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
@@ -1009,16 +1017,16 @@ Item {
             scoreMultiplierElapsed += deltaTime
         }
 
-        if (Math.random() < largeAsteroidDensity / 2) {
+        if (!paused && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
         }
 
-        if (Math.random() < asteroidDensity) {
+        if (!paused && Math.random() < asteroidDensity) {
             var isAsteroid = Math.random() < 0.96
             spawnObject(isAsteroid ? {isAsteroid: true} : {isAsteroid: false, isPowerup: true})
         }
 
-        if (Math.random() < 0.0001) {
+        if (!paused && Math.random() < 0.0001) {
             spawnObject({isAsteroid: false, isInvincibility: true})
         }
 
@@ -1046,7 +1054,7 @@ Item {
                 obj.width = 30 + Math.random() * 30
                 obj.height = obj.width
                 obj.x = Math.random() * (root.width - obj.width)
-                obj.y = -obj.height
+                obj.y = -obj.height - (Math.random() * 100)  // Random offset up to 100 pixels above
                 obj.opacity = 1 - Math.random() * 0.7
                 obj.visible = true
                 return
@@ -1070,7 +1078,7 @@ Item {
                 obj.width = obj.isAsteroid ? 10 : 18
                 obj.height = obj.isAsteroid ? 10 : 18
                 obj.x = Math.random() * (root.width - obj.width)
-                obj.y = -obj.height
+                obj.y = -obj.height - (Math.random() * 100)  // Random offset up to 100 pixels above
                 obj.visible = true
                 return
             }
@@ -1096,6 +1104,7 @@ Item {
         asteroidCount = 0
         level++
         scrollSpeed += 0.1
+        savedScrollSpeed = scrollSpeed  // Update saved speed on level up
         flashOverlay.triggerFlash("#8B6914")
     }
 
@@ -1105,6 +1114,7 @@ Item {
         level = 1
         asteroidCount = 0
         scrollSpeed = 1.6
+        savedScrollSpeed = scrollSpeed  // Reset saved speed
         asteroidDensity = 0.044
         gameOver = false
         paused = false
@@ -1149,26 +1159,44 @@ Item {
         }
     }
 
-    Component.onCompleted: {
-        for (var i = 0; i < asteroidPoolSize; i++) {
-            var obj = objectComponent.createObject(objectContainer)
-            obj.visible = false
-            obj.y = -obj.height
-            asteroidPool.push(obj)
-        }
-        for (i = 0; i < largeAsteroidPoolSize; i++) {
-            var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
-            largeObj.visible = false
-            largeObj.y = -largeObj.height
-            largeAsteroidPool.push(largeObj)
-        }
+Component.onCompleted: {
+    for (var i = 0; i < asteroidPoolSize; i++) {
+        var obj = objectComponent.createObject(objectContainer)
+        obj.visible = false
+        obj.y = -obj.height
+        asteroidPool.push(obj)
+    }
+    for (i = 0; i < largeAsteroidPoolSize; i++) {
+        var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
+        largeObj.visible = false
+        largeObj.y = -largeObj.height
+        largeAsteroidPool.push(largeObj)
+    }
 
-        calibrating = true
-        for (i = 0; i < 5; i++) {
-            spawnObject({isAsteroid: true})
+    calibrating = true
+
+    // Stagger initial spawns over a short period
+    var spawnTimer = Qt.createQmlObject('
+        import QtQuick 2.15
+        Timer {
+            interval: 200
+            repeat: true
+            running: true
+            property int count: 0
+            onTriggered: {
+                if (count < 5) {
+                    spawnObject({isAsteroid: true})
+                }
+                if (count < 3) {
+                    spawnLargeAsteroid()
+                }
+                count++
+                if (count >= 5) {
+                    stop()
+                    destroy()
+                }
+            }
         }
-        for (i = 0; i < 3; i++) {
-            spawnLargeAsteroid()
-        }
+    ', root, "spawnTimer")
     }
 }
