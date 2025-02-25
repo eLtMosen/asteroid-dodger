@@ -48,14 +48,14 @@ Item {
     property real baselineX: 0
     property int calibrationTimer: 5
     property bool invincible: false
-    property real closePassThreshold: 36 // Kept for reference, not used
+    property real closePassThreshold: 36
     property string flashColor: ""
     property int comboCount: 0
     property real lastDodgeTime: 0
     property bool comboActive: false
     property real scoreMultiplier: 1.0
     property real scoreMultiplierElapsed: 0
-    property real preSlowSpeed: 0 // Temporary storage for slow motion
+    property real preSlowSpeed: 0
     property bool isSlowMoActive: false
     property bool isSpeedBoostActive: false
     property bool isShrinkActive: false
@@ -215,7 +215,7 @@ Item {
             id: particleText
             property int points: 1
             text: "+" + points
-            color: "#00CC00" // Green for combos
+            color: "#00CC00"
             font.pixelSize: 16
             z: 3
             opacity: 1
@@ -223,27 +223,27 @@ Item {
             SequentialAnimation {
                 id: particleAnimation
                 running: true
-                ParallelAnimation { // 45° burst
+                ParallelAnimation {
                     NumberAnimation {
                         target: particleText
                         property: "x"
-                        to: x + (x < playerContainer.x ? -30 : 30) // Sideways burst
+                        to: x + (x < playerContainer.x ? -30 : 30)
                         duration: 400
                         easing.type: Easing.OutCubic
                     }
                     NumberAnimation {
                         target: particleText
                         property: "y"
-                        to: y - 25 // Upward burst
+                        to: y - 25
                         duration: 400
                         easing.type: Easing.OutCubic
                     }
                 }
-                ParallelAnimation { // Scroll down and fade
+                ParallelAnimation {
                     NumberAnimation {
                         target: particleText
                         property: "y"
-                        to: y + 40 // Downward drift after burst
+                        to: y + 40
                         duration: 600
                         easing.type: Easing.Linear
                     }
@@ -295,9 +295,9 @@ Item {
             layer.enabled: true
             layer.effect: FastBlur {
                 id: blurEffect
-                radius: gameOver ? 16 : 0
+                radius: gameOver ? 24 : 0
                 Behavior on radius {
-                    NumberAnimation { duration: 250 }
+                    NumberAnimation { duration: 500 }
                 }
             }
 
@@ -740,20 +740,20 @@ Item {
                 Shape {
                     id: asteroidShape
                     visible: isAsteroid && !dodged
-                    property real sizeFactor: 0.8 + Math.random() * 0.4 // 0.8 to 1.2, set at creation
-                    width: 10 * sizeFactor // 8 to 12px
-                    height: 10 * sizeFactor // 8 to 12px
+                    property real sizeFactor: 0.8 + Math.random() * 0.4
+                    width: 10 * sizeFactor
+                    height: 10 * sizeFactor
                     anchors.centerIn: parent
 
                     ShapePath {
                         strokeWidth: -1
                         fillColor: {
-                            var base = 230 // #e6e6e6 base
-                            var delta = Math.round(base * 0.2) // ±20% = ±46
-                            var rand = Math.round(base - delta + Math.random() * (2 * delta)) // 184-276
-                            rand = Math.max(184, Math.min(255, rand)) // Cap at 255
+                            var base = 230
+                            var delta = Math.round(base * 0.2)
+                            var rand = Math.round(base - delta + Math.random() * (2 * delta))
+                            rand = Math.max(184, Math.min(255, rand))
                             var hex = rand.toString(16).padStart(2, '0')
-                            return "#" + hex + hex + hex + "ff" // e.g., #b8b8b8 to #ffffff
+                            return "#" + hex + hex + hex + "ff"
                         }
                         startX: asteroidShape.width * 0.5; startY: 0
                         PathLine { x: asteroidShape.width; y: asteroidShape.height * 0.5 }
@@ -767,7 +767,7 @@ Item {
                     id: scoreText
                     visible: isAsteroid && dodged
                     text: "+1"
-                    color: "#00CC00" // Green
+                    color: "#00CC00"
                     font.pixelSize: 16
                     anchors.centerIn: parent
                     Behavior on opacity {
@@ -813,9 +813,12 @@ Item {
     }
 
     function updateGame() {
+        var roundedScrollSpeed = Math.round(scrollSpeed * 10) / 10
+        var largeAsteroidStep = Math.round((roundedScrollSpeed / 3) * 10) / 10
+
         for (var i = largeAsteroidContainer.children.length - 1; i >= 0; i--) {
             var largeObj = largeAsteroidContainer.children[i]
-            largeObj.y += scrollSpeed / 3
+            largeObj.y = Math.round(largeObj.y + largeAsteroidStep)
             if (largeObj.y >= root.height) {
                 largeObj.destroy()
             }
@@ -823,7 +826,7 @@ Item {
 
         for (i = objectContainer.children.length - 1; i >= 0; i--) {
             var obj = objectContainer.children[i]
-            obj.y += scrollSpeed
+            obj.y = Math.round(obj.y + roundedScrollSpeed)
 
             if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
                 lives--
