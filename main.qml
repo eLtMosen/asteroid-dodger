@@ -138,7 +138,7 @@ Item {
 
     Timer {
         id: slowMoTimer
-        interval: 4000
+        interval: 6000
         running: false
         repeat: false
         onTriggered: {
@@ -315,7 +315,7 @@ Item {
                         property: "opacity"
                         from: 0.5
                         to: 0
-                        duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 4000 : 500
+                        duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 6000 : 500
                         easing.type: Easing.OutQuad
                     }
                     onStopped: {
