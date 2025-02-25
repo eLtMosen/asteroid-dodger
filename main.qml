@@ -29,7 +29,7 @@ Item {
     anchors.fill: parent
     visible: true
 
-    property real scrollSpeed: 1.6  // Base speed in pixels per second
+    property real scrollSpeed: 1.6
     property int basePlayerSpeed: 1
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
@@ -107,12 +107,12 @@ Item {
 
     Timer {
         id: gameTimer
-        interval: 16  // Target 60 FPS, but delta-time handles variations
+        interval: 16
         running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
         repeat: true
         onTriggered: {
             var currentTime = Date.now()
-            var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016  // Default to 16ms if first frame
+            var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016
             lastFrameTime = currentTime
             updateGame(deltaTime)
         }
@@ -752,6 +752,7 @@ Item {
                 x: Math.random() * (root.width - width)
                 y: -height
                 visible: false
+
                 Shape {
                     id: asteroidShape
                     visible: isAsteroid && !dodged
@@ -828,8 +829,16 @@ Item {
     }
 
     function updateGame(deltaTime) {
-        var adjustedScrollSpeed = scrollSpeed * deltaTime * 60  // Scale to match original 60 FPS feel
+        var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
+
+        // Pre-calculate player hitbox center for distance checks
+        var playerCenterX = playerContainer.x + playerHitbox.x + playerHitbox.width / 2
+        var playerCenterY = playerContainer.y + playerHitbox.y + playerHitbox.height / 2
+        var comboCenterX = playerContainer.x + comboHitbox.x + comboHitbox.width / 2
+        var comboCenterY = playerContainer.y + comboHitbox.y + comboHitbox.height / 2
+        var maxDistanceSquared = (playerHitbox.width + 18) * (playerHitbox.width + 18)  // Rough max hitbox size (player + largest asteroid/power-up)
+        var comboDistanceSquared = (comboHitbox.width + 18) * (comboHitbox.width + 18)  // Larger radius for combo hitbox
 
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
@@ -846,108 +855,121 @@ Item {
             if (obj.visible) {
                 obj.y += adjustedScrollSpeed
 
-                if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
-                    lives--
-                    flashOverlay.triggerFlash("red")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    invincible = true
-                    graceTimer.interval = 1000
-                    graceTimer.restart()
-                    obj.visible = false
-                    feedback.play()
-                    if (lives <= 0) {
-                        gameOver = true
+                // Quick distance check for player hitbox
+                var objCenterX = obj.x + obj.width / 2
+                var objCenterY = obj.y + obj.height / 2
+                var dx = objCenterX - playerCenterX
+                var dy = objCenterY - playerCenterY
+                var distanceSquared = dx * dx + dy * dy
+
+                if (distanceSquared < maxDistanceSquared) {
+                    if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
+                        lives--
+                        flashOverlay.triggerFlash("red")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        invincible = true
+                        graceTimer.interval = 1000
+                        graceTimer.restart()
+                        obj.visible = false
+                        feedback.play()
+                        if (lives <= 0) {
+                            gameOver = true
+                        }
+                        continue
                     }
-                    continue
+
+                    if (obj.isPowerup && isColliding(playerHitbox, obj)) {
+                        lives++
+                        flashOverlay.triggerFlash("blue")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        obj.visible = false
+                        continue
+                    }
+
+                    if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
+                        invincible = true
+                        graceTimer.interval = 4000
+                        graceTimer.restart()
+                        flashOverlay.triggerFlash("#FF69B4")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        obj.visible = false
+                        continue
+                    }
+
+                    if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
+                        playerSpeed = basePlayerSpeed * 2
+                        isSpeedBoostActive = true
+                        speedBoostTimer.restart()
+                        flashOverlay.triggerFlash("#FFFF00")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        obj.visible = false
+                        continue
+                    }
+
+                    if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
+                        scoreMultiplier = 2.0
+                        scoreMultiplierElapsed = 0
+                        scoreMultiplierTimer.restart()
+                        flashOverlay.triggerFlash("#00CC00")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        obj.visible = false
+                        continue
+                    }
+
+                    if (obj.isShrink && isColliding(playerHitbox, obj) && !isShrinkActive) {
+                        player.width = 18
+                        player.height = 18
+                        playerHitbox.width = 25
+                        playerHitbox.height = 25
+                        isShrinkActive = true
+                        flashOverlay.triggerFlash("#FFA500")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        shrinkAnimationComponent.createObject(root).start()
+                        obj.visible = false
+                        continue
+                    }
+
+                    if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
+                        preSlowSpeed = scrollSpeed
+                        scrollSpeed = scrollSpeed / 2
+                        isSlowMoActive = true
+                        slowMoTimer.restart()
+                        flashOverlay.triggerFlash("#00FFFF")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        obj.visible = false
+                        continue
+                    }
                 }
 
-                if (obj.isPowerup && isColliding(playerHitbox, obj)) {
-                    lives++
-                    flashOverlay.triggerFlash("blue")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    obj.visible = false
-                    continue
-                }
-
-                if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
-                    invincible = true
-                    graceTimer.interval = 4000
-                    graceTimer.restart()
-                    flashOverlay.triggerFlash("#FF69B4")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    obj.visible = false
-                    continue
-                }
-
-                if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
-                    playerSpeed = basePlayerSpeed * 2
-                    isSpeedBoostActive = true
-                    speedBoostTimer.restart()
-                    flashOverlay.triggerFlash("#FFFF00")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    obj.visible = false
-                    continue
-                }
-
-                if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
-                    scoreMultiplier = 2.0
-                    scoreMultiplierElapsed = 0
-                    scoreMultiplierTimer.restart()
-                    flashOverlay.triggerFlash("#00CC00")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    obj.visible = false
-                    continue
-                }
-
-                if (obj.isShrink && isColliding(playerHitbox, obj) && !isShrinkActive) {
-                    player.width = 18
-                    player.height = 18
-                    playerHitbox.width = 25
-                    playerHitbox.height = 25
-                    isShrinkActive = true
-                    flashOverlay.triggerFlash("#FFA500")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    shrinkAnimationComponent.createObject(root).start()
-                    obj.visible = false
-                    continue
-                }
-
-                if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
-                    preSlowSpeed = scrollSpeed
-                    scrollSpeed = scrollSpeed / 2
-                    isSlowMoActive = true
-                    slowMoTimer.restart()
-                    flashOverlay.triggerFlash("#00FFFF")
-                    comboCount = 0
-                    comboActive = false
-                    comboTimer.stop()
-                    comboMeterAnimation.stop()
-                    obj.visible = false
-                    continue
-                }
-
+                // Combo hitbox check (only if close enough)
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
-                    var isCombo = isColliding(comboHitbox, obj)
+                    var comboDx = objCenterX - comboCenterX
+                    var comboDy = objCenterY - comboCenterY
+                    var comboDistSquared = comboDx * comboDx + comboDy * comboDy
+                    var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
                     var basePoints = isCombo ? 2 : 1
                     var currentTime = Date.now()
 
@@ -1112,11 +1134,11 @@ Item {
 
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
-            asteroidPool[i].y = -asteroidPool[i].height  // Reset position
+            asteroidPool[i].y = -asteroidPool[i].height
         }
         for (i = 0; i < largeAsteroidPool.length; i++) {
             largeAsteroidPool[i].visible = false
-            largeAsteroidPool[i].y = -largeAsteroidPool[i].height  // Reset position
+            largeAsteroidPool[i].y = -largeAsteroidPool[i].height
         }
 
         for (var j = 0; j < 5; j++) {
@@ -1131,13 +1153,13 @@ Item {
         for (var i = 0; i < asteroidPoolSize; i++) {
             var obj = objectComponent.createObject(objectContainer)
             obj.visible = false
-            obj.y = -obj.height  // Ensure initial position
+            obj.y = -obj.height
             asteroidPool.push(obj)
         }
         for (i = 0; i < largeAsteroidPoolSize; i++) {
             var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
             largeObj.visible = false
-            largeObj.y = -largeObj.height  // Ensure initial position
+            largeObj.y = -largeObj.height
             largeAsteroidPool.push(largeObj)
         }
 
