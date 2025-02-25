@@ -404,6 +404,7 @@ Item {
                     height: 144
                     anchors.centerIn: parent
                     visible: comboActive
+                    opacity: 0.2
 
                     ShapePath {
                         strokeWidth: 2
@@ -415,18 +416,6 @@ Item {
                         PathLine { x: 36; y: 72 }
                         PathLine { x: 72; y: 36 }
                     }
-
-                    SequentialAnimation on opacity {
-                        id: comboHitboxAnimation
-                        running: comboActive
-                        loops: Animation.Infinite
-                        NumberAnimation { from: 0.1; to: 0.3; duration: 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: 0.3; to: 0.1; duration: 1000; easing.type: Easing.InOutSine }
-                        onStopped: {
-                            comboHitbox.opacity = 0
-                        }
-                    }
-                    opacity: 0
                 }
             }
 
@@ -499,7 +488,7 @@ Item {
 
                 Rectangle {
                     id: comboMeter
-                    property int maxWidth: scoreText.width * 1.5
+                    property int maxWidth: 48
                     height: 3
                     width: 0
                     color: "green"
@@ -514,15 +503,15 @@ Item {
                             property: "width"
                             from: 0
                             to: comboMeter.maxWidth
-                            duration: 100
-                            easing.type: Easing.OutQuad
+                            duration: 50
+                            easing.type: Easing.Linear
                         }
                         NumberAnimation {
                             target: comboMeter
                             property: "width"
                             from: comboMeter.maxWidth
                             to: 0
-                            duration: 2000
+                            duration: 1950
                             easing.type: Easing.Linear
                         }
                         onStopped: {
