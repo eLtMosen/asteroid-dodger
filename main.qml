@@ -210,13 +210,12 @@ Item {
     }
 
     Component {
-        id: scoreParticleComponent
+        id: comboParticleComponent
         Text {
             id: particleText
             property int points: 1
-            property bool isCombo: false
             text: "+" + points
-            color: isCombo ? "#00CC00" : "#FFD700"
+            color: "#00CC00"
             font.pixelSize: 16
             z: 3
             opacity: 1
@@ -235,9 +234,9 @@ Item {
                 ParallelAnimation {
                     NumberAnimation {
                         target: particleText
-                        property: isCombo ? "x" : "y"
-                        from: isCombo ? x : (y - 2)
-                        to: isCombo ? (x + (x < playerContainer.x ? -80 : 80)) : (y + 40)
+                        property: "x"
+                        from: x
+                        to: x + (x < playerContainer.x ? -80 : 80)
                         duration: 900
                         easing.type: Easing.InQuad
                     }
@@ -735,17 +734,36 @@ Item {
                 property bool isShrink: false
                 property bool isSlowMo: false
                 property bool passed: false
+                property bool dodged: false
                 width: isAsteroid ? 10 : 18
                 height: isAsteroid ? 10 : 18
                 x: Math.random() * (root.width - width)
                 y: -height
 
                 Image {
-                    visible: isAsteroid
+                    id: asteroidImage
+                    visible: isAsteroid && !dodged
                     width: 10
                     height: 10
                     source: "qrc:/asteroid-dodger-star.svg"
                     anchors.centerIn: parent
+                }
+
+                Text {
+                    id: scoreText
+                    visible: isAsteroid && dodged
+                    text: "+1"
+                    color: "#FFD700"
+                    font.pixelSize: 16
+                    anchors.centerIn: parent
+                    Behavior on opacity {
+                        NumberAnimation {
+                            from: 1
+                            to: 0
+                            duration: 900
+                            easing.type: Easing.OutQuad
+                        }
+                    }
                 }
 
                 Text {
@@ -909,20 +927,15 @@ Item {
                     comboTimer.restart()
                     comboMeterAnimation.restart()
                     score += basePoints * comboCount * scoreMultiplier
-                    var particle = scoreParticleComponent.createObject(gameArea, {
+                    var particle = comboParticleComponent.createObject(gameArea, {
                         "x": obj.x,
                         "y": playerContainer.y,
-                        "points": basePoints * comboCount * scoreMultiplier,
-                        "isCombo": true
+                        "points": basePoints * comboCount * scoreMultiplier
                     })
+                    obj.dodged = true
                 } else {
                     score += basePoints * scoreMultiplier
-                    var particle = scoreParticleComponent.createObject(gameArea, {
-                        "x": obj.x,
-                        "y": playerContainer.y,
-                        "points": basePoints * scoreMultiplier,
-                        "isCombo": false
-                    })
+                    obj.dodged = true
                 }
 
                 if (asteroidCount >= asteroidsPerLevel) {
