@@ -29,7 +29,7 @@ Item {
     anchors.fill: parent
     visible: true
 
-    property real scrollSpeed: 1.6
+    property real scrollSpeed: 1.6  // Base speed in pixels per second
     property int basePlayerSpeed: 1
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
@@ -59,10 +59,15 @@ Item {
     property bool isSlowMoActive: false
     property bool isSpeedBoostActive: false
     property bool isShrinkActive: false
+
+    // Object pools
     property var asteroidPool: []
     property var largeAsteroidPool: []
     property int asteroidPoolSize: 40
     property int largeAsteroidPoolSize: 10
+
+    // Delta-time tracking
+    property real lastFrameTime: 0
 
     onPausedChanged: {
         if (paused && comboActive) {
@@ -102,10 +107,15 @@ Item {
 
     Timer {
         id: gameTimer
-        interval: 16
+        interval: 16  // Target 60 FPS, but delta-time handles variations
         running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
         repeat: true
-        onTriggered: updateGame()
+        onTriggered: {
+            var currentTime = Date.now()
+            var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016  // Default to 16ms if first frame
+            lastFrameTime = currentTime
+            updateGame(deltaTime)
+        }
     }
 
     Timer {
@@ -742,7 +752,6 @@ Item {
                 x: Math.random() * (root.width - width)
                 y: -height
                 visible: false
-
                 Shape {
                     id: asteroidShape
                     visible: isAsteroid && !dodged
@@ -818,14 +827,14 @@ Item {
         }
     }
 
-    function updateGame() {
-        var roundedScrollSpeed = Math.round(scrollSpeed * 10) / 10
-        var largeAsteroidStep = Math.round((roundedScrollSpeed / 3) * 10) / 10
+    function updateGame(deltaTime) {
+        var adjustedScrollSpeed = scrollSpeed * deltaTime * 60  // Scale to match original 60 FPS feel
+        var largeAsteroidSpeed = adjustedScrollSpeed / 3
 
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
             if (largeObj.visible) {
-                largeObj.y = Math.round(largeObj.y + largeAsteroidStep)
+                largeObj.y += largeAsteroidSpeed
                 if (largeObj.y >= root.height) {
                     largeObj.visible = false
                 }
@@ -835,7 +844,7 @@ Item {
         for (i = 0; i < asteroidPool.length; i++) {
             var obj = asteroidPool[i]
             if (obj.visible) {
-                obj.y = Math.round(obj.y + roundedScrollSpeed)
+                obj.y += adjustedScrollSpeed
 
                 if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
                     lives--
@@ -975,7 +984,7 @@ Item {
         }
 
         if (scoreMultiplierTimer.running) {
-            scoreMultiplierElapsed += gameTimer.interval / 1000
+            scoreMultiplierElapsed += deltaTime
         }
 
         if (Math.random() < largeAsteroidDensity / 2) {
@@ -1099,12 +1108,15 @@ Item {
         surviveText.opacity = 0
         playerContainer.x = root.width / 2 - player.width / 2
         gameOverScreen.opacity = 0
+        lastFrameTime = 0
 
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
+            asteroidPool[i].y = -asteroidPool[i].height  // Reset position
         }
         for (i = 0; i < largeAsteroidPool.length; i++) {
             largeAsteroidPool[i].visible = false
+            largeAsteroidPool[i].y = -largeAsteroidPool[i].height  // Reset position
         }
 
         for (var j = 0; j < 5; j++) {
@@ -1119,11 +1131,13 @@ Item {
         for (var i = 0; i < asteroidPoolSize; i++) {
             var obj = objectComponent.createObject(objectContainer)
             obj.visible = false
+            obj.y = -obj.height  // Ensure initial position
             asteroidPool.push(obj)
         }
         for (i = 0; i < largeAsteroidPoolSize; i++) {
             var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
             largeObj.visible = false
+            largeObj.y = -largeObj.height  // Ensure initial position
             largeAsteroidPool.push(largeObj)
         }
 
