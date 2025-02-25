@@ -747,20 +747,37 @@ Item {
                 x: Math.random() * (root.width - width)
                 y: -height
 
-                Image {
-                    id: asteroidImage
+                Shape {
+                    id: asteroidShape
                     visible: isAsteroid && !dodged
-                    width: 10
-                    height: 10
-                    source: "qrc:/asteroid-dodger-star.svg"
+                    property real sizeFactor: 0.8 + Math.random() * 0.4 // 0.8 to 1.2, set at creation
+                    width: 10 * sizeFactor // 8 to 12px
+                    height: 10 * sizeFactor // 8 to 12px
                     anchors.centerIn: parent
+
+                    ShapePath {
+                        strokeWidth: 0
+                        fillColor: {
+                            var base = 230 // #e6e6e6 base
+                            var delta = Math.round(base * 0.2) // ±20% = ±46
+                            var rand = Math.round(base - delta + Math.random() * (2 * delta)) // 184-276
+                            rand = Math.max(184, Math.min(255, rand)) // Cap at 255
+                            var hex = rand.toString(16).padStart(2, '0')
+                            return "#" + hex + hex + hex + "ff" // e.g., #b8b8b8 to #ffffff
+                        }
+                        startX: asteroidShape.width * 0.5; startY: 0
+                        PathLine { x: asteroidShape.width; y: asteroidShape.height * 0.5 }
+                        PathLine { x: asteroidShape.width * 0.5; y: asteroidShape.height }
+                        PathLine { x: 0; y: asteroidShape.height * 0.5 }
+                        PathLine { x: asteroidShape.width * 0.5; y: 0 }
+                    }
                 }
 
                 Text {
                     id: scoreText
                     visible: isAsteroid && dodged
                     text: "+1"
-                    color: "#00CC00" // Green for +1
+                    color: "#00CC00" // Green
                     font.pixelSize: 16
                     anchors.centerIn: parent
                     Behavior on opacity {
