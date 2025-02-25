@@ -215,7 +215,7 @@ Item {
             id: particleText
             property int points: 1
             text: "+" + points
-            color: "#00CC00"
+            color: "#00CC00" // Green for combos
             font.pixelSize: 16
             z: 3
             opacity: 1
@@ -223,30 +223,37 @@ Item {
             SequentialAnimation {
                 id: particleAnimation
                 running: true
-                NumberAnimation {
-                    target: particleText
-                    property: "y"
-                    from: y
-                    to: y - 2
-                    duration: 100
-                    easing.type: Easing.OutQuad
-                }
-                ParallelAnimation {
+                ParallelAnimation { // 45° burst
                     NumberAnimation {
                         target: particleText
                         property: "x"
-                        from: x
-                        to: x + (x < playerContainer.x ? -80 : 80)
-                        duration: 900
-                        easing.type: Easing.InQuad
+                        to: x + (x < playerContainer.x ? -30 : 30) // Sideways burst
+                        duration: 400
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: particleText
+                        property: "y"
+                        to: y - 25 // Upward burst
+                        duration: 400
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                ParallelAnimation { // Scroll down and fade
+                    NumberAnimation {
+                        target: particleText
+                        property: "y"
+                        to: y + 40 // Downward drift after burst
+                        duration: 600
+                        easing.type: Easing.Linear
                     }
                     NumberAnimation {
                         target: particleText
                         property: "opacity"
                         from: 1
                         to: 0
-                        duration: 900
-                        easing.type: Easing.OutQuad
+                        duration: 600
+                        easing.type: Easing.Linear
                     }
                 }
             }
@@ -753,7 +760,7 @@ Item {
                     id: scoreText
                     visible: isAsteroid && dodged
                     text: "+1"
-                    color: "#FFD700"
+                    color: "#00CC00" // Green for +1
                     font.pixelSize: 16
                     anchors.centerIn: parent
                     Behavior on opacity {
@@ -929,10 +936,9 @@ Item {
                     score += basePoints * comboCount * scoreMultiplier
                     var particle = comboParticleComponent.createObject(gameArea, {
                         "x": obj.x,
-                        "y": playerContainer.y,
+                        "y": obj.y,
                         "points": basePoints * comboCount * scoreMultiplier
                     })
-                    obj.dodged = true
                 } else {
                     score += basePoints * scoreMultiplier
                     obj.dodged = true
