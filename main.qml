@@ -29,8 +29,11 @@ Item {
     anchors.fill: parent
     visible: true
 
+    // Base resolution is 360px wide
+    property real scaleFactor: root.width / 360  // Scales all pixel values relative to 360px
+
     property real scrollSpeed: 1.6
-    property real savedScrollSpeed: 0  // Store speed when pausing
+    property real savedScrollSpeed: 0
     property int basePlayerSpeed: 1
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
@@ -49,7 +52,7 @@ Item {
     property real baselineX: 0
     property int calibrationTimer: 5
     property bool invincible: false
-    property real closePassThreshold: 36
+    property real closePassThreshold: 36 * scaleFactor
     property string flashColor: ""
     property int comboCount: 0
     property real lastDodgeTime: 0
@@ -61,25 +64,23 @@ Item {
     property bool isSpeedBoostActive: false
     property bool isShrinkActive: false
 
-    // Object pools
     property var asteroidPool: []
     property var largeAsteroidPool: []
     property int asteroidPoolSize: 40
     property int largeAsteroidPoolSize: 10
 
-    // Delta-time tracking
     property real lastFrameTime: 0
 
     onPausedChanged: {
         console.log("Paused state changed to:", paused)
         if (paused) {
             savedScrollSpeed = scrollSpeed
-            scrollSpeed = 0  // Stop movement
+            scrollSpeed = 0
             if (comboActive) {
                 comboMeterAnimation.pause()
             }
         } else {
-            scrollSpeed = savedScrollSpeed  // Restore movement
+            scrollSpeed = savedScrollSpeed
             if (comboActive) {
                 comboMeterAnimation.resume()
             }
@@ -166,7 +167,7 @@ Item {
         repeat: false
         onTriggered: {
             scrollSpeed = preSlowSpeed
-            savedScrollSpeed = preSlowSpeed  // Update saved speed too
+            savedScrollSpeed = preSlowSpeed
             isSlowMoActive = false
         }
     }
@@ -240,7 +241,7 @@ Item {
             property int points: 1
             text: "+" + points
             color: "#00CC00"
-            font.pixelSize: 16
+            font.pixelSize: 16 * scaleFactor
             z: 3
             opacity: 1
 
@@ -251,14 +252,14 @@ Item {
                     NumberAnimation {
                         target: particleText
                         property: "x"
-                        to: x + (x < playerContainer.x ? -30 : 30)
+                        to: x + (x < playerContainer.x ? -30 * scaleFactor : 30 * scaleFactor)
                         duration: 400
                         easing.type: Easing.OutCubic
                     }
                     NumberAnimation {
                         target: particleText
                         property: "y"
-                        to: y - 25
+                        to: y - 25 * scaleFactor
                         duration: 400
                         easing.type: Easing.OutCubic
                     }
@@ -267,7 +268,7 @@ Item {
                     NumberAnimation {
                         target: particleText
                         property: "y"
-                        to: y + 40
+                        to: y + 40 * scaleFactor
                         duration: 600
                         easing.type: Easing.Linear
                     }
@@ -297,10 +298,10 @@ Item {
         id: shrinkAnimationComponent
         ParallelAnimation {
             running: !root.paused
-            NumberAnimation { target: player; property: "width"; to: 36; duration: 6000; easing.type: Easing.Linear }
-            NumberAnimation { target: player; property: "height"; to: 36; duration: 6000; easing.type: Easing.Linear }
-            NumberAnimation { target: playerHitbox; property: "width"; to: 50; duration: 6000; easing.type: Easing.Linear }
-            NumberAnimation { target: playerHitbox; property: "height"; to: 50; duration: 6000; easing.type: Easing.Linear }
+            NumberAnimation { target: player; property: "width"; to: 36 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
+            NumberAnimation { target: player; property: "height"; to: 36 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
+            NumberAnimation { target: playerHitbox; property: "width"; to: 50 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
+            NumberAnimation { target: playerHitbox; property: "height"; to: 50 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
             onStopped: { isShrinkActive = false }
         }
     }
@@ -320,7 +321,7 @@ Item {
             layer.enabled: true
             layer.effect: FastBlur {
                 id: blurEffect
-                radius: gameOver ? 24 : 0
+                radius: gameOver ? 24 * scaleFactor : 0
                 Behavior on radius {
                     NumberAnimation { duration: 500 }
                 }
@@ -371,8 +372,8 @@ Item {
 
                 Image {
                     id: player
-                    width: 36
-                    height: 36
+                    width: 36 * scaleFactor
+                    height: 36 * scaleFactor
                     source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
                     anchors.centerIn: parent
 
@@ -407,39 +408,39 @@ Item {
 
                 Shape {
                     id: playerHitbox
-                    width: 50
-                    height: 50
+                    width: 50 * scaleFactor
+                    height: 50 * scaleFactor
                     anchors.centerIn: parent
                     visible: false
 
                     ShapePath {
                         strokeWidth: -1
                         fillColor: "transparent"
-                        startX: 25; startY: 0
-                        PathLine { x: 50; y: 25 }
-                        PathLine { x: 25; y: 50 }
-                        PathLine { x: 0; y: 25 }
-                        PathLine { x: 25; y: 0 }
+                        startX: 25 * scaleFactor; startY: 0
+                        PathLine { x: 50 * scaleFactor; y: 25 * scaleFactor }
+                        PathLine { x: 25 * scaleFactor; y: 50 * scaleFactor }
+                        PathLine { x: 0; y: 25 * scaleFactor }
+                        PathLine { x: 25 * scaleFactor; y: 0 }
                     }
                 }
 
                 Shape {
                     id: comboHitbox
-                    width: 144
-                    height: 144
+                    width: 144 * scaleFactor
+                    height: 144 * scaleFactor
                     anchors.centerIn: parent
                     visible: comboActive
                     opacity: 0.2
 
                     ShapePath {
-                        strokeWidth: 2
+                        strokeWidth: 2 * scaleFactor
                         strokeColor: "#00CC00"
                         fillColor: "transparent"
-                        startX: 72; startY: 36
-                        PathLine { x: 108; y: 72 }
-                        PathLine { x: 72; y: 108 }
-                        PathLine { x: 36; y: 72 }
-                        PathLine { x: 72; y: 36 }
+                        startX: 72 * scaleFactor; startY: 36 * scaleFactor
+                        PathLine { x: 108 * scaleFactor; y: 72 * scaleFactor }
+                        PathLine { x: 72 * scaleFactor; y: 108 * scaleFactor }
+                        PathLine { x: 36 * scaleFactor; y: 72 * scaleFactor }
+                        PathLine { x: 72 * scaleFactor; y: 36 * scaleFactor }
                     }
                 }
             }
@@ -448,31 +449,31 @@ Item {
                 id: objectContainer
                 width: parent.width
                 height: parent.height
-                z: 1
+                z: 0
                 visible: !calibrating && !showingNow && !showingSurvive
             }
 
             Rectangle {
                 id: levelProgressBar
-                width: 100
-                height: 6
-                radius: 3
+                width: 100 * scaleFactor
+                height: 6 * scaleFactor
+                radius: 3 * scaleFactor
                 color: "#8B6914"
                 opacity: 0.5
                 anchors {
                     top: parent.top
                     horizontalCenter: parent.horizontalCenter
-                    margins: 22
+                    margins: 22 * scaleFactor
                 }
                 z: 4
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
 
                 Rectangle {
                     id: progressFill
-                    width: asteroidCount
+                    width: asteroidCount * scaleFactor  // Scaled proportionally
                     height: parent.height
                     color: "#FFD700"
-                    radius: 3
+                    radius: 3 * scaleFactor
                 }
             }
 
@@ -481,14 +482,14 @@ Item {
                 anchors {
                     bottom: parent.bottom
                     horizontalCenter: parent.horizontalCenter
-                    margins: 6
+                    margins: 6 * scaleFactor
                 }
-                spacing: 5
+                spacing: 5 * scaleFactor
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
                 Text {
                     text: "❤️ " + lives
                     color: "#dddddd"
-                    font.pixelSize: 20
+                    font.pixelSize: 20 * scaleFactor
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -507,19 +508,19 @@ Item {
                 Binding {
                     target: scoreArea
                     property: "y"
-                    value: playerContainer.y + playerContainer.height + 20
+                    value: playerContainer.y + playerContainer.height + 20 * scaleFactor
                     when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
                 }
 
                 Rectangle {
                     id: comboMeter
-                    property int maxWidth: 48
-                    height: 3
+                    property int maxWidth: 48 * scaleFactor
+                    height: 3 * scaleFactor
                     width: 0
                     color: "green"
                     radius: height / 2
                     x: (scoreText.width - width) / 2
-                    y: -height + 3
+                    y: -height + 3 * scaleFactor
                     SequentialAnimation {
                         id: comboMeterAnimation
                         running: comboActive && !root.paused
@@ -549,7 +550,7 @@ Item {
                     id: scoreText
                     text: score
                     color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd"
-                    font.pixelSize: 18
+                    font.pixelSize: 18 * scaleFactor
                     font.bold: scoreMultiplierTimer.running
                 }
             }
@@ -557,7 +558,7 @@ Item {
             Column {
                 id: calibrationText
                 anchors.centerIn: parent
-                spacing: 5
+                spacing: 5 * scaleFactor
                 visible: calibrating
                 opacity: showingNow ? 0 : 1
                 Behavior on opacity {
@@ -566,21 +567,21 @@ Item {
                 Text {
                     text: "Calibrating"
                     color: "white"
-                    font.pixelSize: 26
+                    font.pixelSize: 26 * scaleFactor
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: "Hold your watch comfy"
                     color: "white"
-                    font.pixelSize: 16
+                    font.pixelSize: 16 * scaleFactor
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: calibrationTimer + "s"
                     color: "white"
-                    font.pixelSize: 20
+                    font.pixelSize: 20 * scaleFactor
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -590,7 +591,7 @@ Item {
                 id: nowText
                 text: "NOW"
                 color: "white"
-                font.pixelSize: 48
+                font.pixelSize: 48 * scaleFactor
                 anchors.centerIn: parent
                 visible: showingNow
                 opacity: 0
@@ -599,7 +600,7 @@ Item {
                     running: false
                     NumberAnimation { target: nowText; property: "opacity"; from: 0; to: 1; duration: 500 }
                     ParallelAnimation {
-                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: 48 * scaleFactor; to: 120 * scaleFactor; duration: 1000; easing.type: Easing.OutQuad }
                         NumberAnimation { target: nowText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
                     }
                 }
@@ -609,7 +610,7 @@ Item {
                 id: surviveText
                 text: "SURVIVE"
                 color: "orange"
-                font.pixelSize: 48
+                font.pixelSize: 48 * scaleFactor
                 font.bold: true
                 anchors.centerIn: parent
                 visible: showingSurvive
@@ -619,7 +620,7 @@ Item {
                     running: false
                     NumberAnimation { target: surviveText; property: "opacity"; from: 0; to: 1; duration: 500 }
                     ParallelAnimation {
-                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: 48; to: 120; duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: 48 * scaleFactor; to: 120 * scaleFactor; duration: 1000; easing.type: Easing.OutQuad }
                         NumberAnimation { target: surviveText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
                     }
                 }
@@ -629,7 +630,7 @@ Item {
                 id: pauseText
                 text: "Paused"
                 color: "white"
-                font.pixelSize: 32
+                font.pixelSize: 32 * scaleFactor
                 anchors.centerIn: parent
                 visible: paused && !gameOver && !calibrating && !showingNow && !showingSurvive
             }
@@ -638,14 +639,14 @@ Item {
                 id: levelNumber
                 text: level
                 color: "#dddddd"
-                font.pixelSize: 14
+                font.pixelSize: 14 * scaleFactor
                 font.bold: true
                 anchors {
                     bottom: levelProgressBar.top
                     horizontalCenter: parent.horizontalCenter
-                    bottomMargin: 4
+                    bottomMargin: 4 * scaleFactor
                 }
-                z: 2
+                z: 4
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
             }
         }
@@ -666,58 +667,58 @@ Item {
             }
 
             Column {
-                spacing: 20
+                spacing: 20 * scaleFactor
                 anchors.centerIn: parent
 
                 Text {
                     id: gameOverText
                     text: "Game Over!"
                     color: "red"
-                    font.pixelSize: 28
+                    font.pixelSize: 28 * scaleFactor
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                 }
 
                 Column {
-                    spacing: 4
+                    spacing: 4 * scaleFactor
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Row {
-                        spacing: 8
-                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: score; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
+                        spacing: 8 * scaleFactor
+                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: 16 * scaleFactor; width: 80 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: score; color: "white"; font.pixelSize: 18 * scaleFactor; font.bold: true; width: 40 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: 8
-                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: level; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
+                        spacing: 8 * scaleFactor
+                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: 16 * scaleFactor; width: 80 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: level; color: "white"; font.pixelSize: 18 * scaleFactor; font.bold: true; width: 40 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: 8
-                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: highScore.value; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
+                        spacing: 8 * scaleFactor
+                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: 16 * scaleFactor; width: 80 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highScore.value; color: "white"; font.pixelSize: 18 * scaleFactor; font.bold: true; width: 40 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: 8
-                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: 16; width: 80; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: highLevel.value; color: "white"; font.pixelSize: 18; font.bold: true; width: 40; horizontalAlignment: Text.AlignHCenter }
+                        spacing: 8 * scaleFactor
+                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: 16 * scaleFactor; width: 80 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highLevel.value; color: "white"; font.pixelSize: 18 * scaleFactor; font.bold: true; width: 40 * scaleFactor; horizontalAlignment: Text.AlignHCenter }
                     }
                 }
 
                 Rectangle {
                     id: tryAgainButton
-                    width: 150
-                    height: 50
+                    width: 150 * scaleFactor
+                    height: 50 * scaleFactor
                     color: "green"
                     border.color: "white"
-                    border.width: 2
-                    radius: 10
+                    border.width: 2 * scaleFactor
+                    radius: 10 * scaleFactor
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Text {
                         text: "Die Again"
                         color: "white"
-                        font.pixelSize: 20
+                        font.pixelSize: 20 * scaleFactor
                         font.bold: true
                         anchors.centerIn: parent
                     }
@@ -735,13 +736,13 @@ Item {
         Component {
             id: largeAsteroidComponent
             Rectangle {
-                width: 30 + Math.random() * 30
+                width: (30 + Math.random() * 30) * scaleFactor
                 height: width
                 x: Math.random() * (root.width - width)
-                y: -height
+                y: -height - (Math.random() * 100 * scaleFactor)
                 color: "#0e003d"
                 opacity: 1 - Math.random() * 0.7
-                radius: 180
+                radius: 180 * scaleFactor
                 visible: false
             }
         }
@@ -758,18 +759,18 @@ Item {
                 property bool isSlowMo: false
                 property bool passed: false
                 property bool dodged: false
-                width: isAsteroid ? 10 : 18
-                height: isAsteroid ? 10 : 18
+                width: isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
+                height: isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
                 x: Math.random() * (root.width - width)
-                y: -height
+                y: -height - (Math.random() * 100 * scaleFactor)
                 visible: false
 
                 Shape {
                     id: asteroidShape
                     visible: isAsteroid && !dodged
                     property real sizeFactor: 0.8 + Math.random() * 0.4
-                    width: 10 * sizeFactor
-                    height: 10 * sizeFactor
+                    width: 10 * sizeFactor * scaleFactor
+                    height: 10 * sizeFactor * scaleFactor
                     anchors.centerIn: parent
 
                     ShapePath {
@@ -795,7 +796,7 @@ Item {
                     visible: isAsteroid && dodged
                     text: "+1"
                     color: "#00CC00"
-                    font.pixelSize: 16
+                    font.pixelSize: 16 * scaleFactor
                     anchors.centerIn: parent
                     Behavior on opacity {
                         NumberAnimation {
@@ -818,7 +819,7 @@ Item {
                         if (isSlowMo) return "#00FFFF"
                         return "#0087ff"
                     }
-                    font.pixelSize: 18
+                    font.pixelSize: 18 * scaleFactor
                     font.bold: true
                     anchors.centerIn: parent
                 }
@@ -847,8 +848,8 @@ Item {
         var playerCenterY = playerContainer.y + playerHitbox.y + playerHitbox.height / 2
         var comboCenterX = playerContainer.x + comboHitbox.x + comboHitbox.width / 2
         var comboCenterY = playerContainer.y + comboHitbox.y + comboHitbox.height / 2
-        var maxDistanceSquared = (playerHitbox.width + 18) * (playerHitbox.width + 18)
-        var comboDistanceSquared = (comboHitbox.width + 18) * (comboHitbox.width + 18)
+        var maxDistanceSquared = (playerHitbox.width + 18 * scaleFactor) * (playerHitbox.width + 18 * scaleFactor)
+        var comboDistanceSquared = (comboHitbox.width + 18 * scaleFactor) * (comboHitbox.width + 18 * scaleFactor)
 
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
@@ -940,10 +941,10 @@ Item {
                     }
 
                     if (obj.isShrink && isColliding(playerHitbox, obj) && !isShrinkActive) {
-                        player.width = 18
-                        player.height = 18
-                        playerHitbox.width = 25
-                        playerHitbox.height = 25
+                        player.width = 18 * scaleFactor
+                        player.height = 18 * scaleFactor
+                        playerHitbox.width = 25 * scaleFactor
+                        playerHitbox.height = 25 * scaleFactor
                         isShrinkActive = true
                         flashOverlay.triggerFlash("#FFA500")
                         comboCount = 0
@@ -958,7 +959,7 @@ Item {
                     if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
                         preSlowSpeed = scrollSpeed
                         scrollSpeed = scrollSpeed / 2
-                        savedScrollSpeed = scrollSpeed  // Update saved speed
+                        savedScrollSpeed = scrollSpeed
                         isSlowMoActive = true
                         slowMoTimer.restart()
                         flashOverlay.triggerFlash("#00FFFF")
@@ -1017,16 +1018,16 @@ Item {
             scoreMultiplierElapsed += deltaTime
         }
 
-        if (!paused && Math.random() < largeAsteroidDensity / 2) {
+        if (Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
         }
 
-        if (!paused && Math.random() < asteroidDensity) {
+        if (Math.random() < asteroidDensity) {
             var isAsteroid = Math.random() < 0.96
             spawnObject(isAsteroid ? {isAsteroid: true} : {isAsteroid: false, isPowerup: true})
         }
 
-        if (!paused && Math.random() < 0.0001) {
+        if (Math.random() < 0.0001) {
             spawnObject({isAsteroid: false, isInvincibility: true})
         }
 
@@ -1051,10 +1052,10 @@ Item {
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var obj = largeAsteroidPool[i]
             if (!obj.visible) {
-                obj.width = 30 + Math.random() * 30
+                obj.width = (30 + Math.random() * 30) * scaleFactor
                 obj.height = obj.width
                 obj.x = Math.random() * (root.width - obj.width)
-                obj.y = -obj.height - (Math.random() * 100)  // Random offset up to 100 pixels above
+                obj.y = -obj.height - (Math.random() * 100 * scaleFactor)
                 obj.opacity = 1 - Math.random() * 0.7
                 obj.visible = true
                 return
@@ -1075,10 +1076,10 @@ Item {
                 obj.isSlowMo = properties.isSlowMo || false
                 obj.passed = false
                 obj.dodged = false
-                obj.width = obj.isAsteroid ? 10 : 18
-                obj.height = obj.isAsteroid ? 10 : 18
+                obj.width = obj.isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
+                obj.height = obj.isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
                 obj.x = Math.random() * (root.width - obj.width)
-                obj.y = -obj.height - (Math.random() * 100)  // Random offset up to 100 pixels above
+                obj.y = -obj.height - (Math.random() * 100 * scaleFactor)
                 obj.visible = true
                 return
             }
@@ -1104,7 +1105,7 @@ Item {
         asteroidCount = 0
         level++
         scrollSpeed += 0.1
-        savedScrollSpeed = scrollSpeed  // Update saved speed on level up
+        savedScrollSpeed = scrollSpeed
         flashOverlay.triggerFlash("#8B6914")
     }
 
@@ -1114,7 +1115,7 @@ Item {
         level = 1
         asteroidCount = 0
         scrollSpeed = 1.6
-        savedScrollSpeed = scrollSpeed  // Reset saved speed
+        savedScrollSpeed = scrollSpeed
         asteroidDensity = 0.044
         gameOver = false
         paused = false
@@ -1134,9 +1135,9 @@ Item {
         isSlowMoActive = false
         isSpeedBoostActive = false
         isShrinkActive = false
-        nowText.font.pixelSize = 48
+        nowText.font.pixelSize = 48 * scaleFactor
         nowText.opacity = 0
-        surviveText.font.pixelSize = 48
+        surviveText.font.pixelSize = 48 * scaleFactor
         surviveText.opacity = 0
         playerContainer.x = root.width / 2 - player.width / 2
         gameOverScreen.opacity = 0
@@ -1151,52 +1152,67 @@ Item {
             largeAsteroidPool[i].y = -largeAsteroidPool[i].height
         }
 
-        for (var j = 0; j < 5; j++) {
-            spawnObject({isAsteroid: true})
-        }
-        for (j = 0; j < 3; j++) {
-            spawnLargeAsteroid()
-        }
-    }
-
-Component.onCompleted: {
-    for (var i = 0; i < asteroidPoolSize; i++) {
-        var obj = objectComponent.createObject(objectContainer)
-        obj.visible = false
-        obj.y = -obj.height
-        asteroidPool.push(obj)
-    }
-    for (i = 0; i < largeAsteroidPoolSize; i++) {
-        var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
-        largeObj.visible = false
-        largeObj.y = -largeObj.height
-        largeAsteroidPool.push(largeObj)
-    }
-
-    calibrating = true
-
-    // Stagger initial spawns over a short period
-    var spawnTimer = Qt.createQmlObject('
-        import QtQuick 2.15
-        Timer {
-            interval: 200
-            repeat: true
-            running: true
-            property int count: 0
-            onTriggered: {
-                if (count < 5) {
-                    spawnObject({isAsteroid: true})
-                }
-                if (count < 3) {
-                    spawnLargeAsteroid()
-                }
-                count++
-                if (count >= 5) {
-                    stop()
-                    destroy()
+        var spawnTimer = Qt.createQmlObject('
+            import QtQuick 2.15
+            Timer {
+                interval: 200
+                repeat: true
+                running: true
+                property int count: 0
+                onTriggered: {
+                    if (count < 5) {
+                        spawnObject({isAsteroid: true})
+                    }
+                    if (count < 3) {
+                        spawnLargeAsteroid()
+                    }
+                    count++
+                    if (count >= 5) {
+                        stop()
+                        destroy()
+                    }
                 }
             }
+        ', root, "spawnTimer")
+    }
+
+    Component.onCompleted: {
+        for (var i = 0; i < asteroidPoolSize; i++) {
+            var obj = objectComponent.createObject(objectContainer)
+            obj.visible = false
+            obj.y = -obj.height
+            asteroidPool.push(obj)
         }
-    ', root, "spawnTimer")
+        for (i = 0; i < largeAsteroidPoolSize; i++) {
+            var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
+            largeObj.visible = false
+            largeObj.y = -largeObj.height
+            largeAsteroidPool.push(largeObj)
+        }
+
+        calibrating = true
+
+        var spawnTimer = Qt.createQmlObject('
+            import QtQuick 2.15
+            Timer {
+                interval: 200
+                repeat: true
+                running: true
+                property int count: 0
+                onTriggered: {
+                    if (count < 5) {
+                        spawnObject({isAsteroid: true})
+                    }
+                    if (count < 3) {
+                        spawnLargeAsteroid()
+                    }
+                    count++
+                    if (count >= 5) {
+                        stop()
+                        destroy()
+                    }
+                }
+            }
+        ', root, "spawnTimer")
     }
 }
