@@ -21,7 +21,6 @@ import QtQuick 2.15
 import QtSensors 5.15
 import Nemo.Ngf 1.0
 import Nemo.Configuration 1.0
-import QtGraphicalEffects 1.15
 import QtQuick.Shapes 1.15
 
 Item {
@@ -29,9 +28,7 @@ Item {
     anchors.fill: parent
     visible: true
 
-    // Base resolution is 360px wide
-    property real scaleFactor: root.width / 360  // Scales all pixel values relative to 360px
-
+    property real scaleFactor: root.width / 360
     property real scrollSpeed: 1.6
     property real savedScrollSpeed: 0
     property int basePlayerSpeed: 1
@@ -53,7 +50,7 @@ Item {
     property int calibrationTimer: 5
     property bool invincible: false
     property real closePassThreshold: 36 * scaleFactor
-    property string flashColor: ""
+    property string flashColor: ""  // Kept for structure, unused
     property int comboCount: 0
     property real lastDodgeTime: 0
     property bool comboActive: false
@@ -68,11 +65,9 @@ Item {
     property var largeAsteroidPool: []
     property int asteroidPoolSize: 40
     property int largeAsteroidPoolSize: 10
-
     property real lastFrameTime: 0
 
     onPausedChanged: {
-        console.log("Paused state changed to:", paused)
         if (paused) {
             savedScrollSpeed = scrollSpeed
             scrollSpeed = 0
@@ -247,7 +242,7 @@ Item {
 
             SequentialAnimation {
                 id: particleAnimation
-                running: !root.paused
+                running: true
                 ParallelAnimation {
                     NumberAnimation {
                         target: particleText
@@ -281,15 +276,13 @@ Item {
                         easing.type: Easing.Linear
                     }
                 }
+                onStopped: {
+                    particleText.destroy()  // Explicitly destroy when animation completes
+                }
             }
 
-            Timer {
-                interval: 1000
-                running: true
-                repeat: false
-                onTriggered: {
-                    destroy()
-                }
+            Component.onDestruction: {
+                console.log("Particle destroyed: +" + points)  // Debug to confirm cleanup
             }
         }
     }
@@ -319,41 +312,6 @@ Item {
             id: gameContent
             anchors.fill: parent
             layer.enabled: true
-            layer.effect: FastBlur {
-                id: blurEffect
-                radius: gameOver ? 24 * scaleFactor : 0
-                Behavior on radius {
-                    NumberAnimation { duration: 500 }
-                }
-            }
-
-            Rectangle {
-                id: flashOverlay
-                anchors.fill: parent
-                color: flashColor ? flashColor : "transparent"
-                opacity: 0
-                z: 5
-                SequentialAnimation {
-                    id: flashAnimation
-                    running: false
-                    NumberAnimation {
-                        target: flashOverlay
-                        property: "opacity"
-                        from: 0.5
-                        to: 0
-                        duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 6000 : 500
-                        easing.type: Easing.OutQuad
-                    }
-                    onStopped: {
-                        flashColor = ""
-                    }
-                }
-                function triggerFlash(color) {
-                    flashColor = color
-                    opacity = 0.5
-                    flashAnimation.start()
-                }
-            }
 
             Item {
                 id: largeAsteroidContainer
@@ -396,13 +354,6 @@ Item {
                         onStopped: {
                             player.rotation = 0
                         }
-                    }
-
-                    ColorOverlay {
-                        anchors.fill: parent
-                        source: player
-                        color: "#FFFF0080"
-                        visible: speedBoostTimer.running
                     }
                 }
 
@@ -470,7 +421,7 @@ Item {
 
                 Rectangle {
                     id: progressFill
-                    width: asteroidCount * scaleFactor  // Scaled proportionally
+                    width: asteroidCount * scaleFactor
                     height: parent.height
                     color: "#FFD700"
                     radius: 3 * scaleFactor
@@ -875,7 +826,6 @@ Item {
                 if (distanceSquared < maxDistanceSquared) {
                     if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
                         lives--
-                        flashOverlay.triggerFlash("red")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -892,7 +842,6 @@ Item {
 
                     if (obj.isPowerup && isColliding(playerHitbox, obj)) {
                         lives++
-                        flashOverlay.triggerFlash("blue")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -905,7 +854,6 @@ Item {
                         invincible = true
                         graceTimer.interval = 4000
                         graceTimer.restart()
-                        flashOverlay.triggerFlash("#FF69B4")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -918,7 +866,6 @@ Item {
                         playerSpeed = basePlayerSpeed * 2
                         isSpeedBoostActive = true
                         speedBoostTimer.restart()
-                        flashOverlay.triggerFlash("#FFFF00")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -931,7 +878,6 @@ Item {
                         scoreMultiplier = 2.0
                         scoreMultiplierElapsed = 0
                         scoreMultiplierTimer.restart()
-                        flashOverlay.triggerFlash("#00CC00")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -946,7 +892,6 @@ Item {
                         playerHitbox.width = 25 * scaleFactor
                         playerHitbox.height = 25 * scaleFactor
                         isShrinkActive = true
-                        flashOverlay.triggerFlash("#FFA500")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -962,7 +907,6 @@ Item {
                         savedScrollSpeed = scrollSpeed
                         isSlowMoActive = true
                         slowMoTimer.restart()
-                        flashOverlay.triggerFlash("#00FFFF")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -1106,7 +1050,6 @@ Item {
         level++
         scrollSpeed += 0.1
         savedScrollSpeed = scrollSpeed
-        flashOverlay.triggerFlash("#8B6914")
     }
 
     function restartGame() {
@@ -1191,7 +1134,6 @@ Item {
         }
 
         calibrating = true
-
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
