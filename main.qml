@@ -50,7 +50,7 @@ Item {
     property int calibrationTimer: 5
     property bool invincible: false
     property real closePassThreshold: 36 * scaleFactor
-    property string flashColor: ""  // Kept for structure, unused
+    property string flashColor: ""
     property int comboCount: 0
     property real lastDodgeTime: 0
     property bool comboActive: false
@@ -277,12 +277,8 @@ Item {
                     }
                 }
                 onStopped: {
-                    particleText.destroy()  // Explicitly destroy when animation completes
+                    particleText.destroy()
                 }
-            }
-
-            Component.onDestruction: {
-                console.log("Particle destroyed: +" + points)  // Debug to confirm cleanup
             }
         }
     }
@@ -312,6 +308,38 @@ Item {
             id: gameContent
             anchors.fill: parent
             layer.enabled: true
+
+            Rectangle {
+                id: flashOverlay
+                anchors.fill: parent
+                color: flashColor ? flashColor : "transparent"
+                opacity: 0
+                z: 5
+                SequentialAnimation {
+                    id: flashAnimation
+                    running: false
+                    NumberAnimation {
+                        target: flashOverlay
+                        property: "opacity"
+                        from: 0.5
+                        to: 0
+                        duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 6000 : 500
+                        easing.type: Easing.OutQuad
+                    }
+                    onStopped: {
+                        flashOverlay.opacity = 0  // Reset explicitly
+                        flashColor = ""  // Clear color
+                    }
+                }
+                function triggerFlash(color) {
+                    if (flashAnimation.running) {
+                        flashAnimation.stop()  // Stop any ongoing flash
+                    }
+                    flashColor = color
+                    opacity = 0.5
+                    flashAnimation.start()
+                }
+            }
 
             Item {
                 id: largeAsteroidContainer
@@ -826,6 +854,7 @@ Item {
                 if (distanceSquared < maxDistanceSquared) {
                     if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
                         lives--
+                        flashOverlay.triggerFlash("red")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -842,6 +871,7 @@ Item {
 
                     if (obj.isPowerup && isColliding(playerHitbox, obj)) {
                         lives++
+                        flashOverlay.triggerFlash("blue")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -854,6 +884,7 @@ Item {
                         invincible = true
                         graceTimer.interval = 4000
                         graceTimer.restart()
+                        flashOverlay.triggerFlash("#FF69B4")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -866,6 +897,7 @@ Item {
                         playerSpeed = basePlayerSpeed * 2
                         isSpeedBoostActive = true
                         speedBoostTimer.restart()
+                        flashOverlay.triggerFlash("#FFFF00")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -878,6 +910,7 @@ Item {
                         scoreMultiplier = 2.0
                         scoreMultiplierElapsed = 0
                         scoreMultiplierTimer.restart()
+                        flashOverlay.triggerFlash("#00CC00")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -892,6 +925,7 @@ Item {
                         playerHitbox.width = 25 * scaleFactor
                         playerHitbox.height = 25 * scaleFactor
                         isShrinkActive = true
+                        flashOverlay.triggerFlash("#FFA500")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -907,6 +941,7 @@ Item {
                         savedScrollSpeed = scrollSpeed
                         isSlowMoActive = true
                         slowMoTimer.restart()
+                        flashOverlay.triggerFlash("#00FFFF")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -1050,6 +1085,7 @@ Item {
         level++
         scrollSpeed += 0.1
         savedScrollSpeed = scrollSpeed
+        flashOverlay.triggerFlash("#8B6914")
     }
 
     function restartGame() {
