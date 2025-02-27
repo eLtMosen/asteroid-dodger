@@ -21,7 +21,6 @@ import QtQuick 2.15
 import QtSensors 5.15
 import Nemo.Ngf 1.0
 import Nemo.Configuration 1.0
-import QtGraphicalEffects 1.15
 import QtQuick.Shapes 1.15
 
 Item {
@@ -29,9 +28,7 @@ Item {
     anchors.fill: parent
     visible: true
 
-    // Base resolution is 360px wide
-    property real scaleFactor: root.width / 360  // Scales all pixel values relative to 360px
-
+    property real scaleFactor: root.width / 360
     property real scrollSpeed: 1.6
     property real savedScrollSpeed: 0
     property int basePlayerSpeed: 1
@@ -68,11 +65,9 @@ Item {
     property var largeAsteroidPool: []
     property int asteroidPoolSize: 40
     property int largeAsteroidPoolSize: 10
-
     property real lastFrameTime: 0
 
     onPausedChanged: {
-        console.log("Paused state changed to:", paused)
         if (paused) {
             savedScrollSpeed = scrollSpeed
             scrollSpeed = 0
@@ -247,7 +242,7 @@ Item {
 
             SequentialAnimation {
                 id: particleAnimation
-                running: !root.paused
+                running: true
                 ParallelAnimation {
                     NumberAnimation {
                         target: particleText
@@ -281,14 +276,8 @@ Item {
                         easing.type: Easing.Linear
                     }
                 }
-            }
-
-            Timer {
-                interval: 1000
-                running: true
-                repeat: false
-                onTriggered: {
-                    destroy()
+                onStopped: {
+                    particleText.destroy()
                 }
             }
         }
@@ -319,13 +308,6 @@ Item {
             id: gameContent
             anchors.fill: parent
             layer.enabled: true
-            layer.effect: FastBlur {
-                id: blurEffect
-                radius: gameOver ? 24 * scaleFactor : 0
-                Behavior on radius {
-                    NumberAnimation { duration: 500 }
-                }
-            }
 
             Rectangle {
                 id: flashOverlay
@@ -345,10 +327,14 @@ Item {
                         easing.type: Easing.OutQuad
                     }
                     onStopped: {
-                        flashColor = ""
+                        flashOverlay.opacity = 0  // Reset explicitly
+                        flashColor = ""  // Clear color
                     }
                 }
                 function triggerFlash(color) {
+                    if (flashAnimation.running) {
+                        flashAnimation.stop()  // Stop any ongoing flash
+                    }
                     flashColor = color
                     opacity = 0.5
                     flashAnimation.start()
@@ -396,13 +382,6 @@ Item {
                         onStopped: {
                             player.rotation = 0
                         }
-                    }
-
-                    ColorOverlay {
-                        anchors.fill: parent
-                        source: player
-                        color: "#FFFF0080"
-                        visible: speedBoostTimer.running
                     }
                 }
 
@@ -470,7 +449,7 @@ Item {
 
                 Rectangle {
                     id: progressFill
-                    width: asteroidCount * scaleFactor  // Scaled proportionally
+                    width: asteroidCount * scaleFactor
                     height: parent.height
                     color: "#FFD700"
                     radius: 3 * scaleFactor
@@ -1191,7 +1170,6 @@ Item {
         }
 
         calibrating = true
-
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
