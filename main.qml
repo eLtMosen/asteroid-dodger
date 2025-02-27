@@ -31,14 +31,14 @@ Item {
     property real scaleFactor: root.width / 360
     property real scrollSpeed: 1.6
     property real savedScrollSpeed: 0
-    property int basePlayerSpeed: 1
+    property real basePlayerSpeed: 1.2
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
     property int score: 0
     property int lives: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.044 + (level - 1) * 0.002
+    property real asteroidDensity: 0.044 + (level - 1) * 0.00242  // +10% denser progression
     property real largeAsteroidDensity: asteroidDensity / 2
     property bool gameOver: false
     property bool playerHit: false
@@ -327,13 +327,13 @@ Item {
                         easing.type: Easing.OutQuad
                     }
                     onStopped: {
-                        flashOverlay.opacity = 0  // Reset explicitly
-                        flashColor = ""  // Clear color
+                        flashOverlay.opacity = 0
+                        flashColor = ""
                     }
                 }
                 function triggerFlash(color) {
                     if (flashAnimation.running) {
-                        flashAnimation.stop()  // Stop any ongoing flash
+                        flashAnimation.stop()
                     }
                     flashColor = color
                     opacity = 0.5
@@ -715,7 +715,7 @@ Item {
         Component {
             id: largeAsteroidComponent
             Rectangle {
-                width: (30 + Math.random() * 30) * scaleFactor
+                width: (30 + Math.random() * 43.2) * scaleFactor  // +20% more size range
                 height: width
                 x: Math.random() * (root.width - width)
                 y: -height - (Math.random() * 100 * scaleFactor)
@@ -738,8 +738,8 @@ Item {
                 property bool isSlowMo: false
                 property bool passed: false
                 property bool dodged: false
-                width: isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
-                height: isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
+                width: isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor  // Power-ups +10% larger again
+                height: isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor
                 x: Math.random() * (root.width - width)
                 y: -height - (Math.random() * 100 * scaleFactor)
                 visible: false
@@ -756,9 +756,9 @@ Item {
                         strokeWidth: -1
                         fillColor: {
                             var base = 230
-                            var delta = Math.round(base * 0.2)
+                            var delta = Math.round(base * 0.22)  // +10% more color range
                             var rand = Math.round(base - delta + Math.random() * (2 * delta))
-                            rand = Math.max(184, Math.min(255, rand))
+                            rand = Math.max(179, Math.min(255, rand))  // Adjusted min to 179
                             var hex = rand.toString(16).padStart(2, '0')
                             return "#" + hex + hex + hex + "ff"
                         }
@@ -997,32 +997,32 @@ Item {
             scoreMultiplierElapsed += deltaTime
         }
 
-        if (Math.random() < largeAsteroidDensity / 2) {
+        if (!paused && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
         }
 
-        if (Math.random() < asteroidDensity) {
+        if (!paused && Math.random() < asteroidDensity) {
             var isAsteroid = Math.random() < 0.96
             spawnObject(isAsteroid ? {isAsteroid: true} : {isAsteroid: false, isPowerup: true})
         }
 
-        if (Math.random() < 0.0001) {
+        if (!paused && Math.random() < 0.0001) {
             spawnObject({isAsteroid: false, isInvincibility: true})
         }
 
-        if (Math.random() < 0.0005) {
+        if (!paused && Math.random() < 0.0005) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
         }
 
-        if (Math.random() < 0.0005) {
+        if (!paused && Math.random() < 0.0005) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
         }
 
-        if (Math.random() < 0.0005) {
+        if (!paused && Math.random() < 0.0005) {
             spawnObject({isAsteroid: false, isShrink: true})
         }
 
-        if (Math.random() < 0.0003) {
+        if (!paused && Math.random() < 0.0003) {
             spawnObject({isAsteroid: false, isSlowMo: true})
         }
     }
@@ -1031,7 +1031,7 @@ Item {
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var obj = largeAsteroidPool[i]
             if (!obj.visible) {
-                obj.width = (30 + Math.random() * 30) * scaleFactor
+                obj.width = (30 + Math.random() * 43.2) * scaleFactor
                 obj.height = obj.width
                 obj.x = Math.random() * (root.width - obj.width)
                 obj.y = -obj.height - (Math.random() * 100 * scaleFactor)
@@ -1055,8 +1055,8 @@ Item {
                 obj.isSlowMo = properties.isSlowMo || false
                 obj.passed = false
                 obj.dodged = false
-                obj.width = obj.isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
-                obj.height = obj.isAsteroid ? 10 * scaleFactor : 18 * scaleFactor
+                obj.width = obj.isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor
+                obj.height = obj.isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor
                 obj.x = Math.random() * (root.width - obj.width)
                 obj.y = -obj.height - (Math.random() * 100 * scaleFactor)
                 obj.visible = true
