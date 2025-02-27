@@ -38,7 +38,7 @@ Item {
     property int lives: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.044 + (level - 1) * 0.00242  // +10% denser progression
+    property real asteroidDensity: 0.044 + (level - 1) * 0.00242
     property real largeAsteroidDensity: asteroidDensity / 2
     property bool gameOver: false
     property bool playerHit: false
@@ -235,8 +235,45 @@ Item {
             id: particleText
             property int points: 1
             text: "+" + points
-            color: "#00CC00"
-            font.pixelSize: 16 * scaleFactor
+            color: {
+                if (points <= 10) return "#00CC00"  // Green
+                if (points <= 20) {
+                    // Fade from green (#00CC00) to gold (#FFD700)
+                    var t = (points - 10) / 10
+                    var r = Math.round(0x00 + t * (0xFF - 0x00))
+                    var g = Math.round(0xCC + t * (0xD7 - 0xCC))
+                    var b = Math.round(0x00 + t * (0x00 - 0x00))
+                    return Qt.rgba(r / 255, g / 255, b / 255, 1)
+                }
+                if (points <= 40) {
+                    // Fade from gold (#FFD700) to pink (#FF69B4)
+                    var t = (points - 20) / 20
+                    var r = Math.round(0xFF + t * (0xFF - 0xFF))
+                    var g = Math.round(0xD7 + t * (0x69 - 0xD7))
+                    var b = Math.round(0x00 + t * (0xB4 - 0x00))
+                    return Qt.rgba(r / 255, g / 255, b / 255, 1)
+                }
+                return "#FF69B4"  // Pink beyond 40
+            }
+            font.pixelSize: {
+                if (points <= 10) return 16 * scaleFactor  // Base size
+                if (points <= 20) {
+                    // 20% growth from 16 to 19.2
+                    var t = (points - 10) / 10
+                    return (16 + t * (19.2 - 16)) * scaleFactor
+                }
+                if (points <= 40) {
+                    // 20% growth from 19.2 to 23.04
+                    var t = (points - 20) / 20
+                    return (19.2 + t * (23.04 - 19.2)) * scaleFactor
+                }
+                if (points <= 100) {
+                    // 20% growth from 23.04 to 27.648
+                    var t = (points - 40) / 60
+                    return (23.04 + t * (27.648 - 23.04)) * scaleFactor
+                }
+                return 27.648 * scaleFactor  // Cap at 100+
+            }
             z: 3
             opacity: 1
 
@@ -715,7 +752,7 @@ Item {
         Component {
             id: largeAsteroidComponent
             Rectangle {
-                width: (30 + Math.random() * 43.2) * scaleFactor  // +20% more size range
+                width: (30 + Math.random() * 43.2) * scaleFactor
                 height: width
                 x: Math.random() * (root.width - width)
                 y: -height - (Math.random() * 100 * scaleFactor)
@@ -738,7 +775,7 @@ Item {
                 property bool isSlowMo: false
                 property bool passed: false
                 property bool dodged: false
-                width: isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor  // Power-ups +10% larger again
+                width: isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor
                 height: isAsteroid ? 10 * scaleFactor : 21.78 * scaleFactor
                 x: Math.random() * (root.width - width)
                 y: -height - (Math.random() * 100 * scaleFactor)
@@ -756,9 +793,9 @@ Item {
                         strokeWidth: -1
                         fillColor: {
                             var base = 230
-                            var delta = Math.round(base * 0.22)  // +10% more color range
+                            var delta = Math.round(base * 0.22)
                             var rand = Math.round(base - delta + Math.random() * (2 * delta))
-                            rand = Math.max(179, Math.min(255, rand))  // Adjusted min to 179
+                            rand = Math.max(179, Math.min(255, rand))
                             var hex = rand.toString(16).padStart(2, '0')
                             return "#" + hex + hex + hex + "ff"
                         }
