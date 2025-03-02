@@ -75,10 +75,14 @@ Item {
             if (comboActive) {
                 comboMeterAnimation.pause()
             }
+            comboHitboxAnimation.pause()  // Explicitly pause comboHitbox animation
         } else {
             scrollSpeed = savedScrollSpeed
             if (comboActive) {
                 comboMeterAnimation.resume()
+            }
+            if (scoreMultiplierTimer.running) {  // Resume if multiplier active
+                comboHitboxAnimation.resume()
             }
         }
     }
@@ -239,7 +243,7 @@ Item {
 
     Timer {
         id: shrinkTimer
-        interval: 16 // Match game update rate for smooth animation
+        interval: 16
         running: isShrinkActive && !paused
         repeat: true
         property real elapsed: 0
@@ -258,7 +262,7 @@ Item {
             }
         }
         onRunningChanged: {
-            if (!running) {
+            if (!running && !paused) {  // Only reset elapsed when not paused
                 elapsed = 0
             }
         }
@@ -558,6 +562,7 @@ Item {
                     }
 
                     SequentialAnimation on opacity {
+                        id: comboHitboxAnimation  // Add ID for explicit control
                         running: scoreMultiplierTimer.running && !root.paused
                         loops: Animation.Infinite
                         NumberAnimation { from: 0.2; to: 0.4; duration: 500; easing.type: Easing.InOutSine }
