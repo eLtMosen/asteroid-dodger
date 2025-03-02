@@ -66,6 +66,7 @@ Item {
     property int asteroidPoolSize: 40
     property int largeAsteroidPoolSize: 10
     property real lastFrameTime: 0
+    property var activeParticles: []
 
     onPausedChanged: {
         if (paused) {
@@ -400,7 +401,22 @@ Item {
                     }
                 }
                 onStopped: {
+                    // Remove from activeParticles before destroying
+                    var index = activeParticles.indexOf(particleText)
+                    if (index !== -1) {
+                        activeParticles.splice(index, 1)
+                    }
                     particleText.destroy()
+                }
+            }
+            Component.onCompleted: {
+                // Add to activeParticles and enforce cap
+                activeParticles.push(particleText)
+                if (activeParticles.length > 4) {
+                    var oldestParticle = activeParticles.shift() // Remove oldest
+                    if (oldestParticle) {
+                        oldestParticle.destroy()
+                    }
                 }
             }
         }
