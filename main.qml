@@ -22,6 +22,7 @@ import QtSensors 5.15
 import Nemo.Ngf 1.0
 import Nemo.Configuration 1.0
 import QtQuick.Shapes 1.15
+import org.asteroid.controls 1.0
 
 Item {
     id: root
@@ -60,6 +61,7 @@ Item {
     property bool isSlowMoActive: false
     property bool isSpeedBoostActive: false
     property bool isShrinkActive: false
+    property var activePowerups: []
 
     property var asteroidPool: []
     property var largeAsteroidPool: []
@@ -90,6 +92,7 @@ Item {
             if (level > highLevel.value) {
                 highLevel.value = level
             }
+            clearPowerupBars()
         }
     }
 
@@ -108,6 +111,65 @@ Item {
     NonGraphicalFeedback {
         id: feedback
         event: "press"
+    }
+
+    Component {
+        id: progressBarComponent
+        Item {
+            id: progressBar
+            property real progress: 1.0
+            property string fillColor: "#FFD700"
+            property int duration: 0
+            property var timer: null
+            width: 100 * scaleFactor
+            height: 6 * scaleFactor
+
+            Rectangle {
+                width: parent.width
+                height: parent.height
+                radius: 3 * scaleFactor
+                color: "#8B6914"
+                opacity: 0.5
+            }
+
+            Rectangle {
+                id: fill
+                width: parent.width * progress
+                height: parent.height
+                color: fillColor
+                radius: 3 * scaleFactor
+                opacity: 0.5  // Match level progress bar opacity
+            }
+
+            function startTimer() {
+                if (timer) {
+                    timer.destroy()
+                }
+                timer = Qt.createQmlObject(`
+                    import QtQuick 2.15
+                    Timer {
+                        interval: 16
+                        running: true
+                        repeat: true
+                        property real elapsed: 0
+                        onTriggered: {
+                            elapsed += interval
+                            progress = Math.max(0, 1 - elapsed / duration)
+                            if (progress <= 0) {
+                                progressBar.destroy()
+                            }
+                        }
+                    }
+                `, progressBar, "powerupTimer")
+            }
+
+            onProgressChanged: {
+                if (progress <= 0 && timer) {
+                    timer.destroy()
+                    progressBar.destroy()
+                }
+            }
+        }
     }
 
     Timer {
@@ -130,6 +192,7 @@ Item {
         repeat: false
         onTriggered: {
             invincible = false
+            removePowerup("invincibility")
         }
     }
 
@@ -141,6 +204,7 @@ Item {
         onTriggered: {
             playerSpeed = basePlayerSpeed
             isSpeedBoostActive = false
+            removePowerup("speedBoost")
         }
     }
 
@@ -152,6 +216,7 @@ Item {
         onTriggered: {
             scoreMultiplier = 1.0
             scoreMultiplierElapsed = 0
+            removePowerup("scoreMultiplier")
         }
     }
 
@@ -164,6 +229,18 @@ Item {
             scrollSpeed = preSlowSpeed
             savedScrollSpeed = preSlowSpeed
             isSlowMoActive = false
+            removePowerup("slowMo")
+        }
+    }
+
+    Timer {
+        id: shrinkTimer
+        interval: 6000
+        running: isShrinkActive && !paused
+        repeat: false
+        onTriggered: {
+            isShrinkActive = false
+            removePowerup("shrink")
         }
     }
 
@@ -238,7 +315,6 @@ Item {
             color: {
                 if (points <= 10) return "#00CC00"  // Green
                 if (points <= 20) {
-                    // Fade from green (#00CC00) to gold (#FFD700)
                     var t = (points - 10) / 10
                     var r = Math.round(0x00 + t * (0xFF - 0x00))
                     var g = Math.round(0xCC + t * (0xD7 - 0xCC))
@@ -246,7 +322,6 @@ Item {
                     return Qt.rgba(r / 255, g / 255, b / 255, 1)
                 }
                 if (points <= 40) {
-                    // Fade from gold (#FFD700) to pink (#FF69B4)
                     var t = (points - 20) / 20
                     var r = Math.round(0xFF + t * (0xFF - 0xFF))
                     var g = Math.round(0xD7 + t * (0x69 - 0xD7))
@@ -256,23 +331,20 @@ Item {
                 return "#FF69B4"  // Pink beyond 40
             }
             font.pixelSize: {
-                if (points <= 10) return 16 * scaleFactor  // Base size
+                if (points <= 10) return 16 * scaleFactor
                 if (points <= 20) {
-                    // 20% growth from 16 to 19.2
                     var t = (points - 10) / 10
                     return (16 + t * (19.2 - 16)) * scaleFactor
                 }
                 if (points <= 40) {
-                    // 20% growth from 19.2 to 23.04
                     var t = (points - 20) / 20
                     return (19.2 + t * (23.04 - 19.2)) * scaleFactor
                 }
                 if (points <= 100) {
-                    // 20% growth from 23.04 to 27.648
                     var t = (points - 40) / 60
                     return (23.04 + t * (27.648 - 23.04)) * scaleFactor
                 }
-                return 27.648 * scaleFactor  // Cap at 100+
+                return 27.648 * scaleFactor
             }
             z: 3
             opacity: 1
@@ -323,12 +395,42 @@ Item {
     Component {
         id: shrinkAnimationComponent
         ParallelAnimation {
-            running: !root.paused
-            NumberAnimation { target: player; property: "width"; to: 36 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
-            NumberAnimation { target: player; property: "height"; to: 36 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
-            NumberAnimation { target: playerHitbox; property: "width"; to: 50 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
-            NumberAnimation { target: playerHitbox; property: "height"; to: 50 * scaleFactor; duration: 6000; easing.type: Easing.Linear }
-            onStopped: { isShrinkActive = false }
+            running: isShrinkActive && !root.paused
+            NumberAnimation {
+                target: player;
+                property: "width";
+                from: 18 * scaleFactor;
+                to: 36 * scaleFactor;
+                duration: 6000;
+                easing.type: Easing.Linear
+            }
+            NumberAnimation {
+                target: player;
+                property: "height";
+                from: 18 * scaleFactor;
+                to: 36 * scaleFactor;
+                duration: 6000;
+                easing.type: Easing.Linear
+            }
+            NumberAnimation {
+                target: playerHitbox;
+                property: "width";
+                from: 25 * scaleFactor;
+                to: 50 * scaleFactor;
+                duration: 6000;
+                easing.type: Easing.Linear
+            }
+            NumberAnimation {
+                target: playerHitbox;
+                property: "height";
+                from: 25 * scaleFactor;
+                to: 50 * scaleFactor;
+                duration: 6000;
+                easing.type: Easing.Linear
+            }
+            onStopped: {
+                isShrinkActive = false
+            }
         }
     }
 
@@ -469,27 +571,50 @@ Item {
                 visible: !calibrating && !showingNow && !showingSurvive
             }
 
-            Rectangle {
-                id: levelProgressBar
-                width: 100 * scaleFactor
-                height: 6 * scaleFactor
-                radius: 3 * scaleFactor
-                color: "#8B6914"
-                opacity: 0.5
+            Item {
+                id: progressBarsContainer
                 anchors {
                     top: parent.top
                     horizontalCenter: parent.horizontalCenter
-                    margins: 22 * scaleFactor
+                    topMargin: 22 * scaleFactor
                 }
                 z: 4
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
 
-                Rectangle {
-                    id: progressFill
-                    width: asteroidCount * scaleFactor
-                    height: parent.height
-                    color: "#FFD700"
-                    radius: 3 * scaleFactor
+                // Level Progress Bar
+                Item {
+                    id: levelProgressBar
+                    width: 100 * scaleFactor
+                    height: 6 * scaleFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    Rectangle {
+                        width: parent.width
+                        height: parent.height
+                        radius: 3 * scaleFactor
+                        color: "#8B6914"
+                        opacity: 0.5
+                    }
+
+                    Rectangle {
+                        id: progressFill
+                        width: asteroidCount * scaleFactor
+                        height: parent.height
+                        color: "#FFD700"
+                        radius: 3 * scaleFactor
+                        opacity: 0.5
+                    }
+                }
+
+                // Dynamic Power-up Progress Bars
+                Column {
+                    id: powerupBars
+                    anchors {
+                        top: levelProgressBar.bottom
+                        topMargin: Dims.l(1)
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                    spacing: Dims.l(1)
                 }
             }
 
@@ -856,6 +981,42 @@ Item {
         }
     }
 
+    function addPowerupBar(type, duration, color) {
+        var existing = activePowerups.find(function(p) { return p.type === type })
+        if (existing) {
+            existing.bar.progress = 1.0
+            existing.bar.startTimer()
+            return
+        }
+
+        var bar = progressBarComponent.createObject(powerupBars, {
+            "fillColor": color,
+            "duration": duration
+        })
+        bar.startTimer()
+        activePowerups.push({ type: type, bar: bar })
+    }
+
+    function removePowerup(type) {
+        var index = activePowerups.findIndex(function(p) { return p.type === type })
+        if (index !== -1) {
+            var powerup = activePowerups[index]
+            if (powerup.bar) {
+                powerup.bar.destroy()
+            }
+            activePowerups.splice(index, 1)
+        }
+    }
+
+    function clearPowerupBars() {
+        for (var i = 0; i < activePowerups.length; i++) {
+            if (activePowerups[i].bar) {
+                activePowerups[i].bar.destroy()
+            }
+        }
+        activePowerups = []
+    }
+
     function updateGame(deltaTime) {
         var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
@@ -922,6 +1083,7 @@ Item {
                         graceTimer.interval = 4000
                         graceTimer.restart()
                         flashOverlay.triggerFlash("#FF69B4")
+                        addPowerupBar("invincibility", 4000, "#FF69B4")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -935,6 +1097,7 @@ Item {
                         isSpeedBoostActive = true
                         speedBoostTimer.restart()
                         flashOverlay.triggerFlash("#FFFF00")
+                        addPowerupBar("speedBoost", 3000, "#FFFF00")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -948,6 +1111,7 @@ Item {
                         scoreMultiplierElapsed = 0
                         scoreMultiplierTimer.restart()
                         flashOverlay.triggerFlash("#00CC00")
+                        addPowerupBar("scoreMultiplier", 10000, "#00CC00")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -956,18 +1120,20 @@ Item {
                         continue
                     }
 
-                    if (obj.isShrink && isColliding(playerHitbox, obj) && !isShrinkActive) {
+                    if (obj.isShrink && isColliding(playerHitbox, obj)) {
                         player.width = 18 * scaleFactor
                         player.height = 18 * scaleFactor
                         playerHitbox.width = 25 * scaleFactor
                         playerHitbox.height = 25 * scaleFactor
                         isShrinkActive = true
+                        shrinkTimer.restart()
+                        shrinkAnimationComponent.createObject(root).start()
                         flashOverlay.triggerFlash("#FFA500")
+                        addPowerupBar("shrink", 6000, "#FFA500")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
                         comboMeterAnimation.stop()
-                        shrinkAnimationComponent.createObject(root).start()
                         obj.visible = false
                         continue
                     }
@@ -979,6 +1145,7 @@ Item {
                         isSlowMoActive = true
                         slowMoTimer.restart()
                         flashOverlay.triggerFlash("#00FFFF")
+                        addPowerupBar("slowMo", 6000, "#00FFFF")
                         comboCount = 0
                         comboActive = false
                         comboTimer.stop()
@@ -1151,6 +1318,11 @@ Item {
         isSlowMoActive = false
         isSpeedBoostActive = false
         isShrinkActive = false
+        player.width = 36 * scaleFactor
+        player.height = 36 * scaleFactor
+        playerHitbox.width = 50 * scaleFactor
+        playerHitbox.height = 50 * scaleFactor
+        clearPowerupBars()
         nowText.font.pixelSize = 48 * scaleFactor
         nowText.opacity = 0
         surviveText.font.pixelSize = 48 * scaleFactor
