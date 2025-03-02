@@ -532,6 +532,17 @@ Item {
                         PathLine { x: Dims.l(10); y: Dims.l(20) }
                         PathLine { x: Dims.l(20); y: Dims.l(10) }
                     }
+
+                    // Add this animation to make it blink when score multiplier is active
+                    SequentialAnimation on opacity {
+                        running: scoreMultiplierTimer.running && !root.paused
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.2; to: 0.4; duration: 500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.4; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
+                        onStopped: {
+                            comboHitbox.opacity = 0.2 // Reset to base opacity when stopped
+                        }
+                    }
                 }
             }
 
