@@ -434,7 +434,7 @@ Item {
         Item {
             id: gameContent
             anchors.fill: parent
-            layer.enabled: true
+            layer.enabled: true  // Keep this for the overall game content
 
             Rectangle {
                 id: flashOverlay
@@ -474,6 +474,16 @@ Item {
                 height: parent.height
                 z: 0
                 visible: !calibrating && !showingNow && !showingSurvive
+                layer.enabled: true  // Enable separate layer for large asteroids
+            }
+
+            Item {
+                id: objectContainer
+                width: parent.width
+                height: parent.height
+                z: 0
+                visible: !calibrating && !showingNow && !showingSurvive
+                layer.enabled: true  // Enable separate layer for small asteroids and power-ups
             }
 
             Item {
@@ -549,25 +559,16 @@ Item {
                         PathLine { x: Dims.l(20); y: Dims.l(10) }
                     }
 
-                    // Add this animation to make it blink when score multiplier is active
                     SequentialAnimation on opacity {
                         running: scoreMultiplierTimer.running && !root.paused
                         loops: Animation.Infinite
                         NumberAnimation { from: 0.2; to: 0.4; duration: 500; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 0.4; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
                         onStopped: {
-                            comboHitbox.opacity = 0.2 // Reset to base opacity when stopped
+                            comboHitbox.opacity = 0.2
                         }
                     }
                 }
-            }
-
-            Item {
-                id: objectContainer
-                width: parent.width
-                height: parent.height
-                z: 0
-                visible: !calibrating && !showingNow && !showingSurvive
             }
 
             Item {
