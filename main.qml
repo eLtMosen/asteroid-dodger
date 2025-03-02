@@ -460,7 +460,7 @@ Item {
         Item {
             id: gameContent
             anchors.fill: parent
-            layer.enabled: true  // Keep this for the overall game content
+            layer.enabled: true
 
             Rectangle {
                 id: flashOverlay
@@ -468,6 +468,7 @@ Item {
                 color: flashColor ? flashColor : "transparent"
                 opacity: 0
                 z: 5
+                visible: flashAnimation.running
                 SequentialAnimation {
                     id: flashAnimation
                     running: false
@@ -500,7 +501,6 @@ Item {
                 height: parent.height
                 z: 0
                 visible: !calibrating && !showingNow && !showingSurvive
-                layer.enabled: true  // Enable separate layer for large asteroids
             }
 
             Item {
@@ -509,7 +509,6 @@ Item {
                 height: parent.height
                 z: 0
                 visible: !calibrating && !showingNow && !showingSurvive
-                layer.enabled: true  // Enable separate layer for small asteroids and power-ups
             }
 
             Item {
@@ -826,7 +825,7 @@ Item {
                     horizontalCenter: parent.horizontalCenter
                     bottom: fpsGraph.top
                 }
-                visible: debugMode
+                visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive  // Ensure off when not debugging
             }
 
             Rectangle {
@@ -840,7 +839,7 @@ Item {
                     top: debugToggle.top
                     topMargin: Dims.l(3)
                 }
-                visible: debugMode
+                visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive  // Ensure off when not debugging
 
                 Row {
                     anchors.fill: parent
