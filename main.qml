@@ -243,7 +243,7 @@ Item {
 
     Timer {
         id: shrinkTimer
-        interval: 16
+        interval: 100  // Changed from 16ms to 100ms
         running: isShrinkActive && !paused
         repeat: true
         property real elapsed: 0
@@ -262,7 +262,7 @@ Item {
             }
         }
         onRunningChanged: {
-            if (!running && !paused) {  // Only reset elapsed when not paused
+            if (!running && !paused) {
                 elapsed = 0
             }
         }
