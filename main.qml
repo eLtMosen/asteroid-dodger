@@ -61,7 +61,6 @@ Item {
     property bool isSpeedBoostActive: false
     property bool isShrinkActive: false
     property var activePowerups: []
-
     property var asteroidPool: []
     property var largeAsteroidPool: []
     property int asteroidPoolSize: 40
@@ -234,12 +233,28 @@ Item {
 
     Timer {
         id: shrinkTimer
-        interval: 6000
+        interval: 16 // Match game update rate for smooth animation
         running: isShrinkActive && !paused
-        repeat: false
+        repeat: true
+        property real elapsed: 0
         onTriggered: {
-            isShrinkActive = false
-            removePowerup("shrink")
+            elapsed += interval
+            var progress = Math.min(1.0, elapsed / 6000)
+            player.width = Dims.l(5) + (Dims.l(10) - Dims.l(5)) * progress
+            player.height = Dims.l(5) + (Dims.l(10) - Dims.l(5)) * progress
+            playerHitbox.width = Dims.l(7) + (Dims.l(14) - Dims.l(7)) * progress
+            playerHitbox.height = Dims.l(7) + (Dims.l(14) - Dims.l(7)) * progress
+            if (elapsed >= 6000) {
+                isShrinkActive = false
+                elapsed = 0
+                removePowerup("shrink")
+                stop()
+            }
+        }
+        onRunningChanged: {
+            if (!running) {
+                elapsed = 0
+            }
         }
     }
 
@@ -387,48 +402,6 @@ Item {
                 onStopped: {
                     particleText.destroy()
                 }
-            }
-        }
-    }
-
-    Component {
-        id: shrinkAnimationComponent
-        ParallelAnimation {
-            running: isShrinkActive && !root.paused
-            NumberAnimation {
-                target: player
-                property: "width"
-                from: Dims.l(5)
-                to: Dims.l(10)
-                duration: 6000
-                easing.type: Easing.Linear
-            }
-            NumberAnimation {
-                target: player
-                property: "height"
-                from: Dims.l(5)
-                to: Dims.l(10)
-                duration: 6000
-                easing.type: Easing.Linear
-            }
-            NumberAnimation {
-                target: playerHitbox
-                property: "width"
-                from: Dims.l(7)
-                to: Dims.l(14)
-                duration: 6000
-                easing.type: Easing.Linear
-            }
-            NumberAnimation {
-                target: playerHitbox
-                property: "height"
-                from: Dims.l(7)
-                to: Dims.l(14)
-                duration: 6000
-                easing.type: Easing.Linear
-            }
-            onStopped: {
-                isShrinkActive = false
             }
         }
     }
@@ -979,16 +952,20 @@ Item {
     }
 
     function addPowerupBar(type, duration, color) {
-        var existing = activePowerups.find(function(p) { return p.type === type })
-        if (existing) {
-            existing.bar.progress = 1.0
-            existing.bar.startTimer()
+        var existingIndex = activePowerups.findIndex(function(p) { return p.type === type })
+        if (existingIndex !== -1) {
+            var existing = activePowerups[existingIndex]
+            if (existing.bar) {
+                existing.bar.progress = 1.0
+                existing.bar.startTimer()
+            }
             return
         }
 
         var bar = progressBarComponent.createObject(powerupBars, {
             "fillColor": color,
-            "duration": duration
+            "duration": duration,
+            "progress": 1.0
         })
         bar.startTimer()
         activePowerups.push({ type: type, bar: bar })
@@ -1124,7 +1101,6 @@ Item {
                         playerHitbox.height = Dims.l(7)
                         isShrinkActive = true
                         shrinkTimer.restart()
-                        shrinkAnimationComponent.createObject(root).start()
                         flashOverlay.triggerFlash("#FFA500")
                         addPowerupBar("shrink", 6000, "#FFA500")
                         comboCount = 0
@@ -1328,15 +1304,21 @@ Item {
         gameOverScreen.opacity = 0
         lastFrameTime = 0
 
+        // Reset all asteroids to initial state
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
-            asteroidPool[i].y = -asteroidPool[i].height
+            asteroidPool[i].y = -asteroidPool[i].height - (Math.random() * Dims.l(28))
+            asteroidPool[i].x = Math.random() * (root.width - asteroidPool[i].width)
+            asteroidPool[i].passed = false
+            asteroidPool[i].dodged = false
         }
         for (i = 0; i < largeAsteroidPool.length; i++) {
             largeAsteroidPool[i].visible = false
-            largeAsteroidPool[i].y = -largeAsteroidPool[i].height
+            largeAsteroidPool[i].y = -largeAsteroidPool[i].height - (Math.random() * Dims.l(28))
+            largeAsteroidPool[i].x = Math.random() * (root.width - largeAsteroidPool[i].width)
         }
 
+        // Spawn initial asteroids
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
