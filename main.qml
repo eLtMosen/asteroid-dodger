@@ -1157,7 +1157,7 @@ Item {
                             continue
                         }
 
-                        if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
+                        if (obj.isSlowMo && isColliding(playerHitbox, obj)) {
                             preSlowSpeed = scrollSpeed
                             scrollSpeed = scrollSpeed / 2
                             savedScrollSpeed = scrollSpeed
