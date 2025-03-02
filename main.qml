@@ -1262,9 +1262,11 @@ Item {
                         }
 
                         if (obj.isSlowMo && isColliding(playerHitbox, obj)) {
-                            preSlowSpeed = scrollSpeed
-                            scrollSpeed = scrollSpeed / 2
-                            savedScrollSpeed = scrollSpeed
+                            if (!isSlowMoActive) {  // Only set speed on first pickup
+                                preSlowSpeed = scrollSpeed
+                                scrollSpeed = preSlowSpeed / 2
+                            }
+                            savedScrollSpeed = scrollSpeed  // Update savedScrollSpeed for pause/resume
                             isSlowMoActive = true
                             slowMoTimer.restart()
                             flashOverlay.triggerFlash("#00FFFF")
