@@ -1161,13 +1161,14 @@ Item {
         for (i = 0; i < asteroidPool.length; i++) {
             var obj = asteroidPool[i]
             if (obj.visible) {
-                // Bounding box pre-check
-                if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - Dims.l(5) &&
-                    obj.x <= playerContainer.x + comboHitbox.width / 2 + playerHitbox.width + Dims.l(5) &&
-                    obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - Dims.l(5) &&
-                    obj.y <= playerContainer.y + comboHitbox.height / 2 + playerHitbox.height + Dims.l(5)) {
-                    var objCenterX = obj.x + obj.width / 2
-                    var objCenterY = obj.y + obj.height / 2
+                var objCenterX = obj.x + obj.width / 2
+                var objCenterY = obj.y + obj.height / 2
+
+                // Tightened bounding box pre-check for playerHitbox collisions
+                if (obj.x + obj.width >= playerContainer.x - Dims.l(5) &&
+                    obj.x <= playerContainer.x + playerHitbox.width + Dims.l(5) &&
+                    obj.y + obj.height >= playerContainer.y - Dims.l(5) &&
+                    obj.y <= playerContainer.y + playerHitbox.height + Dims.l(5)) {
                     var dx = objCenterX - playerCenterX
                     var dy = objCenterY - playerCenterY
                     var distanceSquared = dx * dx + dy * dy
@@ -1278,6 +1279,7 @@ Item {
                     }
                 }
 
+                // Combo check moved outside collision pre-check
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
