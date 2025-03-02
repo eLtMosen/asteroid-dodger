@@ -38,7 +38,7 @@ Item {
     property int lives: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.044 + (level - 1) * 0.00242
+    property real asteroidDensity: 0.044 + (level - 1) * 0.004
     property real largeAsteroidDensity: asteroidDensity / 2
     property bool gameOver: false
     property bool playerHit: false
@@ -68,6 +68,9 @@ Item {
     property real lastFrameTime: 0
     property var activeParticles: []
     property bool debugMode: false
+    property real lastLargeAsteroidSpawn: 0
+    property real lastObjectSpawn: 0
+    property int spawnCooldown: 200  // 200ms cooldown
 
     onPausedChanged: {
         if (paused) {
@@ -1262,11 +1265,11 @@ Item {
                         }
 
                         if (obj.isSlowMo && isColliding(playerHitbox, obj)) {
-                            if (!isSlowMoActive) {  // Only set speed on first pickup
+                            if (!isSlowMoActive) {
                                 preSlowSpeed = scrollSpeed
                                 scrollSpeed = preSlowSpeed / 2
                             }
-                            savedScrollSpeed = scrollSpeed  // Update savedScrollSpeed for pause/resume
+                            savedScrollSpeed = scrollSpeed
                             isSlowMoActive = true
                             slowMoTimer.restart()
                             flashOverlay.triggerFlash("#00FFFF")
@@ -1328,33 +1331,42 @@ Item {
             scoreMultiplierElapsed += deltaTime
         }
 
-        if (!paused && Math.random() < largeAsteroidDensity / 2) {
+        // Throttled spawning with 200ms cooldown
+        var currentTime = Date.now()
+        if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
+            lastLargeAsteroidSpawn = currentTime
         }
 
-        if (!paused && Math.random() < asteroidDensity) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < asteroidDensity) {
             var isAsteroid = Math.random() < 0.96
             spawnObject(isAsteroid ? {isAsteroid: true} : {isAsteroid: false, isPowerup: true})
+            lastObjectSpawn = currentTime
         }
 
-        if (!paused && Math.random() < 0.0001) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0001) {
             spawnObject({isAsteroid: false, isInvincibility: true})
+            lastObjectSpawn = currentTime
         }
 
-        if (!paused && Math.random() < 0.0005) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0005) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
+            lastObjectSpawn = currentTime
         }
 
-        if (!paused && Math.random() < 0.0005) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0005) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
+            lastObjectSpawn = currentTime
         }
 
-        if (!paused && Math.random() < 0.0005) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0005) {
             spawnObject({isAsteroid: false, isShrink: true})
+            lastObjectSpawn = currentTime
         }
 
-        if (!paused && Math.random() < 0.0003) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0003) {
             spawnObject({isAsteroid: false, isSlowMo: true})
+            lastObjectSpawn = currentTime
         }
     }
 
