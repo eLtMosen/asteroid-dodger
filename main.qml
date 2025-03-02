@@ -67,6 +67,7 @@ Item {
     property int largeAsteroidPoolSize: 10
     property real lastFrameTime: 0
     property var activeParticles: []
+    property bool debugMode: false
 
     onPausedChanged: {
         if (paused) {
@@ -180,15 +181,35 @@ Item {
         interval: 16
         running: !gameOver && !calibrating && !showingNow && !showingSurvive
         repeat: true
+        property real lastFps: 60
+        property var fpsHistory: []
+        property real lastFpsUpdate: 0
+        property real lastGraphUpdate: 0  // New property for graph timing
         onTriggered: {
             var currentTime = Date.now()
             var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016
             lastFrameTime = currentTime
             updateGame(deltaTime)
-            if (!paused) {  // Move accelerometer logic here
+            if (!paused) {
                 var deltaX = (accelerometer.reading.x - baselineX) * -2
                 var newX = playerContainer.x + deltaX * playerSpeed
                 playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
+            }
+            // Calculate FPS
+            var currentFps = deltaTime > 0 ? 1 / deltaTime : 60
+            lastFps = currentFps
+            // Update FPS display every 500ms when debug mode is on
+            if (debugMode && currentTime - lastFpsUpdate >= 500) {
+                lastFpsUpdate = currentTime
+                fpsDisplay.text = "FPS: " + Math.round(currentFps)
+            }
+            // Update graph every 500ms
+            if (debugMode && currentTime - lastGraphUpdate >= 500) {
+                lastGraphUpdate = currentTime
+                var tempHistory = fpsHistory.slice()
+                tempHistory.push(currentFps)
+                if (tempHistory.length > 10) tempHistory.shift()
+                fpsHistory = tempHistory
             }
         }
     }
@@ -772,9 +793,99 @@ Item {
                 id: pauseText
                 text: "Paused"
                 color: "white"
-                font.pixelSize: Dims.l(9)
+                font.pixelSize: Dims.l(12)
                 anchors.centerIn: parent
+                opacity: 0  // Default to invisible
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive  // Always visible when game is active
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !gameOver && !calibrating && !showingNow && !showingSurvive
+                    onClicked: {
+                        paused = !paused
+                        pauseText.opacity = paused ? 1.0 : 0.0  // Fade in/out on click
+                    }
+                }
+            }
+
+            Text {
+                id: fpsDisplay
+                text: "FPS: 60"  // Initial static value
+                color: "white"
+                opacity: 0.5
+                font.pixelSize: Dims.l(10)
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    bottom: fpsGraph.top
+                }
+                visible: debugMode
+            }
+
+            Rectangle {
+                id: fpsGraph
+                width: Dims.l(30)
+                height: Dims.l(10)
+                color: "#00000000"
+                opacity: 0.5
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: debugToggle.top
+                    topMargin: Dims.l(3)
+                }
+                visible: debugMode
+
+                Row {
+                    anchors.fill: parent
+                    spacing: 0
+                    Repeater {
+                        model: 10
+                        Rectangle {
+                            width: fpsGraph.width / 10
+                            height: {
+                                var fps = index < gameTimer.fpsHistory.length ? gameTimer.fpsHistory[index] : 0
+                                return Math.min(Dims.l(10), Math.max(0, (fps / 60) * Dims.l(10)))
+                            }
+                            color: {
+                                var fps = index < gameTimer.fpsHistory.length ? gameTimer.fpsHistory[index] : 0
+                                if (fps > 60) return "green"
+                                else if (fps >= 50) return "orange"
+                                else return "red"
+                            }
+                        }
+                    }
+                }
+            }
+
+            Text {
+                id: debugToggle
+                text: "Debug"
+                color: "white"
+                opacity: debugMode ? 1 : 0.5
+                font.pixelSize: Dims.l(10)  // Increased from 5 to 7 (~1/3 larger, sane rounding)
+                font.bold: debugMode
+                anchors {
+                    bottom: pauseText.top
+                    horizontalCenter: parent.horizontalCenter
+                    bottomMargin: Dims.l(4)
+                }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutQuad
+                    }
+                }
                 visible: paused && !gameOver && !calibrating && !showingNow && !showingSurvive
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        debugMode = !debugMode
+                    }
+                }
             }
 
             Text {
@@ -971,14 +1082,6 @@ Item {
         Accelerometer {
             id: accelerometer
             active: true
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: !gameOver && !calibrating && !showingNow && !showingSurvive
-            onClicked: {
-                paused = !paused
-            }
         }
     }
 
