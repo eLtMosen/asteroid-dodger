@@ -1029,22 +1029,32 @@ Item {
         var maxDistanceSquared = (playerHitbox.width + Dims.l(5)) * (playerHitbox.width + Dims.l(5))
         var comboDistanceSquared = (comboHitbox.width + Dims.l(5)) * (comboHitbox.width + Dims.l(5))
 
+        // First pass: Batch update all asteroid positions
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
             if (largeObj.visible) {
                 largeObj.y += largeAsteroidSpeed
-                if (largeObj.y >= root.height) {
-                    largeObj.visible = false
-                }
+            }
+        }
+        for (i = 0; i < asteroidPool.length; i++) {
+            var obj = asteroidPool[i]
+            if (obj.visible) {
+                obj.y += adjustedScrollSpeed
+            }
+        }
+
+        // Second pass: Collision and combo checks
+        for (i = 0; i < largeAsteroidPool.length; i++) {
+            var largeObj = largeAsteroidPool[i]
+            if (largeObj.visible && largeObj.y >= root.height) {
+                largeObj.visible = false
             }
         }
 
         for (i = 0; i < asteroidPool.length; i++) {
             var obj = asteroidPool[i]
             if (obj.visible) {
-                obj.y += adjustedScrollSpeed
-
-                // Adjusted bounding box pre-check to cover comboHitbox area
+                // Bounding box pre-check
                 if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - Dims.l(5) &&
                     obj.x <= playerContainer.x + comboHitbox.width / 2 + playerHitbox.width + Dims.l(5) &&
                     obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - Dims.l(5) &&
