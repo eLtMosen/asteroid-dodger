@@ -181,6 +181,11 @@ Item {
             var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016
             lastFrameTime = currentTime
             updateGame(deltaTime)
+            if (!paused) {  // Move accelerometer logic here
+                var deltaX = (accelerometer.reading.x - baselineX) * -2
+                var newX = playerContainer.x + deltaX * playerSpeed
+                playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
+            }
         }
     }
 
@@ -272,29 +277,34 @@ Item {
                 showingNow = true
                 feedback.play()
                 nowTransition.start()
+                introTimer.phase = 1  // Ensure introTimer starts in correct phase
+                introTimer.start()
             }
         }
     }
 
     Timer {
-        id: nowToSurviveTimer
+        id: introTimer
         interval: 1000
-        running: showingNow
-        repeat: false
+        running: showingNow || showingSurvive
+        repeat: true
+        property int phase: showingNow ? 1 : showingSurvive ? 2 : 0
         onTriggered: {
-            showingNow = false
-            showingSurvive = true
-            surviveTransition.start()
+            if (phase === 1) {
+                showingNow = false
+                showingSurvive = true
+                surviveTransition.start()
+                phase = 2
+            } else if (phase === 2) {
+                showingSurvive = false
+                phase = 0
+                stop()
+            }
         }
-    }
-
-    Timer {
-        id: surviveToGameTimer
-        interval: 1000
-        running: showingSurvive
-        repeat: false
-        onTriggered: {
-            showingSurvive = false
+        onRunningChanged: {
+            if (!running) {
+                phase = 0
+            }
         }
     }
 
@@ -306,18 +316,6 @@ Item {
         onTriggered: {
             comboCount = 0
             comboActive = false
-        }
-    }
-
-    Timer {
-        id: accelerometerTimer
-        interval: 12
-        running: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
-        repeat: true
-        onTriggered: {
-            var deltaX = (accelerometer.reading.x - baselineX) * -2
-            var newX = playerContainer.x + deltaX * playerSpeed
-            playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
         }
     }
 
