@@ -1028,114 +1028,120 @@ Item {
             if (obj.visible) {
                 obj.y += adjustedScrollSpeed
 
-                var objCenterX = obj.x + obj.width / 2
-                var objCenterY = obj.y + obj.height / 2
-                var dx = objCenterX - playerCenterX
-                var dy = objCenterY - playerCenterY
-                var distanceSquared = dx * dx + dy * dy
+                // Adjusted bounding box pre-check to cover comboHitbox area
+                if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - Dims.l(5) &&
+                    obj.x <= playerContainer.x + comboHitbox.width / 2 + playerHitbox.width + Dims.l(5) &&
+                    obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - Dims.l(5) &&
+                    obj.y <= playerContainer.y + comboHitbox.height / 2 + playerHitbox.height + Dims.l(5)) {
+                    var objCenterX = obj.x + obj.width / 2
+                    var objCenterY = obj.y + obj.height / 2
+                    var dx = objCenterX - playerCenterX
+                    var dy = objCenterY - playerCenterY
+                    var distanceSquared = dx * dx + dy * dy
 
-                if (distanceSquared < maxDistanceSquared) {
-                    if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
-                        lives--
-                        flashOverlay.triggerFlash("red")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        invincible = true
-                        graceTimer.restart()
-                        obj.visible = false
-                        feedback.play()
-                        if (lives <= 0) {
-                            gameOver = true
+                    if (distanceSquared < maxDistanceSquared) {
+                        if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
+                            lives--
+                            flashOverlay.triggerFlash("red")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            invincible = true
+                            graceTimer.restart()
+                            obj.visible = false
+                            feedback.play()
+                            if (lives <= 0) {
+                                gameOver = true
+                            }
+                            continue
                         }
-                        continue
-                    }
 
-                    if (obj.isPowerup && isColliding(playerHitbox, obj)) {
-                        lives++
-                        flashOverlay.triggerFlash("blue")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        obj.visible = false
-                        continue
-                    }
+                        if (obj.isPowerup && isColliding(playerHitbox, obj)) {
+                            lives++
+                            flashOverlay.triggerFlash("blue")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            obj.visible = false
+                            continue
+                        }
 
-                    if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
-                        invincible = true
-                        graceTimer.interval = 4000
-                        graceTimer.restart()
-                        flashOverlay.triggerFlash("#FF69B4")
-                        addPowerupBar("invincibility", 4000, "#FF69B4")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        obj.visible = false
-                        continue
-                    }
+                        if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
+                            invincible = true
+                            graceTimer.interval = 4000
+                            graceTimer.restart()
+                            flashOverlay.triggerFlash("#FF69B4")
+                            addPowerupBar("invincibility", 4000, "#FF69B4")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            obj.visible = false
+                            continue
+                        }
 
-                    if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
-                        playerSpeed = basePlayerSpeed * 2
-                        isSpeedBoostActive = true
-                        speedBoostTimer.restart()
-                        flashOverlay.triggerFlash("#FFFF00")
-                        addPowerupBar("speedBoost", 3000, "#FFFF00")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        obj.visible = false
-                        continue
-                    }
+                        if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
+                            playerSpeed = basePlayerSpeed * 2
+                            isSpeedBoostActive = true
+                            speedBoostTimer.restart()
+                            flashOverlay.triggerFlash("#FFFF00")
+                            addPowerupBar("speedBoost", 3000, "#FFFF00")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            obj.visible = false
+                            continue
+                        }
 
-                    if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
-                        scoreMultiplier = 2.0
-                        scoreMultiplierElapsed = 0
-                        scoreMultiplierTimer.restart()
-                        flashOverlay.triggerFlash("#00CC00")
-                        addPowerupBar("scoreMultiplier", 10000, "#00CC00")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        obj.visible = false
-                        continue
-                    }
+                        if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
+                            scoreMultiplier = 2.0
+                            scoreMultiplierElapsed = 0
+                            scoreMultiplierTimer.restart()
+                            flashOverlay.triggerFlash("#00CC00")
+                            addPowerupBar("scoreMultiplier", 10000, "#00CC00")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            obj.visible = false
+                            continue
+                        }
 
-                    if (obj.isShrink && isColliding(playerHitbox, obj)) {
-                        player.width = Dims.l(5)
-                        player.height = Dims.l(5)
-                        playerHitbox.width = Dims.l(7)
-                        playerHitbox.height = Dims.l(7)
-                        isShrinkActive = true
-                        shrinkTimer.restart()
-                        flashOverlay.triggerFlash("#FFA500")
-                        addPowerupBar("shrink", 6000, "#FFA500")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        obj.visible = false
-                        continue
-                    }
+                        if (obj.isShrink && isColliding(playerHitbox, obj)) {
+                            player.width = Dims.l(5)
+                            player.height = Dims.l(5)
+                            playerHitbox.width = Dims.l(7)
+                            playerHitbox.height = Dims.l(7)
+                            isShrinkActive = true
+                            shrinkTimer.restart()
+                            flashOverlay.triggerFlash("#FFA500")
+                            addPowerupBar("shrink", 6000, "#FFA500")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            obj.visible = false
+                            continue
+                        }
 
-                    if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
-                        preSlowSpeed = scrollSpeed
-                        scrollSpeed = scrollSpeed / 2
-                        savedScrollSpeed = scrollSpeed
-                        isSlowMoActive = true
-                        slowMoTimer.restart()
-                        flashOverlay.triggerFlash("#00FFFF")
-                        addPowerupBar("slowMo", 6000, "#00FFFF")
-                        comboCount = 0
-                        comboActive = false
-                        comboTimer.stop()
-                        comboMeterAnimation.stop()
-                        obj.visible = false
-                        continue
+                        if (obj.isSlowMo && isColliding(playerHitbox, obj) && !isSlowMoActive) {
+                            preSlowSpeed = scrollSpeed
+                            scrollSpeed = scrollSpeed / 2
+                            savedScrollSpeed = scrollSpeed
+                            isSlowMoActive = true
+                            slowMoTimer.restart()
+                            flashOverlay.triggerFlash("#00FFFF")
+                            addPowerupBar("slowMo", 6000, "#00FFFF")
+                            comboCount = 0
+                            comboActive = false
+                            comboTimer.stop()
+                            comboMeterAnimation.stop()
+                            obj.visible = false
+                            continue
+                        }
                     }
                 }
 
