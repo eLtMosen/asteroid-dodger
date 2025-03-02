@@ -1284,35 +1284,44 @@ Item {
                     }
                 }
 
-                // Combo check moved outside collision pre-check
+                // Combo check with tighter pre-check
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
-                    var comboDx = objCenterX - comboCenterX
-                    var comboDy = objCenterY - comboCenterY
-                    var comboDistSquared = comboDx * comboDx + comboDy * comboDy
-                    var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
-                    var basePoints = isCombo ? 2 : 1
-                    var currentTime = Date.now()
+                    // Tighter bounding box pre-check for comboHitbox
+                    if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - Dims.l(5) &&
+                        obj.x <= playerContainer.x + comboHitbox.width / 2 + Dims.l(5) &&
+                        obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - Dims.l(5) &&
+                        obj.y <= playerContainer.y + comboHitbox.height / 2 + Dims.l(5)) {
+                        var comboDx = objCenterX - comboCenterX
+                        var comboDy = objCenterY - comboCenterY
+                        var comboDistSquared = comboDx * comboDx + comboDy * comboDy
+                        var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
+                        var basePoints = isCombo ? 2 : 1
+                        var currentTime = Date.now()
 
-                    if (isCombo) {
-                        if (currentTime - lastDodgeTime <= 2000) {
-                            comboCount++
+                        if (isCombo) {
+                            if (currentTime - lastDodgeTime <= 2000) {
+                                comboCount++
+                            } else {
+                                comboCount = 1
+                            }
+                            lastDodgeTime = currentTime
+                            comboActive = true
+                            comboTimer.restart()
+                            comboMeterAnimation.restart()
+                            score += basePoints * comboCount * scoreMultiplier
+                            var particle = comboParticleComponent.createObject(gameArea, {
+                                "x": obj.x,
+                                "y": obj.y,
+                                "points": basePoints * comboCount * scoreMultiplier
+                            })
                         } else {
-                            comboCount = 1
+                            score += basePoints * scoreMultiplier
+                            obj.dodged = true
                         }
-                        lastDodgeTime = currentTime
-                        comboActive = true
-                        comboTimer.restart()
-                        comboMeterAnimation.restart()
-                        score += basePoints * comboCount * scoreMultiplier
-                        var particle = comboParticleComponent.createObject(gameArea, {
-                            "x": obj.x,
-                            "y": obj.y,
-                            "points": basePoints * comboCount * scoreMultiplier
-                        })
                     } else {
-                        score += basePoints * scoreMultiplier
+                        score += 1 * scoreMultiplier  // Base points for non-combo dodge
                         obj.dodged = true
                     }
 
