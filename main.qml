@@ -1250,11 +1250,9 @@ Item {
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var obj = largeAsteroidPool[i]
             if (!obj.visible) {
-                obj.width = Dims.l(8 + Math.random() * 12)
-                obj.height = obj.width
+                // Only update necessary properties
                 obj.x = Math.random() * (root.width - obj.width)
                 obj.y = -obj.height - (Math.random() * Dims.l(28))
-                obj.opacity = 1 - Math.random() * 0.7
                 obj.visible = true
                 return
             }
@@ -1265,20 +1263,23 @@ Item {
         for (var i = 0; i < asteroidPool.length; i++) {
             var obj = asteroidPool[i]
             if (!obj.visible) {
-                obj.isAsteroid = properties.isAsteroid || false
-                obj.isPowerup = properties.isPowerup || false
-                obj.isInvincibility = properties.isInvincibility || false
-                obj.isSpeedBoost = properties.isSpeedBoost || false
-                obj.isScoreMultiplier = properties.isScoreMultiplier || false
-                obj.isShrink = properties.isShrink || false
-                obj.isSlowMo = properties.isSlowMo || false
-                obj.passed = false
-                obj.dodged = false
-                obj.width = obj.isAsteroid ? Dims.l(3) : Dims.l(6)
-                obj.height = obj.isAsteroid ? Dims.l(3) : Dims.l(6)
+                // Reset type-specific properties only if they differ
+                if (obj.isAsteroid !== (properties.isAsteroid || false)) {
+                    obj.isAsteroid = properties.isAsteroid || false
+                    obj.isPowerup = properties.isPowerup || false
+                    obj.isInvincibility = properties.isInvincibility || false
+                    obj.isSpeedBoost = properties.isSpeedBoost || false
+                    obj.isScoreMultiplier = properties.isScoreMultiplier || false
+                    obj.isShrink = properties.isShrink || false
+                    obj.isSlowMo = properties.isSlowMo || false
+                }
+                // Only update necessary properties
                 obj.x = Math.random() * (root.width - obj.width)
                 obj.y = -obj.height - (Math.random() * Dims.l(28))
                 obj.visible = true
+                // Reset passed and dodged only if true to avoid unnecessary updates
+                if (obj.passed) obj.passed = false
+                if (obj.dodged) obj.dodged = false
                 return
             }
         }
