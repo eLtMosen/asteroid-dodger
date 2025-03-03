@@ -73,6 +73,8 @@ Item {
     property real lastLargeAsteroidSpawn: 0
     property real lastObjectSpawn: 0
     property int spawnCooldown: 200
+    property bool isGraceActive: false
+    property bool isInvincibleActive: false
 
     onPausedChanged: {
         if (paused) {
@@ -231,15 +233,33 @@ Item {
     Timer {
         id: graceTimer
         interval: 1000
-        running: invincible && !paused
+        running: isGraceActive && !paused
         repeat: false
         onTriggered: {
+            isGraceActive = false
+            invincible = false
+            removePowerup("grace")
+        }
+        onRunningChanged: {
+            if (running && !paused) {
+                addPowerupBar("grace", 1000, "#FF69B4")
+            }
+        }
+    }
+
+    Timer {
+        id: invincibilityTimer
+        interval: 10000  // Restored to 10 seconds
+        running: isInvincibleActive && !paused
+        repeat: false
+        onTriggered: {
+            isInvincibleActive = false
             invincible = false
             removePowerup("invincibility")
         }
         onRunningChanged: {
             if (running && !paused) {
-                addPowerupBar("invincibility", 1000, "#FF69B4")
+                addPowerupBar("invincibility", 10000, "#FF69B4")
             }
         }
     }
@@ -540,7 +560,7 @@ Item {
                     anchors.centerIn: parent
 
                     SequentialAnimation on opacity {
-                        running: invincible && !root.paused
+                        running: (isGraceActive || isInvincibleActive) && !root.paused
                         loops: Animation.Infinite
                         NumberAnimation { from: 1.0; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 0.2; to: 1.0; duration: 500; easing.type: Easing.InOutSine }
@@ -1263,7 +1283,7 @@ Item {
                             shield--
                             if (shield <= 0) {
                                 gameOver = true
-                                shield = 0  // Clamp shield to 0
+                                shield = 0
                                 flashOverlay.triggerFlash("red")
                                 comboCount = 0
                                 comboActive = false
@@ -1279,9 +1299,8 @@ Item {
                             comboTimer.stop()
                             comboMeterAnimation.stop()
                             invincible = true
-                            graceTimer.interval = 1000
+                            isGraceActive = true  // Trigger grace period
                             graceTimer.restart()
-                            addPowerupBar("invincibility", 1000, "#FF69B4")
                             obj.visible = false
                             feedback.play()
                             continue
@@ -1300,10 +1319,9 @@ Item {
 
                         if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
                             invincible = true
-                            graceTimer.interval = 4000
-                            graceTimer.restart()
+                            isInvincibleActive = true  // Trigger invincibility power-up
+                            invincibilityTimer.restart()
                             flashOverlay.triggerFlash("#FF69B4")
-                            addPowerupBar("invincibility", 4000, "#FF69B4")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
