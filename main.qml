@@ -226,6 +226,11 @@ Item {
             invincible = false
             removePowerup("invincibility")
         }
+        onRunningChanged: {
+            if (running && !paused) {  // Add bar when grace period starts
+                addPowerupBar("invincibility", 1000, "#FF69B4")  // Pink matches invincibility power-up
+            }
+        }
     }
 
     Timer {
@@ -1184,7 +1189,9 @@ Item {
                             comboTimer.stop()
                             comboMeterAnimation.stop()
                             invincible = true
+                            graceTimer.interval = 1000  // Ensure 1s for grace period
                             graceTimer.restart()
+                            addPowerupBar("invincibility", 1000, "#FF69B4")  // Add bar here too
                             obj.visible = false
                             feedback.play()
                             if (lives <= 0) {
@@ -1209,7 +1216,7 @@ Item {
                             graceTimer.interval = 4000
                             graceTimer.restart()
                             flashOverlay.triggerFlash("#FF69B4")
-                            addPowerupBar("invincibility", 4000, "#FF69B4")
+                            addPowerupBar("invincibility", 4000, "#FF69B4")  // Use same color as grace period
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
