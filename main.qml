@@ -35,7 +35,7 @@ Item {
     property real playerSpeed: basePlayerSpeed
     property int asteroidCount: 0
     property int score: 0
-    property int lives: 2
+    property int shield: 2
     property int level: 1
     property int asteroidsPerLevel: 100
     property real asteroidDensity: 0.044 + (level - 1) * 0.004
@@ -70,7 +70,7 @@ Item {
     property bool debugMode: false
     property real lastLargeAsteroidSpawn: 0
     property real lastObjectSpawn: 0
-    property int spawnCooldown: 200  // 200ms cooldown
+    property int spawnCooldown: 200
 
     onPausedChanged: {
         if (paused) {
@@ -79,13 +79,13 @@ Item {
             if (comboActive) {
                 comboMeterAnimation.pause()
             }
-            comboHitboxAnimation.pause()  // Explicitly pause comboHitbox animation
+            comboHitboxAnimation.pause()
         } else {
             scrollSpeed = savedScrollSpeed
             if (comboActive) {
                 comboMeterAnimation.resume()
             }
-            if (scoreMultiplierTimer.running) {  // Resume if multiplier active
+            if (scoreMultiplierTimer.running) {
                 comboHitboxAnimation.resume()
             }
         }
@@ -187,7 +187,7 @@ Item {
         property real lastFps: 60
         property var fpsHistory: []
         property real lastFpsUpdate: 0
-        property real lastGraphUpdate: 0  // New property for graph timing
+        property real lastGraphUpdate: 0
         onTriggered: {
             var currentTime = Date.now()
             var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016
@@ -198,15 +198,12 @@ Item {
                 var newX = playerContainer.x + deltaX * playerSpeed
                 playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
             }
-            // Calculate FPS
             var currentFps = deltaTime > 0 ? 1 / deltaTime : 60
             lastFps = currentFps
-            // Update FPS display every 500ms when debug mode is on
             if (debugMode && currentTime - lastFpsUpdate >= 500) {
                 lastFpsUpdate = currentTime
                 fpsDisplay.text = "FPS: " + Math.round(currentFps)
             }
-            // Update graph every 500ms
             if (debugMode && currentTime - lastGraphUpdate >= 500) {
                 lastGraphUpdate = currentTime
                 var tempHistory = fpsHistory.slice()
@@ -227,8 +224,8 @@ Item {
             removePowerup("invincibility")
         }
         onRunningChanged: {
-            if (running && !paused) {  // Add bar when grace period starts
-                addPowerupBar("invincibility", 1000, "#FF69B4")  // Pink matches invincibility power-up
+            if (running && !paused) {
+                addPowerupBar("invincibility", 1000, "#FF69B4")
             }
         }
     }
@@ -272,7 +269,7 @@ Item {
 
     Timer {
         id: shrinkTimer
-        interval: 100  // Changed from 16ms to 100ms
+        interval: 100
         running: isShrinkActive && !paused
         repeat: true
         property real elapsed: 0
@@ -310,7 +307,7 @@ Item {
                 showingNow = true
                 feedback.play()
                 nowTransition.start()
-                introTimer.phase = 1  // Ensure introTimer starts in correct phase
+                introTimer.phase = 1
                 introTimer.start()
             }
         }
@@ -359,7 +356,7 @@ Item {
             property int points: 1
             text: "+" + points
             color: {
-                if (points <= 10) return "#00CC00"  // Green
+                if (points <= 10) return "#00CC00"
                 if (points <= 20) {
                     var t = (points - 10) / 10
                     var r = Math.round(0x00 + t * (0xFF - 0x00))
@@ -374,7 +371,7 @@ Item {
                     var b = Math.round(0x00 + t * (0xB4 - 0x00))
                     return Qt.rgba(r / 255, g / 255, b / 255, 1)
                 }
-                return "#FF69B4"  // Pink beyond 40
+                return "#FF69B4"
             }
             font.pixelSize: {
                 if (points <= 10) return Dims.l(4)
@@ -432,7 +429,6 @@ Item {
                     }
                 }
                 onStopped: {
-                    // Remove from activeParticles before destroying
                     var index = activeParticles.indexOf(particleText)
                     if (index !== -1) {
                         activeParticles.splice(index, 1)
@@ -441,10 +437,9 @@ Item {
                 }
             }
             Component.onCompleted: {
-                // Add to activeParticles and enforce cap
                 activeParticles.push(particleText)
                 if (activeParticles.length > 4) {
-                    var oldestParticle = activeParticles.shift() // Remove oldest
+                    var oldestParticle = activeParticles.shift()
                     if (oldestParticle) {
                         oldestParticle.destroy()
                     }
@@ -590,7 +585,7 @@ Item {
                     }
 
                     SequentialAnimation on opacity {
-                        id: comboHitboxAnimation  // Add ID for explicit control
+                        id: comboHitboxAnimation
                         running: scoreMultiplierTimer.running && !root.paused
                         loops: Animation.Infinite
                         NumberAnimation { from: 0.2; to: 0.4; duration: 500; easing.type: Easing.InOutSine }
@@ -647,21 +642,103 @@ Item {
                 }
             }
 
-            Column {
-                id: hudBottom
+
+            Text {
+                id: levelNumber
+                text: level
+                color: "#dddddd"
+                font.pixelSize: Dims.l(4)
+                font.bold: true
+                anchors {
+                    top: root.top
+                    horizontalCenter: parent.horizontalCenter
+                }
+                z: 4
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+            }
+
+            Item {
+                id: shieldProgressBar
                 anchors {
                     bottom: parent.bottom
                     horizontalCenter: parent.horizontalCenter
-                    margins: Dims.l(2)
+                    bottomMargin: Dims.l(4)
                 }
-                spacing: Dims.l(1)
+                width: Dims.l(28)
+                height: Dims.l(2)
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-                Text {
-                    text: "❤️ " + lives
-                    color: "#dddddd"
-                    font.pixelSize: Dims.l(6)
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
+                z: 4
+
+                Rectangle {
+                    width: parent.width
+                    height: parent.height
+                    radius: Dims.l(1)
+                    color: "#8B6914"
+                    opacity: 0.5
+                }
+
+                Rectangle {
+                    id: shieldFill
+                    width: (shield / 20) * parent.width
+                    height: parent.height
+                    color: "#0000FF"
+                    radius: Dims.l(1)
+                    opacity: 0.5
+                }
+            }
+
+            Text {
+                id: shieldText
+                text: shield === 1 ? "❤️" : shield
+                color: shield === 1 ? "red" : "#FFFFFF"  // White when blinking starts, blue otherwise
+                font.pixelSize: shield === 1 ? Dims.l(6) : Dims.l(4)  // Base size
+                font.bold: true
+                anchors {
+                    bottom: parent.bottom
+                    horizontalCenter: parent.horizontalCenter
+                }
+                z: 4
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
+
+                SequentialAnimation {
+                    running: shield === 1 && !root.paused && !gameOver
+                    loops: Animation.Infinite
+                    ParallelAnimation {
+                        ColorAnimation {  // Replaced NumberAnimation for color
+                            target: shieldText
+                            property: "color"
+                            from: "white"
+                            to: "#00FFFF"  // Bright blue
+                            duration: 500
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: shieldText
+                            property: "font.pixelSize"
+                            from: Dims.l(6)
+                            to: Dims.l(8)  // +2 size
+                            duration: 500
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+                    ParallelAnimation {
+                        ColorAnimation {  // Replaced NumberAnimation for color
+                            target: shieldText
+                            property: "color"
+                            from: "#00FFFF"
+                            to: "white"
+                            duration: 500
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: shieldText
+                            property: "font.pixelSize"
+                            from: Dims.l(8)
+                            to: Dims.l(6)  // Back to original
+                            duration: 500
+                            easing.type: Easing.InOutSine
+                        }
+                    }
                 }
             }
 
@@ -802,8 +879,8 @@ Item {
                 color: "white"
                 font.pixelSize: Dims.l(12)
                 anchors.centerIn: parent
-                opacity: 0  // Default to invisible
-                visible: !gameOver && !calibrating && !showingNow && !showingSurvive  // Always visible when game is active
+                opacity: 0
+                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
                 Behavior on opacity {
                     NumberAnimation {
                         duration: 250
@@ -815,14 +892,14 @@ Item {
                     enabled: !gameOver && !calibrating && !showingNow && !showingSurvive
                     onClicked: {
                         paused = !paused
-                        pauseText.opacity = paused ? 1.0 : 0.0  // Fade in/out on click
+                        pauseText.opacity = paused ? 1.0 : 0.0
                     }
                 }
             }
 
             Text {
                 id: fpsDisplay
-                text: "FPS: 60"  // Initial static value
+                text: "FPS: 60"
                 color: "white"
                 opacity: 0.5
                 font.pixelSize: Dims.l(10)
@@ -830,7 +907,7 @@ Item {
                     horizontalCenter: parent.horizontalCenter
                     bottom: fpsGraph.top
                 }
-                visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive  // Ensure off when not debugging
+                visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive
             }
 
             Rectangle {
@@ -844,7 +921,7 @@ Item {
                     top: debugToggle.top
                     topMargin: Dims.l(3)
                 }
-                visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive  // Ensure off when not debugging
+                visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive
 
                 Row {
                     anchors.fill: parent
@@ -873,7 +950,7 @@ Item {
                 text: "Debug"
                 color: "white"
                 opacity: debugMode ? 1 : 0.5
-                font.pixelSize: Dims.l(10)  // Increased from 5 to 7 (~1/3 larger, sane rounding)
+                font.pixelSize: Dims.l(10)
                 font.bold: debugMode
                 anchors {
                     bottom: pauseText.top
@@ -894,21 +971,6 @@ Item {
                     }
                 }
             }
-
-            Text {
-                id: levelNumber
-                text: level
-                color: "#dddddd"
-                font.pixelSize: Dims.l(4)
-                font.bold: true
-                anchors {
-                    bottom: levelProgressBar.top
-                    horizontalCenter: parent.horizontalCenter
-                    bottomMargin: Dims.l(1)
-                }
-                z: 4
-                visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-            }
         }
 
         Item {
@@ -923,6 +985,9 @@ Item {
             onVisibleChanged: {
                 if (visible) {
                     opacity = 1
+                }
+                else {
+                    opacity = 0
                 }
             }
 
@@ -985,8 +1050,10 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
+                        enabled: gameOver
                         onClicked: {
                             restartGame()
+                            gameOver = false
                         }
                     }
                 }
@@ -1143,7 +1210,6 @@ Item {
         var maxDistanceSquared = (playerHitbox.width + Dims.l(5)) * (playerHitbox.width + Dims.l(5))
         var comboDistanceSquared = (comboHitbox.width + Dims.l(5)) * (comboHitbox.width + Dims.l(5))
 
-        // First pass: Batch update all asteroid positions
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
             if (largeObj.visible) {
@@ -1157,7 +1223,6 @@ Item {
             }
         }
 
-        // Second pass: Collision and combo checks
         for (i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
             if (largeObj.visible && largeObj.y >= root.height) {
@@ -1171,7 +1236,6 @@ Item {
                 var objCenterX = obj.x + obj.width / 2
                 var objCenterY = obj.y + obj.height / 2
 
-                // Tightened bounding box pre-check for playerHitbox collisions
                 if (obj.x + obj.width >= playerContainer.x - Dims.l(5) &&
                     obj.x <= playerContainer.x + playerHitbox.width + Dims.l(5) &&
                     obj.y + obj.height >= playerContainer.y - Dims.l(5) &&
@@ -1182,26 +1246,26 @@ Item {
 
                     if (distanceSquared < maxDistanceSquared) {
                         if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
-                            lives--
+                            shield--
                             flashOverlay.triggerFlash("red")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
                             comboMeterAnimation.stop()
                             invincible = true
-                            graceTimer.interval = 1000  // Ensure 1s for grace period
+                            graceTimer.interval = 1000
                             graceTimer.restart()
-                            addPowerupBar("invincibility", 1000, "#FF69B4")  // Add bar here too
+                            addPowerupBar("invincibility", 1000, "#FF69B4")
                             obj.visible = false
                             feedback.play()
-                            if (lives <= 0) {
+                            if (shield <= 0) {
                                 gameOver = true
                             }
                             continue
                         }
 
                         if (obj.isPowerup && isColliding(playerHitbox, obj)) {
-                            lives++
+                            shield = Math.min(20, shield + 1)
                             flashOverlay.triggerFlash("blue")
                             comboCount = 0
                             comboActive = false
@@ -1216,7 +1280,7 @@ Item {
                             graceTimer.interval = 4000
                             graceTimer.restart()
                             flashOverlay.triggerFlash("#FF69B4")
-                            addPowerupBar("invincibility", 4000, "#FF69B4")  // Use same color as grace period
+                            addPowerupBar("invincibility", 4000, "#FF69B4")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
@@ -1290,11 +1354,9 @@ Item {
                     }
                 }
 
-                // Combo check with tighter pre-check
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
-                    // Tighter bounding box pre-check for comboHitbox
                     if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - Dims.l(5) &&
                         obj.x <= playerContainer.x + comboHitbox.width / 2 + Dims.l(5) &&
                         obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - Dims.l(5) &&
@@ -1327,7 +1389,7 @@ Item {
                             obj.dodged = true
                         }
                     } else {
-                        score += 1 * scoreMultiplier  // Base points for non-combo dodge
+                        score += 1 * scoreMultiplier
                         obj.dodged = true
                     }
 
@@ -1346,7 +1408,6 @@ Item {
             scoreMultiplierElapsed += deltaTime
         }
 
-        // Throttled spawning with 200ms cooldown
         var currentTime = Date.now()
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
@@ -1389,7 +1450,6 @@ Item {
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var obj = largeAsteroidPool[i]
             if (!obj.visible) {
-                // Only update necessary properties
                 obj.x = Math.random() * (root.width - obj.width)
                 obj.y = -obj.height - (Math.random() * Dims.l(28))
                 obj.visible = true
@@ -1402,7 +1462,6 @@ Item {
         for (var i = 0; i < asteroidPool.length; i++) {
             var obj = asteroidPool[i]
             if (!obj.visible) {
-                // Reset type-specific properties only if they differ
                 if (obj.isAsteroid !== (properties.isAsteroid || false)) {
                     obj.isAsteroid = properties.isAsteroid || false
                     obj.isPowerup = properties.isPowerup || false
@@ -1412,11 +1471,9 @@ Item {
                     obj.isShrink = properties.isShrink || false
                     obj.isSlowMo = properties.isSlowMo || false
                 }
-                // Only update necessary properties
                 obj.x = Math.random() * (root.width - obj.width)
                 obj.y = -obj.height - (Math.random() * Dims.l(28))
                 obj.visible = true
-                // Reset passed and dodged only if true to avoid unnecessary updates
                 if (obj.passed) obj.passed = false
                 if (obj.dodged) obj.dodged = false
                 return
@@ -1449,7 +1506,7 @@ Item {
 
     function restartGame() {
         score = 0
-        lives = 2
+        shield = 2
         level = 1
         asteroidCount = 0
         scrollSpeed = 1.6
@@ -1486,7 +1543,6 @@ Item {
         gameOverScreen.opacity = 0
         lastFrameTime = 0
 
-        // Reset all asteroids to initial state
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
             asteroidPool[i].y = -asteroidPool[i].height - (Math.random() * Dims.l(28))
@@ -1500,7 +1556,6 @@ Item {
             largeAsteroidPool[i].x = Math.random() * (root.width - largeAsteroidPool[i].width)
         }
 
-        // Spawn initial asteroids
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
