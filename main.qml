@@ -23,6 +23,8 @@ import Nemo.Ngf 1.0
 import Nemo.Configuration 1.0
 import QtQuick.Shapes 1.15
 import org.asteroid.controls 1.0
+import Nemo.KeepAlive 1.1
+import org.nemomobile.systemsettings 1.0
 
 Item {
     id: root
@@ -118,6 +120,18 @@ Item {
     NonGraphicalFeedback {
         id: feedback
         event: "press"
+    }
+
+    DisplaySettings {
+        id: displaySettings
+        onBrightnessChanged: {
+            if (startBrightness != -1) {
+                return
+            }
+
+            startBrightness = brightness
+            displaySettings.brightness = displaySettings.maximumBrightness
+        }
     }
 
     Component {
@@ -1594,6 +1608,8 @@ Item {
             largeAsteroidPool.push(largeObj)
         }
 
+        DisplayBlanking.preventBlanking = true
+
         calibrating = true
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
@@ -1618,4 +1634,6 @@ Item {
             }
         ', root, "spawnTimer")
     }
+
+    Component.onDestruction: displaySettings.brightness = startBrightness
 }
