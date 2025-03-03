@@ -1261,6 +1261,18 @@ Item {
                     if (distanceSquared < maxDistanceSquared) {
                         if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
                             shield--
+                            if (shield <= 0) {
+                                gameOver = true
+                                shield = 0  // Clamp shield to 0
+                                flashOverlay.triggerFlash("red")
+                                comboCount = 0
+                                comboActive = false
+                                comboTimer.stop()
+                                comboMeterAnimation.stop()
+                                obj.visible = false
+                                feedback.play()
+                                continue
+                            }
                             flashOverlay.triggerFlash("red")
                             comboCount = 0
                             comboActive = false
@@ -1272,9 +1284,6 @@ Item {
                             addPowerupBar("invincibility", 1000, "#FF69B4")
                             obj.visible = false
                             feedback.play()
-                            if (shield <= 0) {
-                                gameOver = true
-                            }
                             continue
                         }
 
