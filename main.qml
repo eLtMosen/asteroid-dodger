@@ -844,35 +844,59 @@ Item {
                 }
             }
 
-            Column {
-                id: calibrationText
-                anchors.centerIn: parent
-                spacing: dimsFactor * 1
+            Item {
+                id: calibrationContainer
+                anchors.fill: parent
                 visible: calibrating
-                opacity: showingNow ? 0 : 1
-                Behavior on opacity {
-                    NumberAnimation { duration: 500; easing.type: Easing.InOutQuad }
+
+                Column {
+                    id: calibrationText
+                    anchors {
+                        bottom: parent.bottom
+                        bottomMargin: dimsFactor * 20
+                        horizontalCenter: parent.horizontalCenter
+                    }
+                    spacing: dimsFactor * 1
+                    opacity: showingNow ? 0 : 1
+                    Behavior on opacity {
+                        NumberAnimation { duration: 500; easing.type: Easing.InOutQuad }
+                    }
+                    Text {
+                        text: "Calibrating"
+                        color: "white"
+                        font.pixelSize: dimsFactor * 10
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                    Text {
+                        text: "Hold your watch comfy"
+                        color: "white"
+                        font.pixelSize: dimsFactor * 7
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                    Text {
+                        text: calibrationTimer + "s"
+                        color: "white"
+                        font.pixelSize: dimsFactor * 10
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
                 }
-                Text {
-                    text: "Calibrating"
-                    color: "white"
-                    font.pixelSize: dimsFactor * 10
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                Text {
-                    text: "Hold your watch comfy"
-                    color: "white"
-                    font.pixelSize: dimsFactor * 7
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                Text {
-                    text: calibrationTimer + "s"
-                    color: "white"
-                    font.pixelSize: dimsFactor * 10
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: calibrating
+                    onClicked: {
+                        baselineX = accelerometer.reading.x
+                        calibrating = false
+                        calibrationCountdownTimer.stop()
+                        showingNow = true
+                        feedback.play()
+                        nowTransition.start()
+                        introTimer.phase = 1
+                        introTimer.start()
+                    }
                 }
             }
 
