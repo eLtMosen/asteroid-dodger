@@ -1168,7 +1168,7 @@ Item {
                         if (isSlowMo) return "#00FFFF"
                         return "#0087ff"
                     }
-                    font.pixelSize: dimsFactor * 5
+                    font.pixelSize: dimsFactor * 6
                     font.bold: true
                     anchors.centerIn: parent
                 }
