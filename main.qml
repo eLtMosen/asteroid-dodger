@@ -132,6 +132,7 @@ Item {
             id: progressBar
             property real progress: 1.0
             property string fillColor: "#FFD700"
+            property string bgColor: "#8B6914"
             property int duration: 0
             property var timer: null
             width: dimsFactor * 28
@@ -141,7 +142,7 @@ Item {
                 width: parent.width
                 height: parent.height
                 radius: dimsFactor * 1
-                color: "#8B6914"
+                color: bgColor
                 opacity: 0.5
             }
 
@@ -232,7 +233,7 @@ Item {
         }
         onRunningChanged: {
             if (running && !paused) {
-                addPowerupBar("grace", 2000, "#FF69B4")
+                addPowerupBar("grace", 2000, "#FF69B4", "#8B374F")
             }
         }
     }
@@ -249,7 +250,7 @@ Item {
         }
         onRunningChanged: {
             if (running && !paused) {
-                addPowerupBar("invincibility", 10000, "#FF69B4")
+                addPowerupBar("invincibility", 10000, "#FF69B4", "#8B374F")
             }
         }
     }
@@ -264,6 +265,11 @@ Item {
             isSpeedBoostActive = false
             removePowerup("speedBoost")
         }
+        onRunningChanged: {
+            if (running && !paused) {
+                addPowerupBar("speedBoost", 6000, "#FFFF00", "#8B8B00")
+            }
+        }
     }
 
     Timer {
@@ -275,6 +281,11 @@ Item {
             scoreMultiplier = 1.0
             scoreMultiplierElapsed = 0
             removePowerup("scoreMultiplier")
+        }
+        onRunningChanged: {
+            if (running && !paused) {
+                addPowerupBar("scoreMultiplier", 10000, "#00CC00", "#006600")
+            }
         }
     }
 
@@ -288,6 +299,11 @@ Item {
             savedScrollSpeed = preSlowSpeed
             isSlowMoActive = false
             removePowerup("slowMo")
+        }
+        onRunningChanged: {
+            if (running && !paused) {
+                addPowerupBar("slowMo", 6000, "#00FFFF", "#008B8B")
+            }
         }
     }
 
@@ -314,6 +330,9 @@ Item {
         onRunningChanged: {
             if (!running && !paused) {
                 elapsed = 0
+            }
+            if (running && !paused) {
+                addPowerupBar("shrink", 6000, "#FFA500", "#8B5A00")
             }
         }
     }
@@ -1181,7 +1200,7 @@ Item {
         }
     }
 
-    function addPowerupBar(type, duration, color) {
+    function addPowerupBar(type, duration, color, bgColor) {
         var existingIndex = activePowerups.findIndex(function(p) { return p.type === type })
         if (existingIndex !== -1) {
             var existing = activePowerups[existingIndex]
@@ -1194,6 +1213,7 @@ Item {
 
         var bar = progressBarComponent.createObject(powerupBars, {
             "fillColor": color,
+            "bgColor": bgColor,
             "duration": duration,
             "progress": 1.0
         })
@@ -1323,7 +1343,7 @@ Item {
                             isSpeedBoostActive = true
                             speedBoostTimer.restart()
                             flashOverlay.triggerFlash("#FFFF00")
-                            addPowerupBar("speedBoost", 6000, "#FFFF00")
+                            addPowerupBar("speedBoost", 6000, "#FFFF00", "#8B8B00")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
@@ -1337,7 +1357,7 @@ Item {
                             scoreMultiplierElapsed = 0
                             scoreMultiplierTimer.restart()
                             flashOverlay.triggerFlash("#00CC00")
-                            addPowerupBar("scoreMultiplier", 10000, "#00CC00")
+                            addPowerupBar("scoreMultiplier", 10000, "#00CC00", "#006600")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
@@ -1354,7 +1374,7 @@ Item {
                             isShrinkActive = true
                             shrinkTimer.restart()
                             flashOverlay.triggerFlash("#FFA500")
-                            addPowerupBar("shrink", 6000, "#FFA500")
+                            addPowerupBar("shrink", 6000, "#FFA500", "#8B5A00")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
@@ -1372,7 +1392,7 @@ Item {
                             isSlowMoActive = true
                             slowMoTimer.restart()
                             flashOverlay.triggerFlash("#00FFFF")
-                            addPowerupBar("slowMo", 6000, "#00FFFF")
+                            addPowerupBar("slowMo", 6000, "#00FFFF", "#008B8B")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
