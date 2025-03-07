@@ -143,7 +143,7 @@ Item {
                 height: parent.height
                 radius: dimsFactor * 1
                 color: bgColor
-                opacity: 0.5
+                opacity: 1.0
             }
 
             Rectangle {
@@ -152,7 +152,7 @@ Item {
                 height: parent.height
                 color: fillColor
                 radius: dimsFactor * 1
-                opacity: 0.5
+                opacity: 1.0
             }
 
             function startTimer() {
@@ -498,44 +498,44 @@ Item {
         Rectangle {
             anchors.fill: parent
             color: "black"
+            layer.enabled: true
+        }
+
+        Rectangle {
+            id: flashOverlay
+            anchors.fill: parent
+            color: flashColor ? flashColor : "transparent"
+            opacity: 0
+            visible: flashAnimation.running
+            SequentialAnimation {
+                id: flashAnimation
+                running: false
+                NumberAnimation {
+                    target: flashOverlay
+                    property: "opacity"
+                    from: 0.5
+                    to: 0
+                    duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 6000 : 500
+                    easing.type: Easing.OutQuad
+                }
+                onStopped: {
+                    flashOverlay.opacity = 0
+                    flashColor = ""
+                }
+            }
+            function triggerFlash(color) {
+                if (flashAnimation.running) {
+                    flashAnimation.stop()
+                }
+                flashColor = color
+                opacity = 0.5
+                flashAnimation.start()
+            }
         }
 
         Item {
             id: gameContent
             anchors.fill: parent
-
-            Rectangle {
-                id: flashOverlay
-                anchors.fill: parent
-                color: flashColor ? flashColor : "transparent"
-                opacity: 0
-                z: 5
-                visible: flashAnimation.running
-                SequentialAnimation {
-                    id: flashAnimation
-                    running: false
-                    NumberAnimation {
-                        target: flashOverlay
-                        property: "opacity"
-                        from: 0.5
-                        to: 0
-                        duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 6000 : 500
-                        easing.type: Easing.OutQuad
-                    }
-                    onStopped: {
-                        flashOverlay.opacity = 0
-                        flashColor = ""
-                    }
-                }
-                function triggerFlash(color) {
-                    if (flashAnimation.running) {
-                        flashAnimation.stop()
-                    }
-                    flashColor = color
-                    opacity = 0.5
-                    flashAnimation.start()
-                }
-            }
 
             Item {
                 id: largeAsteroidContainer
@@ -660,7 +660,7 @@ Item {
                         height: parent.height
                         radius: dimsFactor * 1
                         color: "#8B6914"
-                        opacity: 0.5
+                        opacity: 1.0
                     }
 
                     Rectangle {
@@ -669,7 +669,7 @@ Item {
                         height: parent.height
                         color: "#FFD700"
                         radius: dimsFactor * 1
-                        opacity: 0.5
+                        opacity: 1.0
                     }
                 }
 
@@ -715,7 +715,7 @@ Item {
                     height: parent.height
                     radius: dimsFactor * 1
                     color: "#8B6914"
-                    opacity: 0.5
+                    opacity: 1.0
                 }
 
                 Rectangle {
@@ -724,7 +724,7 @@ Item {
                     height: parent.height
                     color: "#0000FF"
                     radius: dimsFactor * 1
-                    opacity: 0.5
+                    opacity: 1.0
                 }
             }
 
@@ -1088,7 +1088,7 @@ Item {
                 spacing: dimsFactor * 6
                 anchors.centerIn: parent
 
-                Text {
+                Text {  // Changed from TextContrast
                     id: gameOverText
                     text: "Game Over!"
                     color: "red"
@@ -1160,8 +1160,14 @@ Item {
                 height: width
                 x: Math.random() * (root.width - width)
                 y: -height - (Math.random() * dimsFactor * 28)
-                color: "#0e003d"
-                opacity: 1 - Math.random() * 0.7
+                color: {
+                    var t = Math.random()
+                    var r = Math.round(0x0e + t * (0x2a - 0x0e))
+                    var g = Math.round(0x00 + t * (0x00 - 0x00))
+                    var b = Math.round(0x3d + t * (0x9b - 0x3d))
+                    return Qt.rgba(r / 255, g / 255, b / 255, 1)
+                }
+                opacity: 1.0
                 radius: dimsFactor * 50
                 visible: false
             }
@@ -1308,19 +1314,18 @@ Item {
             var largeObj = largeAsteroidPool[i]
             if (largeObj.visible) {
                 largeObj.y += largeAsteroidSpeed
+                if (largeObj.y >= root.height) { // Only cull when below screen
+                    largeObj.visible = false
+                }
             }
         }
         for (i = 0; i < asteroidPool.length; i++) {
             var obj = asteroidPool[i]
             if (obj.visible) {
                 obj.y += adjustedScrollSpeed
-            }
-        }
-
-        for (i = 0; i < largeAsteroidPool.length; i++) {
-            var largeObj = largeAsteroidPool[i]
-            if (largeObj.visible && largeObj.y >= root.height) {
-                largeObj.visible = false
+                if (obj.y >= root.height) { // Only cull when below screen
+                    obj.visible = false
+                }
             }
         }
 
@@ -1497,10 +1502,6 @@ Item {
                     if (asteroidCount >= asteroidsPerLevel) {
                         levelUp()
                     }
-                }
-
-                if (obj.y >= root.height) {
-                    obj.visible = false
                 }
             }
         }
