@@ -1085,58 +1085,58 @@ Item {
             }
 
             Column {
-                spacing: dimsFactor * 6
+                spacing: Math.round(dimsFactor * 6 * 1.2)
                 anchors.centerIn: parent
 
-                Text {  // Changed from TextContrast
+                Text {
                     id: gameOverText
                     text: "Game Over!"
                     color: "red"
-                    font.pixelSize: dimsFactor * 8
+                    font.pixelSize: Math.round(dimsFactor * 8 * 1.2)
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                 }
 
                 Column {
-                    spacing: dimsFactor * 1
+                    spacing: Math.round(dimsFactor * 1 * 1.2)
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Row {
-                        spacing: dimsFactor * 2
-                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: score; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
+                        spacing: Math.round(dimsFactor * 2 * 1.2)
+                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: Math.round(dimsFactor * 4 * 1.2); width: Math.round(dimsFactor * 22 * 1.2); horizontalAlignment: Text.AlignHCenter }
+                        Text { text: score; color: "white"; font.pixelSize: Math.round(dimsFactor * 5 * 1.2); font.bold: true; width: Math.round(dimsFactor * 11 * 1.2); horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: dimsFactor * 2
-                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: level; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
+                        spacing: Math.round(dimsFactor * 2 * 1.2)
+                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: Math.round(dimsFactor * 4 * 1.2); width: Math.round(dimsFactor * 22 * 1.2); horizontalAlignment: Text.AlignHCenter }
+                        Text { text: level; color: "white"; font.pixelSize: Math.round(dimsFactor * 5 * 1.2); font.bold: true; width: Math.round(dimsFactor * 11 * 1.2); horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: dimsFactor * 2
-                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: highScore.value; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
+                        spacing: Math.round(dimsFactor * 2 * 1.2)
+                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: Math.round(dimsFactor * 4 * 1.2); width: Math.round(dimsFactor * 22 * 1.2); horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highScore.value; color: "white"; font.pixelSize: Math.round(dimsFactor * 5 * 1.2); font.bold: true; width: Math.round(dimsFactor * 11 * 1.2); horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: dimsFactor * 2
-                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
-                        Text { text: highLevel.value; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
+                        spacing: Math.round(dimsFactor * 2 * 1.2)
+                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: Math.round(dimsFactor * 4 * 1.2); width: Math.round(dimsFactor * 22 * 1.2); horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highLevel.value; color: "white"; font.pixelSize: Math.round(dimsFactor * 5 * 1.2); font.bold: true; width: Math.round(dimsFactor * 11 * 1.2); horizontalAlignment: Text.AlignHCenter }
                     }
                 }
 
                 Rectangle {
                     id: tryAgainButton
-                    width: dimsFactor * 42
-                    height: dimsFactor * 14
+                    width: Math.round(dimsFactor * 42 * 1.2)
+                    height: Math.round(dimsFactor * 14 * 1.2)
                     color: "green"
                     border.color: "white"
-                    border.width: dimsFactor * 1
-                    radius: dimsFactor * 3
+                    border.width: Math.round(dimsFactor * 1 * 1.2)
+                    radius: Math.round(dimsFactor * 3 * 1.2)
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Text {
                         text: "Die Again"
                         color: "white"
-                        font.pixelSize: dimsFactor * 6
+                        font.pixelSize: Math.round(dimsFactor * 6 * 1.2)
                         font.bold: true
                         anchors.centerIn: parent
                     }
