@@ -714,7 +714,7 @@ Item {
                     width: parent.width
                     height: parent.height
                     radius: dimsFactor * 1
-                    color: "#8B6914"
+                    color: "#00478B" // Darker tone matching #8B6914 -> #FFD700 shift
                     opacity: 1.0
                 }
 
@@ -722,7 +722,7 @@ Item {
                     id: shieldFill
                     width: (shield / 20) * parent.width
                     height: parent.height
-                    color: "#0000FF"
+                    color: "#0087FF" // Matches power-up color for shield/life +1
                     radius: dimsFactor * 1
                     opacity: 1.0
                 }
