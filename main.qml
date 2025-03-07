@@ -837,21 +837,21 @@ Item {
                 Text {
                     text: "Calibrating"
                     color: "white"
-                    font.pixelSize: dimsFactor * 7
+                    font.pixelSize: dimsFactor * 10
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: "Hold your watch comfy"
                     color: "white"
-                    font.pixelSize: dimsFactor * 4
+                    font.pixelSize: dimsFactor * 7
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: calibrationTimer + "s"
                     color: "white"
-                    font.pixelSize: dimsFactor * 6
+                    font.pixelSize: dimsFactor * 10
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
