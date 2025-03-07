@@ -31,6 +31,9 @@ Item {
     anchors.fill: parent
     visible: true
 
+    // Scaling factor for all dimensions, based on Dims.l(100)
+    property real dimsFactor: Dims.l(100) / 100
+
     property real scrollSpeed: 1.6
     property real savedScrollSpeed: 0
     property real basePlayerSpeed: 1.2
@@ -51,7 +54,7 @@ Item {
     property real baselineX: 0
     property int calibrationTimer: 5
     property bool invincible: false
-    property real closePassThreshold: Dims.l(10)
+    property real closePassThreshold: dimsFactor * 10
     property string flashColor: ""
     property int comboCount: 0
     property real lastDodgeTime: 0
@@ -87,7 +90,7 @@ Item {
         } else {
             scrollSpeed = savedScrollSpeed
             if (comboActive) {
-                comboMeterAnimation.resume()
+            comboMeterAnimation.resume()
             }
             if (scoreMultiplierTimer.running) {
                 comboHitboxAnimation.resume()
@@ -126,11 +129,11 @@ Item {
 
     DisplaySettings {
         id: displaySettings
+        property int startBrightness: -1
         onBrightnessChanged: {
             if (startBrightness != -1) {
                 return
             }
-
             startBrightness = brightness
             displaySettings.brightness = displaySettings.maximumBrightness
         }
@@ -144,13 +147,13 @@ Item {
             property string fillColor: "#FFD700"
             property int duration: 0
             property var timer: null
-            width: Dims.l(28)
-            height: Dims.l(2)
+            width: dimsFactor * 28
+            height: dimsFactor * 2
 
             Rectangle {
                 width: parent.width
                 height: parent.height
-                radius: Dims.l(1)
+                radius: dimsFactor * 1
                 color: "#8B6914"
                 opacity: 0.5
             }
@@ -160,7 +163,7 @@ Item {
                 width: parent.width * progress
                 height: parent.height
                 color: fillColor
-                radius: Dims.l(1)
+                radius: dimsFactor * 1
                 opacity: 0.5
             }
 
@@ -249,7 +252,7 @@ Item {
 
     Timer {
         id: invincibilityTimer
-        interval: 10000  // Restored to 10 seconds
+        interval: 10000
         running: isInvincibleActive && !paused
         repeat: false
         onTriggered: {
@@ -310,10 +313,10 @@ Item {
         onTriggered: {
             elapsed += interval
             var progress = Math.min(1.0, elapsed / 6000)
-            player.width = Dims.l(5) + (Dims.l(10) - Dims.l(5)) * progress
-            player.height = Dims.l(5) + (Dims.l(10) - Dims.l(5)) * progress
-            playerHitbox.width = Dims.l(7) + (Dims.l(14) - Dims.l(7)) * progress
-            playerHitbox.height = Dims.l(7) + (Dims.l(14) - Dims.l(7)) * progress
+            player.width = dimsFactor * 5 + (dimsFactor * 10 - dimsFactor * 5) * progress
+            player.height = dimsFactor * 5 + (dimsFactor * 10 - dimsFactor * 5) * progress
+            playerHitbox.width = dimsFactor * 7 + (dimsFactor * 14 - dimsFactor * 7) * progress
+            playerHitbox.height = dimsFactor * 7 + (dimsFactor * 14 - dimsFactor * 7) * progress
             if (elapsed >= 6000) {
                 isShrinkActive = false
                 elapsed = 0
@@ -408,20 +411,20 @@ Item {
                 return "#FF69B4"
             }
             font.pixelSize: {
-                if (points <= 10) return Dims.l(4)
+                if (points <= 10) return dimsFactor * 4
                 if (points <= 20) {
                     var t = (points - 10) / 10
-                    return (Dims.l(4) + t * (Dims.l(5) - Dims.l(4)))
+                    return (dimsFactor * 4 + t * (dimsFactor * 5 - dimsFactor * 4))
                 }
                 if (points <= 40) {
                     var t = (points - 20) / 20
-                    return (Dims.l(5) + t * (Dims.l(6) - Dims.l(5)))
+                    return (dimsFactor * 5 + t * (dimsFactor * 6 - dimsFactor * 5))
                 }
                 if (points <= 100) {
                     var t = (points - 40) / 60
-                    return (Dims.l(6) + t * (Dims.l(7) - Dims.l(6)))
+                    return (dimsFactor * 6 + t * (dimsFactor * 7 - dimsFactor * 6))
                 }
-                return Dims.l(7)
+                return dimsFactor * 7
             }
             z: 3
             opacity: 1
@@ -433,14 +436,14 @@ Item {
                     NumberAnimation {
                         target: particleText
                         property: "x"
-                        to: x + (x < playerContainer.x ? -Dims.l(8) : Dims.l(8))
+                        to: x + (x < playerContainer.x ? -dimsFactor * 8 : dimsFactor * 8)
                         duration: 400
                         easing.type: Easing.OutCubic
                     }
                     NumberAnimation {
                         target: particleText
                         property: "y"
-                        to: y - Dims.l(7)
+                        to: y - dimsFactor * 7
                         duration: 400
                         easing.type: Easing.OutCubic
                     }
@@ -449,7 +452,7 @@ Item {
                     NumberAnimation {
                         target: particleText
                         property: "y"
-                        to: y + Dims.l(11)
+                        to: y + dimsFactor * 11
                         duration: 600
                         easing.type: Easing.Linear
                     }
@@ -554,8 +557,8 @@ Item {
 
                 Image {
                     id: player
-                    width: Dims.l(10)
-                    height: Dims.l(10)
+                    width: dimsFactor * 10
+                    height: dimsFactor * 10
                     source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
                     anchors.centerIn: parent
 
@@ -583,39 +586,39 @@ Item {
 
                 Shape {
                     id: playerHitbox
-                    width: Dims.l(14)
-                    height: Dims.l(14)
+                    width: dimsFactor * 14
+                    height: dimsFactor * 14
                     anchors.centerIn: parent
                     visible: false
 
                     ShapePath {
                         strokeWidth: -1
                         fillColor: "transparent"
-                        startX: Dims.l(7); startY: 0
-                        PathLine { x: Dims.l(14); y: Dims.l(7) }
-                        PathLine { x: Dims.l(7); y: Dims.l(14) }
-                        PathLine { x: 0; y: Dims.l(7) }
-                        PathLine { x: Dims.l(7); y: 0 }
+                        startX: dimsFactor * 7; startY: 0
+                        PathLine { x: dimsFactor * 14; y: dimsFactor * 7 }
+                        PathLine { x: dimsFactor * 7; y: dimsFactor * 14 }
+                        PathLine { x: 0; y: dimsFactor * 7 }
+                        PathLine { x: dimsFactor * 7; y: 0 }
                     }
                 }
 
                 Shape {
                     id: comboHitbox
-                    width: Dims.l(40)
-                    height: Dims.l(40)
+                    width: dimsFactor * 40
+                    height: dimsFactor * 40
                     anchors.centerIn: parent
                     visible: comboActive
                     opacity: 0.2
 
                     ShapePath {
-                        strokeWidth: Dims.l(1)
+                        strokeWidth: dimsFactor * 1
                         strokeColor: "#00CC00"
                         fillColor: "transparent"
-                        startX: Dims.l(20); startY: Dims.l(10)
-                        PathLine { x: Dims.l(30); y: Dims.l(20) }
-                        PathLine { x: Dims.l(20); y: Dims.l(30) }
-                        PathLine { x: Dims.l(10); y: Dims.l(20) }
-                        PathLine { x: Dims.l(20); y: Dims.l(10) }
+                        startX: dimsFactor * 20; startY: dimsFactor * 10
+                        PathLine { x: dimsFactor * 30; y: dimsFactor * 20 }
+                        PathLine { x: dimsFactor * 20; y: dimsFactor * 30 }
+                        PathLine { x: dimsFactor * 10; y: dimsFactor * 20 }
+                        PathLine { x: dimsFactor * 20; y: dimsFactor * 10 }
                     }
 
                     SequentialAnimation on opacity {
@@ -636,21 +639,21 @@ Item {
                 anchors {
                     top: parent.top
                     horizontalCenter: parent.horizontalCenter
-                    topMargin: Dims.l(6)
+                    topMargin: dimsFactor * 6
                 }
                 z: 4
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
 
                 Item {
                     id: levelProgressBar
-                    width: Dims.l(28)
-                    height: Dims.l(2)
+                    width: dimsFactor * 28
+                    height: dimsFactor * 2
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Rectangle {
                         width: parent.width
                         height: parent.height
-                        radius: Dims.l(1)
+                        radius: dimsFactor * 1
                         color: "#8B6914"
                         opacity: 0.5
                     }
@@ -660,7 +663,7 @@ Item {
                         width: (asteroidCount / asteroidsPerLevel) * parent.width
                         height: parent.height
                         color: "#FFD700"
-                        radius: Dims.l(1)
+                        radius: dimsFactor * 1
                         opacity: 0.5
                     }
                 }
@@ -669,19 +672,18 @@ Item {
                     id: powerupBars
                     anchors {
                         top: levelProgressBar.bottom
-                        topMargin: Dims.l(1)
+                        topMargin: dimsFactor * 1
                         horizontalCenter: parent.horizontalCenter
                     }
-                    spacing: Dims.l(1)
+                    spacing: dimsFactor * 1
                 }
             }
-
 
             Text {
                 id: levelNumber
                 text: level
                 color: "#dddddd"
-                font.pixelSize: Dims.l(4)
+                font.pixelSize: dimsFactor * 4
                 font.bold: true
                 anchors {
                     top: root.top
@@ -696,17 +698,17 @@ Item {
                 anchors {
                     bottom: parent.bottom
                     horizontalCenter: parent.horizontalCenter
-                    bottomMargin: Dims.l(4)
+                    bottomMargin: dimsFactor * 4
                 }
-                width: Dims.l(28)
-                height: Dims.l(2)
+                width: dimsFactor * 28
+                height: dimsFactor * 2
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
                 z: 4
 
                 Rectangle {
                     width: parent.width
                     height: parent.height
-                    radius: Dims.l(1)
+                    radius: dimsFactor * 1
                     color: "#8B6914"
                     opacity: 0.5
                 }
@@ -716,7 +718,7 @@ Item {
                     width: (shield / 20) * parent.width
                     height: parent.height
                     color: "#0000FF"
-                    radius: Dims.l(1)
+                    radius: dimsFactor * 1
                     opacity: 0.5
                 }
             }
@@ -724,8 +726,8 @@ Item {
             Text {
                 id: shieldText
                 text: shield === 1 ? "❤️" : shield
-                color: shield === 1 ? "red" : "#FFFFFF"  // White when blinking starts, blue otherwise
-                font.pixelSize: shield === 1 ? Dims.l(6) : Dims.l(4)  // Base size
+                color: shield === 1 ? "red" : "#FFFFFF"
+                font.pixelSize: shield === 1 ? dimsFactor * 6 : dimsFactor * 4
                 font.bold: true
                 anchors {
                     bottom: parent.bottom
@@ -738,25 +740,25 @@ Item {
                     running: shield === 1 && !root.paused && !gameOver
                     loops: Animation.Infinite
                     ParallelAnimation {
-                        ColorAnimation {  // Replaced NumberAnimation for color
+                        ColorAnimation {
                             target: shieldText
                             property: "color"
                             from: "white"
-                            to: "#00FFFF"  // Bright blue
+                            to: "#00FFFF"
                             duration: 500
                             easing.type: Easing.InOutSine
                         }
                         NumberAnimation {
                             target: shieldText
                             property: "font.pixelSize"
-                            from: Dims.l(6)
-                            to: Dims.l(8)  // +2 size
+                            from: dimsFactor * 6
+                            to: dimsFactor * 8
                             duration: 500
                             easing.type: Easing.InOutSine
                         }
                     }
                     ParallelAnimation {
-                        ColorAnimation {  // Replaced NumberAnimation for color
+                        ColorAnimation {
                             target: shieldText
                             property: "color"
                             from: "#00FFFF"
@@ -767,8 +769,8 @@ Item {
                         NumberAnimation {
                             target: shieldText
                             property: "font.pixelSize"
-                            from: Dims.l(8)
-                            to: Dims.l(6)  // Back to original
+                            from: dimsFactor * 8
+                            to: dimsFactor * 6
                             duration: 500
                             easing.type: Easing.InOutSine
                         }
@@ -789,19 +791,19 @@ Item {
                 Binding {
                     target: scoreArea
                     property: "y"
-                    value: playerContainer.y + playerContainer.height + Dims.l(6)
+                    value: playerContainer.y + playerContainer.height + dimsFactor * 6
                     when: !gameOver && !paused && !calibrating && !showingNow && !showingSurvive
                 }
 
                 Rectangle {
                     id: comboMeter
-                    property int maxWidth: Dims.l(13)
-                    height: Dims.l(1)
+                    property int maxWidth: dimsFactor * 13
+                    height: dimsFactor * 1
                     width: 0
                     color: "green"
                     radius: height / 2
                     x: (scoreText.width - width) / 2
-                    y: -height + Dims.l(1)
+                    y: -height + dimsFactor * 1
                     SequentialAnimation {
                         id: comboMeterAnimation
                         running: comboActive && !root.paused
@@ -831,7 +833,7 @@ Item {
                     id: scoreText
                     text: score
                     color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd"
-                    font.pixelSize: Dims.l(5)
+                    font.pixelSize: dimsFactor * 5
                     font.bold: scoreMultiplierTimer.running
                 }
             }
@@ -839,7 +841,7 @@ Item {
             Column {
                 id: calibrationText
                 anchors.centerIn: parent
-                spacing: Dims.l(1)
+                spacing: dimsFactor * 1
                 visible: calibrating
                 opacity: showingNow ? 0 : 1
                 Behavior on opacity {
@@ -848,21 +850,21 @@ Item {
                 Text {
                     text: "Calibrating"
                     color: "white"
-                    font.pixelSize: Dims.l(7)
+                    font.pixelSize: dimsFactor * 7
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: "Hold your watch comfy"
                     color: "white"
-                    font.pixelSize: Dims.l(4)
+                    font.pixelSize: dimsFactor * 4
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: calibrationTimer + "s"
                     color: "white"
-                    font.pixelSize: Dims.l(6)
+                    font.pixelSize: dimsFactor * 6
                     horizontalAlignment: Text.AlignHCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -872,7 +874,7 @@ Item {
                 id: nowText
                 text: "NOW"
                 color: "white"
-                font.pixelSize: Dims.l(13)
+                font.pixelSize: dimsFactor * 13
                 anchors.centerIn: parent
                 visible: showingNow
                 opacity: 0
@@ -881,7 +883,7 @@ Item {
                     running: false
                     NumberAnimation { target: nowText; property: "opacity"; from: 0; to: 1; duration: 500 }
                     ParallelAnimation {
-                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: Dims.l(13); to: Dims.l(33); duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: dimsFactor * 13; to: dimsFactor * 33; duration: 1000; easing.type: Easing.OutQuad }
                         NumberAnimation { target: nowText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
                     }
                 }
@@ -891,7 +893,7 @@ Item {
                 id: surviveText
                 text: "SURVIVE"
                 color: "orange"
-                font.pixelSize: Dims.l(13)
+                font.pixelSize: dimsFactor * 13
                 font.bold: true
                 anchors.centerIn: parent
                 visible: showingSurvive
@@ -901,7 +903,7 @@ Item {
                     running: false
                     NumberAnimation { target: surviveText; property: "opacity"; from: 0; to: 1; duration: 500 }
                     ParallelAnimation {
-                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: Dims.l(13); to: Dims.l(33); duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: dimsFactor * 13; to: dimsFactor * 33; duration: 1000; easing.type: Easing.OutQuad }
                         NumberAnimation { target: surviveText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
                     }
                 }
@@ -911,7 +913,7 @@ Item {
                 id: pauseText
                 text: "Paused"
                 color: "white"
-                font.pixelSize: Dims.l(12)
+                font.pixelSize: dimsFactor * 12
                 anchors.centerIn: parent
                 opacity: 0
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
@@ -936,7 +938,7 @@ Item {
                 text: "FPS: 60"
                 color: "white"
                 opacity: 0.5
-                font.pixelSize: Dims.l(10)
+                font.pixelSize: dimsFactor * 10
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     bottom: fpsGraph.top
@@ -946,14 +948,14 @@ Item {
 
             Rectangle {
                 id: fpsGraph
-                width: Dims.l(30)
-                height: Dims.l(10)
+                width: dimsFactor * 30
+                height: dimsFactor * 10
                 color: "#00000000"
                 opacity: 0.5
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     top: debugToggle.top
-                    topMargin: Dims.l(3)
+                    topMargin: dimsFactor * 3
                 }
                 visible: debugMode && !gameOver && !calibrating && !showingNow && !showingSurvive
 
@@ -966,7 +968,7 @@ Item {
                             width: fpsGraph.width / 10
                             height: {
                                 var fps = index < gameTimer.fpsHistory.length ? gameTimer.fpsHistory[index] : 0
-                                return Math.min(Dims.l(10), Math.max(0, (fps / 60) * Dims.l(10)))
+                                return Math.min(dimsFactor * 10, Math.max(0, (fps / 60) * dimsFactor * 10))
                             }
                             color: {
                                 var fps = index < gameTimer.fpsHistory.length ? gameTimer.fpsHistory[index] : 0
@@ -984,12 +986,12 @@ Item {
                 text: "Debug"
                 color: "white"
                 opacity: debugMode ? 1 : 0.5
-                font.pixelSize: Dims.l(10)
+                font.pixelSize: dimsFactor * 10
                 font.bold: debugMode
                 anchors {
                     bottom: pauseText.top
                     horizontalCenter: parent.horizontalCenter
-                    bottomMargin: Dims.l(4)
+                    bottomMargin: dimsFactor * 4
                 }
                 Behavior on opacity {
                     NumberAnimation {
@@ -1019,65 +1021,64 @@ Item {
             onVisibleChanged: {
                 if (visible) {
                     opacity = 1
-                }
-                else {
+                } else {
                     opacity = 0
                 }
             }
 
             Column {
-                spacing: Dims.l(6)
+                spacing: dimsFactor * 6
                 anchors.centerIn: parent
 
                 Text {
                     id: gameOverText
                     text: "Game Over!"
                     color: "red"
-                    font.pixelSize: Dims.l(8)
+                    font.pixelSize: dimsFactor * 8
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                 }
 
                 Column {
-                    spacing: Dims.l(1)
+                    spacing: dimsFactor * 1
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Row {
-                        spacing: Dims.l(2)
-                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: Dims.l(4); width: Dims.l(22); horizontalAlignment: Text.AlignHCenter }
-                        Text { text: score; color: "white"; font.pixelSize: Dims.l(5); font.bold: true; width: Dims.l(11); horizontalAlignment: Text.AlignHCenter }
+                        spacing: dimsFactor * 2
+                        Text { text: "Score"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: score; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: Dims.l(2)
-                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: Dims.l(4); width: Dims.l(22); horizontalAlignment: Text.AlignHCenter }
-                        Text { text: level; color: "white"; font.pixelSize: Dims.l(5); font.bold: true; width: Dims.l(11); horizontalAlignment: Text.AlignHCenter }
+                        spacing: dimsFactor * 2
+                        Text { text: "Level"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: level; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: Dims.l(2)
-                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: Dims.l(4); width: Dims.l(22); horizontalAlignment: Text.AlignHCenter }
-                        Text { text: highScore.value; color: "white"; font.pixelSize: Dims.l(5); font.bold: true; width: Dims.l(11); horizontalAlignment: Text.AlignHCenter }
+                        spacing: dimsFactor * 2
+                        Text { text: "High Score"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highScore.value; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
                     }
                     Row {
-                        spacing: Dims.l(2)
-                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: Dims.l(4); width: Dims.l(22); horizontalAlignment: Text.AlignHCenter }
-                        Text { text: highLevel.value; color: "white"; font.pixelSize: Dims.l(5); font.bold: true; width: Dims.l(11); horizontalAlignment: Text.AlignHCenter }
+                        spacing: dimsFactor * 2
+                        Text { text: "Max Level"; color: "#dddddd"; font.pixelSize: dimsFactor * 4; width: dimsFactor * 22; horizontalAlignment: Text.AlignHCenter }
+                        Text { text: highLevel.value; color: "white"; font.pixelSize: dimsFactor * 5; font.bold: true; width: dimsFactor * 11; horizontalAlignment: Text.AlignHCenter }
                     }
                 }
 
                 Rectangle {
                     id: tryAgainButton
-                    width: Dims.l(42)
-                    height: Dims.l(14)
+                    width: dimsFactor * 42
+                    height: dimsFactor * 14
                     color: "green"
                     border.color: "white"
-                    border.width: Dims.l(1)
-                    radius: Dims.l(3)
+                    border.width: dimsFactor * 1
+                    radius: dimsFactor * 3
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Text {
                         text: "Die Again"
                         color: "white"
-                        font.pixelSize: Dims.l(6)
+                        font.pixelSize: dimsFactor * 6
                         font.bold: true
                         anchors.centerIn: parent
                     }
@@ -1097,13 +1098,13 @@ Item {
         Component {
             id: largeAsteroidComponent
             Rectangle {
-                width: Dims.l(8 + Math.random() * 12)
+                width: dimsFactor * (8 + Math.random() * 12)
                 height: width
                 x: Math.random() * (root.width - width)
-                y: -height - (Math.random() * Dims.l(28))
+                y: -height - (Math.random() * dimsFactor * 28)
                 color: "#0e003d"
                 opacity: 1 - Math.random() * 0.7
-                radius: Dims.l(50)
+                radius: dimsFactor * 50
                 visible: false
             }
         }
@@ -1120,18 +1121,18 @@ Item {
                 property bool isSlowMo: false
                 property bool passed: false
                 property bool dodged: false
-                width: isAsteroid ? Dims.l(3) : Dims.l(6)
-                height: isAsteroid ? Dims.l(3) : Dims.l(6)
+                width: isAsteroid ? dimsFactor * 3 : dimsFactor * 6
+                height: isAsteroid ? dimsFactor * 3 : dimsFactor * 6
                 x: Math.random() * (root.width - width)
-                y: -height - (Math.random() * Dims.l(28))
+                y: -height - (Math.random() * dimsFactor * 28)
                 visible: false
 
                 Shape {
                     id: asteroidShape
                     visible: isAsteroid && !dodged
                     property real sizeFactor: 0.8 + Math.random() * 0.4
-                    width: Dims.l(3) * sizeFactor
-                    height: Dims.l(3) * sizeFactor
+                    width: dimsFactor * 3 * sizeFactor
+                    height: dimsFactor * 3 * sizeFactor
                     anchors.centerIn: parent
 
                     ShapePath {
@@ -1157,7 +1158,7 @@ Item {
                     visible: isAsteroid && dodged
                     text: "+1"
                     color: "#00CC00"
-                    font.pixelSize: Dims.l(4)
+                    font.pixelSize: dimsFactor * 4
                     anchors.centerIn: parent
                     Behavior on opacity {
                         NumberAnimation {
@@ -1180,7 +1181,7 @@ Item {
                         if (isSlowMo) return "#00FFFF"
                         return "#0087ff"
                     }
-                    font.pixelSize: Dims.l(5)
+                    font.pixelSize: dimsFactor * 5
                     font.bold: true
                     anchors.centerIn: parent
                 }
@@ -1241,8 +1242,8 @@ Item {
         var playerCenterY = playerContainer.y + playerHitbox.y + playerHitbox.height / 2
         var comboCenterX = playerContainer.x + comboHitbox.x + comboHitbox.width / 2
         var comboCenterY = playerContainer.y + comboHitbox.y + comboHitbox.height / 2
-        var maxDistanceSquared = (playerHitbox.width + Dims.l(5)) * (playerHitbox.width + Dims.l(5))
-        var comboDistanceSquared = (comboHitbox.width + Dims.l(5)) * (comboHitbox.width + Dims.l(5))
+        var maxDistanceSquared = (playerHitbox.width + dimsFactor * 5) * (playerHitbox.width + dimsFactor * 5)
+        var comboDistanceSquared = (comboHitbox.width + dimsFactor * 5) * (comboHitbox.width + dimsFactor * 5)
 
         for (var i = 0; i < largeAsteroidPool.length; i++) {
             var largeObj = largeAsteroidPool[i]
@@ -1270,10 +1271,10 @@ Item {
                 var objCenterX = obj.x + obj.width / 2
                 var objCenterY = obj.y + obj.height / 2
 
-                if (obj.x + obj.width >= playerContainer.x - Dims.l(5) &&
-                    obj.x <= playerContainer.x + playerHitbox.width + Dims.l(5) &&
-                    obj.y + obj.height >= playerContainer.y - Dims.l(5) &&
-                    obj.y <= playerContainer.y + playerHitbox.height + Dims.l(5)) {
+                if (obj.x + obj.width >= playerContainer.x - dimsFactor * 5 &&
+                    obj.x <= playerContainer.x + playerHitbox.width + dimsFactor * 5 &&
+                    obj.y + obj.height >= playerContainer.y - dimsFactor * 5 &&
+                    obj.y <= playerContainer.y + playerHitbox.height + dimsFactor * 5) {
                     var dx = objCenterX - playerCenterX
                     var dy = objCenterY - playerCenterY
                     var distanceSquared = dx * dx + dy * dy
@@ -1299,7 +1300,7 @@ Item {
                             comboTimer.stop()
                             comboMeterAnimation.stop()
                             invincible = true
-                            isGraceActive = true  // Trigger grace period
+                            isGraceActive = true
                             graceTimer.restart()
                             obj.visible = false
                             feedback.play()
@@ -1319,7 +1320,7 @@ Item {
 
                         if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
                             invincible = true
-                            isInvincibleActive = true  // Trigger invincibility power-up
+                            isInvincibleActive = true
                             invincibilityTimer.restart()
                             flashOverlay.triggerFlash("#FF69B4")
                             comboCount = 0
@@ -1359,10 +1360,10 @@ Item {
                         }
 
                         if (obj.isShrink && isColliding(playerHitbox, obj)) {
-                            player.width = Dims.l(5)
-                            player.height = Dims.l(5)
-                            playerHitbox.width = Dims.l(7)
-                            playerHitbox.height = Dims.l(7)
+                            player.width = dimsFactor * 5
+                            player.height = dimsFactor * 5
+                            playerHitbox.width = dimsFactor * 7
+                            playerHitbox.height = dimsFactor * 7
                             isShrinkActive = true
                             shrinkTimer.restart()
                             flashOverlay.triggerFlash("#FFA500")
@@ -1398,10 +1399,10 @@ Item {
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > (playerContainer.y + player.height / 2) && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
-                    if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - Dims.l(5) &&
-                        obj.x <= playerContainer.x + comboHitbox.width / 2 + Dims.l(5) &&
-                        obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - Dims.l(5) &&
-                        obj.y <= playerContainer.y + comboHitbox.height / 2 + Dims.l(5)) {
+                    if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - dimsFactor * 5 &&
+                        obj.x <= playerContainer.x + comboHitbox.width / 2 + dimsFactor * 5 &&
+                        obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - dimsFactor * 5 &&
+                        obj.y <= playerContainer.y + comboHitbox.height / 2 + dimsFactor * 5) {
                         var comboDx = objCenterX - comboCenterX
                         var comboDy = objCenterY - comboCenterY
                         var comboDistSquared = comboDx * comboDx + comboDy * comboDy
@@ -1492,7 +1493,7 @@ Item {
             var obj = largeAsteroidPool[i]
             if (!obj.visible) {
                 obj.x = Math.random() * (root.width - obj.width)
-                obj.y = -obj.height - (Math.random() * Dims.l(28))
+                obj.y = -obj.height - (Math.random() * dimsFactor * 28)
                 obj.visible = true
                 return
             }
@@ -1513,7 +1514,7 @@ Item {
                     obj.isSlowMo = properties.isSlowMo || false
                 }
                 obj.x = Math.random() * (root.width - obj.width)
-                obj.y = -obj.height - (Math.random() * Dims.l(28))
+                obj.y = -obj.height - (Math.random() * dimsFactor * 28)
                 obj.visible = true
                 if (obj.passed) obj.passed = false
                 if (obj.dodged) obj.dodged = false
@@ -1571,14 +1572,14 @@ Item {
         isSlowMoActive = false
         isSpeedBoostActive = false
         isShrinkActive = false
-        player.width = Dims.l(10)
-        player.height = Dims.l(10)
-        playerHitbox.width = Dims.l(14)
-        playerHitbox.height = Dims.l(14)
+        player.width = dimsFactor * 10
+        player.height = dimsFactor * 10
+        playerHitbox.width = dimsFactor * 14
+        playerHitbox.height = dimsFactor * 14
         clearPowerupBars()
-        nowText.font.pixelSize = Dims.l(13)
+        nowText.font.pixelSize = dimsFactor * 13
         nowText.opacity = 0
-        surviveText.font.pixelSize = Dims.l(13)
+        surviveText.font.pixelSize = dimsFactor * 13
         surviveText.opacity = 0
         playerContainer.x = root.width / 2 - player.width / 2
         gameOverScreen.opacity = 0
@@ -1586,14 +1587,14 @@ Item {
 
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
-            asteroidPool[i].y = -asteroidPool[i].height - (Math.random() * Dims.l(28))
+            asteroidPool[i].y = -asteroidPool[i].height - (Math.random() * dimsFactor * 28)
             asteroidPool[i].x = Math.random() * (root.width - asteroidPool[i].width)
             asteroidPool[i].passed = false
             asteroidPool[i].dodged = false
         }
         for (i = 0; i < largeAsteroidPool.length; i++) {
             largeAsteroidPool[i].visible = false
-            largeAsteroidPool[i].y = -largeAsteroidPool[i].height - (Math.random() * Dims.l(28))
+            largeAsteroidPool[i].y = -largeAsteroidPool[i].height - (Math.random() * dimsFactor * 28)
             largeAsteroidPool[i].x = Math.random() * (root.width - largeAsteroidPool[i].width)
         }
 
