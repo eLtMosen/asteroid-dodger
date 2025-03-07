@@ -256,7 +256,7 @@ Item {
 
     Timer {
         id: speedBoostTimer
-        interval: 3000
+        interval: 6000
         running: isSpeedBoostActive && !paused
         repeat: false
         onTriggered: {
@@ -1323,7 +1323,7 @@ Item {
                             isSpeedBoostActive = true
                             speedBoostTimer.restart()
                             flashOverlay.triggerFlash("#FFFF00")
-                            addPowerupBar("speedBoost", 3000, "#FFFF00")
+                            addPowerupBar("speedBoost", 6000, "#FFFF00")
                             comboCount = 0
                             comboActive = false
                             comboTimer.stop()
