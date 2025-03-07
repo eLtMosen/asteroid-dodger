@@ -503,7 +503,6 @@ Item {
         Item {
             id: gameContent
             anchors.fill: parent
-            layer.enabled: true
 
             Rectangle {
                 id: flashOverlay
