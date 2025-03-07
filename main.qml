@@ -222,7 +222,7 @@ Item {
 
     Timer {
         id: graceTimer
-        interval: 1000
+        interval: 2000
         running: isGraceActive && !paused
         repeat: false
         onTriggered: {
@@ -232,7 +232,7 @@ Item {
         }
         onRunningChanged: {
             if (running && !paused) {
-                addPowerupBar("grace", 1000, "#FF69B4")
+                addPowerupBar("grace", 2000, "#FF69B4")
             }
         }
     }
