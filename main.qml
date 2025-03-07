@@ -24,7 +24,6 @@ import Nemo.Configuration 1.0
 import QtQuick.Shapes 1.15
 import org.asteroid.controls 1.0
 import Nemo.KeepAlive 1.1
-import org.nemomobile.systemsettings 1.0
 
 Item {
     id: root
@@ -90,7 +89,7 @@ Item {
         } else {
             scrollSpeed = savedScrollSpeed
             if (comboActive) {
-            comboMeterAnimation.resume()
+                comboMeterAnimation.resume()
             }
             if (scoreMultiplierTimer.running) {
                 comboHitboxAnimation.resume()
@@ -125,18 +124,6 @@ Item {
     NonGraphicalFeedback {
         id: feedback
         event: "press"
-    }
-
-    DisplaySettings {
-        id: displaySettings
-        property int startBrightness: -1
-        onBrightnessChanged: {
-            if (startBrightness != -1) {
-                return
-            }
-            startBrightness = brightness
-            displaySettings.brightness = displaySettings.maximumBrightness
-        }
     }
 
     Component {
@@ -1662,6 +1649,4 @@ Item {
             }
         ', root, "spawnTimer")
     }
-
-    Component.onDestruction: displaySettings.brightness = startBrightness
 }
