@@ -1153,25 +1153,25 @@ Item {
             }
         }
 
-        Component {
-            id: largeAsteroidComponent
-            Rectangle {
-                width: dimsFactor * (8 + Math.random() * 12)
-                height: width
-                x: Math.random() * (root.width - width)
-                y: -height - (Math.random() * dimsFactor * 28)
-                color: {
-                    var t = Math.random()
-                    var r = Math.round(0x0e + t * (0x2a - 0x0e))
-                    var g = Math.round(0x00 + t * (0x00 - 0x00))
-                    var b = Math.round(0x3d + t * (0x9b - 0x3d))
-                    return Qt.rgba(r / 255, g / 255, b / 255, 1)
-                }
-                opacity: 1.0
-                radius: dimsFactor * 50
-                visible: false
+    Component {
+        id: largeAsteroidComponent
+        Rectangle {
+            width: dimsFactor * (8 + Math.random() * 12)
+            height: width
+            x: Math.random() * (root.width - width)
+            y: -height - (Math.random() * dimsFactor * 28)
+            color: {
+                var t = Math.random()
+                var r = Math.round((0x0e + t * (0x2a - 0x0e)) * 0.42)
+                var g = Math.round((0x00 + t * (0x00 - 0x00)) * 0.42)
+                var b = Math.round((0x3d + t * (0x9b - 0x3d)) * 0.42)
+                return Qt.rgba(r / 255, g / 255, b / 255, 1)
             }
+            opacity: 1.0
+            radius: dimsFactor * 50
+            visible: false
         }
+    }
 
         Component {
             id: objectComponent
