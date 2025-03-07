@@ -689,8 +689,8 @@ Item {
                 id: levelNumber
                 text: level
                 color: "#dddddd"
-                font.pixelSize: dimsFactor * 4
-                font.bold: true
+                font.pixelSize: dimsFactor * 9
+                font.family: "Fyodor"
                 anchors {
                     top: root.top
                     horizontalCenter: parent.horizontalCenter
@@ -733,8 +733,8 @@ Item {
                 id: shieldText
                 text: shield === 1 ? "❤️" : shield
                 color: shield === 1 ? "red" : "#FFFFFF"
-                font.pixelSize: shield === 1 ? dimsFactor * 6 : dimsFactor * 4
-                font.bold: true
+                font.pixelSize: shield === 1 ? dimsFactor * 6 : dimsFactor * 8
+                font.family: "Fyodor"
                 anchors {
                     bottom: parent.bottom
                     horizontalCenter: parent.horizontalCenter
@@ -844,6 +844,33 @@ Item {
                 }
             }
 
+            Column {
+                id: titleText
+                anchors {
+                    verticalCenter: parent.top
+                    verticalCenterOffset: root.height / 6
+                    horizontalCenter: parent.horizontalCenter
+                }
+                spacing: dimsFactor * 1
+                z: 4
+                visible: calibrating
+
+                Text {
+                    text: "v1.3"
+                    color: "#bbdddddd"
+                    font.family: "Fyodor"
+                    font.pixelSize: dimsFactor * 10
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                Text {
+                    text: "Asteroid Dodger"
+                    color: "#bbdddddd"
+                    font.family: "Fyodor"
+                    font.pixelSize: dimsFactor * 12
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+
             Item {
                 id: calibrationContainer
                 anchors.fill: parent
@@ -904,7 +931,8 @@ Item {
                 id: nowText
                 text: "NOW"
                 color: "white"
-                font.pixelSize: dimsFactor * 13
+                font.pixelSize: dimsFactor * 24
+                font.family: "Fyodor"
                 anchors.centerIn: parent
                 visible: showingNow
                 opacity: 0
@@ -913,7 +941,7 @@ Item {
                     running: false
                     NumberAnimation { target: nowText; property: "opacity"; from: 0; to: 1; duration: 500 }
                     ParallelAnimation {
-                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: dimsFactor * 13; to: dimsFactor * 33; duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: nowText; property: "font.pixelSize"; from: dimsFactor * 24; to: dimsFactor * 48; duration: 1000; easing.type: Easing.OutQuad }
                         NumberAnimation { target: nowText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
                     }
                 }
@@ -923,8 +951,8 @@ Item {
                 id: surviveText
                 text: "SURVIVE"
                 color: "orange"
-                font.pixelSize: dimsFactor * 13
-                font.bold: true
+                font.pixelSize: dimsFactor * 24
+                font.family: "Fyodor"
                 anchors.centerIn: parent
                 visible: showingSurvive
                 opacity: 0
@@ -933,7 +961,7 @@ Item {
                     running: false
                     NumberAnimation { target: surviveText; property: "opacity"; from: 0; to: 1; duration: 500 }
                     ParallelAnimation {
-                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: dimsFactor * 13; to: dimsFactor * 33; duration: 1000; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: surviveText; property: "font.pixelSize"; from: dimsFactor * 24; to: dimsFactor * 48; duration: 1000; easing.type: Easing.OutQuad }
                         NumberAnimation { target: surviveText; property: "opacity"; from: 1; to: 0; duration: 1000; easing.type: Easing.OutQuad }
                     }
                 }
@@ -943,7 +971,8 @@ Item {
                 id: pauseText
                 text: "Paused"
                 color: "white"
-                font.pixelSize: dimsFactor * 12
+                font.pixelSize: dimsFactor * 22
+                font.family: "Fyodor"
                 anchors.centerIn: parent
                 opacity: 0
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
