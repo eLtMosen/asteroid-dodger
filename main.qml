@@ -132,7 +132,7 @@ Item {
             id: progressBar
             property real progress: 1.0
             property string fillColor: "#FFD700"
-            property string bgColor: "#8B6914"
+            property string bgColor: "#45220A"
             property int duration: 0
             property var timer: null
             width: dimsFactor * 28
@@ -659,7 +659,7 @@ Item {
                         width: parent.width
                         height: parent.height
                         radius: dimsFactor * 1
-                        color: "#8B6914"
+                        color: "#45220A"
                         opacity: 1.0
                     }
 
@@ -714,7 +714,7 @@ Item {
                     width: parent.width
                     height: parent.height
                     radius: dimsFactor * 1
-                    color: "#00478B" // Darker tone matching #8B6914 -> #FFD700 shift
+                    color: "#002346"
                     opacity: 1.0
                 }
 
@@ -722,7 +722,7 @@ Item {
                     id: shieldFill
                     width: (shield / 20) * parent.width
                     height: parent.height
-                    color: "#0087FF" // Matches power-up color for shield/life +1
+                    color: "#0087FF"
                     radius: dimsFactor * 1
                     opacity: 1.0
                 }
