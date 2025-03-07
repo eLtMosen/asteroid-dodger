@@ -42,8 +42,8 @@ Item {
     property int shield: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.044 + (level - 1) * 0.004
-    property real largeAsteroidDensity: asteroidDensity / 2
+    property real asteroidDensity: 0.05 + (level - 1) * 0.005
+    property real largeAsteroidDensity: asteroidDensity / 3
     property bool gameOver: false
     property bool playerHit: false
     property bool paused: false
@@ -1560,7 +1560,7 @@ Item {
         asteroidCount = 0
         scrollSpeed = 1.6
         savedScrollSpeed = scrollSpeed
-        asteroidDensity = 0.044
+        asteroidDensity = 0.05
         gameOver = false
         paused = false
         playerHit = false
@@ -1613,14 +1613,14 @@ Item {
                 running: true
                 property int count: 0
                 onTriggered: {
-                    if (count < 5) {
+                    if (count < 3) {
                         spawnObject({isAsteroid: true})
                     }
-                    if (count < 3) {
+                    if (count < 2) {
                         spawnLargeAsteroid()
                     }
                     count++
-                    if (count >= 5) {
+                    if (count >= 3) {
                         stop()
                         destroy()
                     }
@@ -1654,14 +1654,14 @@ Item {
                 running: true
                 property int count: 0
                 onTriggered: {
-                    if (count < 5) {
+                    if (count < 3) {
                         spawnObject({isAsteroid: true})
                     }
-                    if (count < 3) {
+                    if (count < 2) {
                         spawnLargeAsteroid()
                     }
                     count++
-                    if (count >= 5) {
+                    if (count >= 3) {
                         stop()
                         destroy()
                     }
