@@ -722,7 +722,7 @@ Item {
 
                 Rectangle {
                     id: shieldFill
-                    width: (shield / 20) * parent.width
+                    width: (shield / 10) * parent.width
                     height: parent.height
                     color: "#0087FF"
                     radius: dimsFactor * 1
@@ -1374,7 +1374,7 @@ Item {
                         }
 
                         if (obj.isPowerup && isColliding(playerHitbox, obj)) {
-                            shield = Math.min(20, shield + 1)
+                            shield = Math.min(10, shield + 1)
                             flashOverlay.triggerFlash("blue")
                             comboCount = 0
                             comboActive = false
