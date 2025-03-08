@@ -77,6 +77,7 @@ Item {
     property int spawnCooldown: Math.max(100, 200 - (level - 1) * 2)
     property bool isGraceActive: false
     property bool isInvincibleActive: false
+    property real lastAsteroidSpawn: 0
 
     onPausedChanged: {
         if (paused) {
@@ -1512,44 +1513,44 @@ Item {
         }
 
         var currentTime = Date.now()
-        var powerupBaseChance = asteroidDensity * 0.012
+        var powerupBaseChance = asteroidDensity * 0.01
 
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
             lastLargeAsteroidSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < asteroidDensity) {
-            spawnObject({isAsteroid: true})  // Now only spawns asteroids
-            lastObjectSpawn = currentTime
+        if (!paused && currentTime - lastAsteroidSpawn >= spawnCooldown && Math.random() < asteroidDensity) {
+            spawnObject({isAsteroid: true})
+            lastAsteroidSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 2.0) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.6) {
             spawnObject({isAsteroid: false, isPowerup: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.1) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isInvincibility: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.9) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.3) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.4) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
             spawnObject({isAsteroid: false, isShrink: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.5) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.4) {
             spawnObject({isAsteroid: false, isSlowMo: true})
             lastObjectSpawn = currentTime
         }
