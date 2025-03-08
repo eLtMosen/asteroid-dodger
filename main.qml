@@ -1520,8 +1520,12 @@ Item {
         }
 
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < asteroidDensity) {
-            var isAsteroid = Math.random() < 0.96
-            spawnObject(isAsteroid ? {isAsteroid: true} : {isAsteroid: false, isPowerup: true})
+            spawnObject({isAsteroid: true})  // Now only spawns asteroids
+            lastObjectSpawn = currentTime
+        }
+
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 2.0) {
+            spawnObject({isAsteroid: false, isPowerup: true})
             lastObjectSpawn = currentTime
         }
 
