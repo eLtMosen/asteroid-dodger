@@ -1512,6 +1512,8 @@ Item {
         }
 
         var currentTime = Date.now()
+        var powerupBaseChance = asteroidDensity * 0.012
+
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
             lastLargeAsteroidSpawn = currentTime
@@ -1523,27 +1525,27 @@ Item {
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0001) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.1) {
             spawnObject({isAsteroid: false, isInvincibility: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0005) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0005) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.3) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0005) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.4) {
             spawnObject({isAsteroid: false, isShrink: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < 0.0003) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.5) {
             spawnObject({isAsteroid: false, isSlowMo: true})
             lastObjectSpawn = currentTime
         }
