@@ -1572,7 +1572,7 @@ Item {
         if (activeLaser && activeLaser.visible) {
             for (i = 0; i < asteroidPool.length; i++) {
                 var obj = asteroidPool[i]
-                if (obj && obj.visible && obj !== activeLaser) {
+                if (obj && obj.visible && obj !== activeLaser) {  // Exclude only the active laser
                     if (obj.y <= activeLaser.y + activeLaser.height && obj.y + obj.height >= activeLaser.y &&
                         obj.x + obj.width >= 0 && obj.x <= root.width) {
                         if (obj.isAsteroid) {
@@ -1585,7 +1585,7 @@ Item {
                                 "y": objY,
                                 "points": 10 * scoreMultiplier
                             })
-                        } else if (!obj.isLaserSwipe) {
+                        } else {  // Destroy all power-ups, including isLaserSwipe
                             obj.visible = false
                         }
                     }
