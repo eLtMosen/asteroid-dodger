@@ -30,56 +30,59 @@ Item {
     anchors.fill: parent
     visible: true
 
-    // Scaling factor for all dimensions, based on Dims.l(100)
-    property real dimsFactor: Dims.l(100) / 100
-
-    property real scrollSpeed: 1.6
-    property real savedScrollSpeed: 0
-    property real basePlayerSpeed: 1.2
-    property real playerSpeed: basePlayerSpeed
-    property int asteroidCount: 0
-    property int score: 0
-    property int shield: 2
-    property int level: 1
-    property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.08 + (level - 1) * 0.02
-    property real largeAsteroidDensity: asteroidDensity / 3
-    property bool gameOver: false
-    property bool playerHit: false
-    property bool paused: false
+    // --- Game Mechanics ---
     property bool calibrating: false
-    property bool showingNow: false
-    property bool showingSurvive: false
-    property real baselineX: 0
     property int calibrationTimer: 5
-    property bool invincible: false
-    property real closePassThreshold: dimsFactor * 10
-    property string flashColor: ""
-    property int comboCount: 0
-    property real lastDodgeTime: 0
     property bool comboActive: false
-    property real scoreMultiplier: 1.0
-    property real scoreMultiplierElapsed: 0
-    property real preSlowSpeed: 0
-    property bool isSlowMoActive: false
-    property bool isSpeedBoostActive: false
-    property bool isShrinkActive: false
-    property var activePowerups: []
-    property var asteroidPool: []
-    property var largeAsteroidPool: []
-    property int asteroidPoolSize: 40
-    property int largeAsteroidPoolSize: 10
-    property real lastFrameTime: 0
-    property var activeParticles: []
+    property int comboCount: 0
+    property real closePassThreshold: dimsFactor * 10
     property bool debugMode: false
-    property real lastLargeAsteroidSpawn: 0
-    property real lastObjectSpawn: 0
-    property int spawnCooldown: Math.max(100, 200 - (level - 1) * 2)
+    property bool gameOver: false
+    property bool invincible: false
     property bool isGraceActive: false
     property bool isInvincibleActive: false
+    property bool isShrinkActive: false
+    property bool isSlowMoActive: false
+    property bool isSpeedBoostActive: false
+    property real lastDodgeTime: 0
+    property int level: 1
+    property bool paused: false
+    property bool playerHit: false
+    property int score: 0
+    property real scoreMultiplier: 1.0
+    property real scoreMultiplierElapsed: 0
+    property int shield: 2
+    property bool showingNow: false
+    property bool showingSurvive: false
+
+    // --- Object Spawning and Pools ---
+    property var activeLaser: null  // Reference to active laser swipe
+    property var activeParticles: []
+    property var activePowerups: []
+    property int asteroidCount: 0
+    property real asteroidDensity: 0.08 + (level - 1) * 0.02
+    property var asteroidPool: []
+    property int asteroidPoolSize: 40
+    property int asteroidsPerLevel: 100
+    property real largeAsteroidDensity: asteroidDensity / 3
+    property var largeAsteroidPool: []
+    property int largeAsteroidPoolSize: 10
     property real lastAsteroidSpawn: 0
-    property real lastLaserSwipeSpawn: 0  // New: Track last laser swipe spawn
-    property var activeLaser: null  // New: Reference to active laser swipe
+    property real lastLargeAsteroidSpawn: 0
+    property real lastLaserSwipeSpawn: 0  // Track last laser swipe spawn
+    property real lastObjectSpawn: 0
+    property int spawnCooldown: Math.max(100, 200 - (level - 1) * 2)
+
+    // --- Visual and Timing Settings ---
+    property real baselineX: 0
+    property real dimsFactor: Dims.l(100) / 100  // Scaling factor for all dimensions
+    property string flashColor: ""
+    property real lastFrameTime: 0
+    property real playerSpeed: basePlayerSpeed
+    property real basePlayerSpeed: 1.2
+    property real preSlowSpeed: 0
+    property real savedScrollSpeed: 0
+    property real scrollSpeed: 1.6
 
     onPausedChanged: {
         if (paused) {
