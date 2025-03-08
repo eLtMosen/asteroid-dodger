@@ -42,7 +42,7 @@ Item {
     property int shield: 2
     property int level: 1
     property int asteroidsPerLevel: 100
-    property real asteroidDensity: 0.05 + (level - 1) * 0.005
+    property real asteroidDensity: 0.08 + (level - 1) * 0.02
     property real largeAsteroidDensity: asteroidDensity / 3
     property bool gameOver: false
     property bool playerHit: false
@@ -74,7 +74,7 @@ Item {
     property bool debugMode: false
     property real lastLargeAsteroidSpawn: 0
     property real lastObjectSpawn: 0
-    property int spawnCooldown: 200
+    property int spawnCooldown: Math.max(100, 200 - (level - 1) * 2)
     property bool isGraceActive: false
     property bool isInvincibleActive: false
 
