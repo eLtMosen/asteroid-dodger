@@ -499,6 +499,7 @@ Item {
             anchors.fill: parent
             color: "black"
             layer.enabled: true
+            clip: true
         }
 
         Rectangle {
