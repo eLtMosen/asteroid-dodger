@@ -38,8 +38,6 @@ Asteroid-Dodger is a thrilling survival game for AsteroidOS where you tilt your 
 - **Game pauses** with a screen tap.
 - **Calibration start screen** adjusts the accelerometer to your comfortable position.
 - **Game intro screen** smoothly transitions from calibration to action.
-- **NEW: Settings menu** for adjusting sensitivity and toggling power-ups.
-- **NEW: Audio feedback** with retro sound effects for dodging, power-ups, and crashes.
 
 ### Ready to test your reflexes? Strap in and dodge like a pro! 🚀
 
