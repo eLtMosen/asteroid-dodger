@@ -63,7 +63,7 @@ Item {
     property var activePowerups: []
     property var activeShots: []  // New: Track AutoFire shots
     property int asteroidCount: 0
-    property real asteroidDensity: 0.08 + (level - 1) * 0.02
+    property real asteroidDensity: 0.15 + (level - 1) * 0.05
     property var asteroidPool: []
     property int asteroidPoolSize: 40
     property int asteroidsPerLevel: 100
@@ -1718,7 +1718,7 @@ Item {
         }
 
         var currentTime = Date.now()
-        var powerupBaseChance = asteroidDensity * 0.008
+        var powerupBaseChance = asteroidDensity * 0.005
 
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
@@ -1735,17 +1735,17 @@ Item {
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.5) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.4) {
             spawnObject({isAsteroid: false, isInvincibility: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.6) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.0) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
             lastObjectSpawn = currentTime
         }
@@ -1765,7 +1765,7 @@ Item {
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isAutoFire: true})
             lastObjectSpawn = currentTime
         }
@@ -1846,7 +1846,7 @@ Item {
         asteroidCount = 0
         scrollSpeed = 1.6
         savedScrollSpeed = scrollSpeed
-        asteroidDensity = 0.08
+        asteroidDensity = 0.14
         gameOver = false
         paused = false
         playerHit = false
