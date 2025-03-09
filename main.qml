@@ -205,16 +205,24 @@ Item {
         property var fpsHistory: []
         property real lastFpsUpdate: 0
         property real lastGraphUpdate: 0
+        property real smoothedX: 0  // New: Smoothed accelerometer value
+        property real smoothingFactor: 0.5  // Adjust for sensitivity (0.1 = heavy smoothing, 0.5 = light)
+
         onTriggered: {
             var currentTime = Date.now()
             var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016
             lastFrameTime = currentTime
             updateGame(deltaTime)
+
             if (!paused) {
-                var deltaX = (accelerometer.reading.x - baselineX) * -2
+                // Apply low-pass filter to accelerometer x-reading
+                var rawX = accelerometer.reading.x
+                smoothedX = smoothedX + smoothingFactor * (rawX - smoothedX)
+                var deltaX = (smoothedX - baselineX) * -2
                 var newX = playerContainer.x + deltaX * playerSpeed
                 playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
             }
+
             var currentFps = deltaTime > 0 ? 1 / deltaTime : 60
             lastFps = currentFps
             if (debugMode && currentTime - lastFpsUpdate >= 500) {
@@ -611,14 +619,16 @@ Item {
                 }
                 onStopped: {
                     flashOverlay.opacity = 0
+                    flashOverlay.color = "transparent"
                     flashColor = ""
                 }
             }
             function triggerFlash(color) {
                 if (flashAnimation.running) {
-                    flashAnimation.stop()
+                    flashAnimation.complete()  // Finish current animation gracefully
                 }
                 flashColor = color
+                flashOverlay.color = color
                 opacity = 0.5
                 flashAnimation.start()
             }
@@ -1387,10 +1397,6 @@ Item {
     }
 
     function updateGame(deltaTime) {
-        if (!playerContainer || !playerHitbox || !gameArea) {
-            console.log("Critical components missing, skipping update: playerContainer=", playerContainer, "playerHitbox=", playerHitbox, "gameArea=", gameArea)
-            return
-        }
 
         var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
@@ -1498,6 +1504,7 @@ Item {
                                 feedback.play()
                                 continue
                             }
+                            // Log state before and after changes
                             flashOverlay.triggerFlash("red")
                             comboCount = 0
                             comboActive = false
@@ -1871,6 +1878,10 @@ Item {
         playerContainer.x = root.width / 2 - player.width / 2
         gameOverScreen.opacity = 0
         lastFrameTime = 0
+        flashOverlay.opacity = 0
+        flashOverlay.color = "transparent"
+        flashColor = ""
+        if (flashAnimation.running) flashAnimation.stop()
 
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
