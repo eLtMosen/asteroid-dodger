@@ -1453,6 +1453,7 @@ Item {
         var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
         var currentTime = Date.now()
+        var coarseRange = root.height  // Only check objects within screen height
 
         var playerCenterX = playerContainer.x + playerHitbox.x + playerHitbox.width / 2
         var playerCenterY = playerContainer.y + playerHitbox.y + playerHitbox.height / 2
@@ -1492,6 +1493,7 @@ Item {
                 obj.visible = false
                 continue
             }
+            if (obj.y + obj.height < -coarseRange || obj.y > root.height + coarseRange) continue  // Skip far objects
 
             var objCenterX = obj.x + obj.width / 2
             var objCenterY = obj.y + obj.height / 2
