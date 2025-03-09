@@ -254,17 +254,17 @@ Item {
         property var fpsHistory: []
         property real lastFpsUpdate: 0
         property real lastGraphUpdate: 0
-        property real smoothedX: 0  // New: Smoothed accelerometer value
-        property real smoothingFactor: 0.5  // Adjust for sensitivity (0.1 = heavy smoothing, 0.5 = light)
+        property real smoothedX: 0
+        property real smoothingFactor: 0.5
 
         onTriggered: {
             var currentTime = Date.now()
             var deltaTime = lastFrameTime > 0 ? (currentTime - lastFrameTime) / 1000 : 0.016
+            if (deltaTime > 0.033) deltaTime = 0.033  // Cap at ~30 FPS
             lastFrameTime = currentTime
             updateGame(deltaTime)
 
             if (!paused) {
-                // Apply low-pass filter to accelerometer x-reading
                 var rawX = accelerometer.reading.x
                 smoothedX = smoothedX + smoothingFactor * (rawX - smoothedX)
                 var deltaX = (smoothedX - baselineX) * -2
@@ -1446,9 +1446,11 @@ Item {
     }
 
     function updateGame(deltaTime) {
+        if (!playerContainer || !playerHitbox || !gameArea) return
 
         var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
+        var currentTime = Date.now()
 
         var playerCenterX = playerContainer.x + playerHitbox.x + playerHitbox.width / 2
         var playerCenterY = playerContainer.y + playerHitbox.y + playerHitbox.height / 2
@@ -1457,15 +1459,197 @@ Item {
         var maxDistanceSquared = (playerHitbox.width + dimsFactor * 5) * (playerHitbox.width + dimsFactor * 5)
         var comboDistanceSquared = (comboHitbox.width + dimsFactor * 5) * (comboHitbox.width + dimsFactor * 5)
 
-        // Update shots
+        // Update shots efficiently
         for (var i = activeShots.length - 1; i >= 0; i--) {
             var shot = activeShots[i]
-            if (shot && shot.visible) {
-                shot.speed = Math.max(scrollSpeed, shot.speed - (scrollSpeed * deltaTime))
-                shot.y -= shot.speed * deltaTime * 60  // Move the Item itself
+            if (shot) {
+                shot.y -= shot.speed * deltaTime * 60
                 if (shot.y <= -shot.height) {
                     shot.destroy()
                     activeShots.splice(i, 1)
+                }
+            }
+        }
+
+        // Move large asteroids (single pass)
+        for (i = largeAsteroidPool.length - 1; i >= 0; i--) {
+            var largeObj = largeAsteroidPool[i]
+            if (largeObj.visible) {
+                largeObj.y += largeAsteroidSpeed
+                if (largeObj.y >= root.height) largeObj.visible = false
+            }
+        }
+
+        // Move and check asteroids/power-ups (single pass)
+        for (i = asteroidPool.length - 1; i >= 0; i--) {
+            var obj = asteroidPool[i]
+            if (!obj.visible) continue
+
+            obj.y += adjustedScrollSpeed
+            if (obj.y >= root.height) {
+                obj.visible = false
+                continue
+            }
+
+            var objCenterX = obj.x + obj.width / 2
+            var objCenterY = obj.y + obj.height / 2
+            var dx = objCenterX - playerCenterX
+            var dy = objCenterY - playerCenterY
+            var distanceSquared = dx * dx + dy * dy
+
+            if (distanceSquared < maxDistanceSquared &&
+                obj.x + obj.width >= playerContainer.x - dimsFactor * 5 &&
+                obj.x <= playerContainer.x + playerHitbox.width + dimsFactor * 5 &&
+                obj.y + obj.height >= playerContainer.y - dimsFactor * 5 &&
+                obj.y <= playerContainer.y + playerHitbox.height + dimsFactor * 5) {
+                if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
+                    shield--
+                    if (shield <= 0) {
+                        gameOver = true
+                        shield = 0
+                        flashOverlay.triggerFlash("red")
+                        comboCount = 0
+                        comboActive = false
+                        comboTimer.stop()
+                        comboMeterAnimation.stop()
+                        obj.visible = false
+                        feedback.play()
+                        continue
+                    }
+                    flashOverlay.triggerFlash("red")
+                    comboCount = 0
+                    comboActive = false
+                    comboTimer.stop()
+                    comboMeterAnimation.stop()
+                    invincible = true
+                    isGraceActive = true
+                    graceTimer.restart()
+                    obj.visible = false
+                    feedback.play()
+                    continue
+                }
+                if (obj.isPowerup && isColliding(playerHitbox, obj)) {
+                    shield = Math.min(10, shield + 1)
+                    flashOverlay.triggerFlash("blue")
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
+                    invincible = true
+                    isInvincibleActive = true
+                    invincibilityTimer.restart()
+                    flashOverlay.triggerFlash("#FF69B4")
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
+                    playerSpeed = basePlayerSpeed * 2
+                    isSpeedBoostActive = true
+                    speedBoostTimer.restart()
+                    flashOverlay.triggerFlash("#FFFF00")
+                    addPowerupBar("speedBoost", 6000, "#FFFF00", "#8B8B00")
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
+                    scoreMultiplier = 2.0
+                    scoreMultiplierElapsed = 0
+                    scoreMultiplierTimer.restart()
+                    flashOverlay.triggerFlash("#00CC00")
+                    addPowerupBar("scoreMultiplier", 10000, "#00CC00", "#006600")
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isShrink && isColliding(playerHitbox, obj)) {
+                    player.width = dimsFactor * 5
+                    player.height = dimsFactor * 5
+                    playerHitbox.width = dimsFactor * 7
+                    playerHitbox.height = dimsFactor * 7
+                    isShrinkActive = true
+                    shrinkTimer.restart()
+                    flashOverlay.triggerFlash("#FFA500")
+                    addPowerupBar("shrink", 6000, "#FFA500", "#8B5A00")
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isSlowMo && isColliding(playerHitbox, obj)) {
+                    if (!isSlowMoActive) {
+                        preSlowSpeed = scrollSpeed
+                        scrollSpeed = preSlowSpeed / 2
+                    }
+                    savedScrollSpeed = scrollSpeed
+                    isSlowMoActive = true
+                    slowMoTimer.restart()
+                    flashOverlay.triggerFlash("#00FFFF")
+                    addPowerupBar("slowMo", 6000, "#00FFFF", "#008B8B")
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isLaserSwipe && isColliding(playerHitbox, obj)) {
+                    flashOverlay.triggerFlash("red")
+                    if (!activeLaser) {
+                        activeLaser = laserSwipeComponent.createObject(gameArea)
+                        addPowerupBar("laserSwipe", 2000, "red", "#8B0000")
+                    }
+                    obj.visible = false
+                    continue
+                }
+                if (obj.isAutoFire && isColliding(playerHitbox, obj)) {
+                    flashOverlay.triggerFlash("#800080")
+                    isAutoFireActive = true
+                    autoFireTimer.restart()
+                    shotTimer.restart()
+                    addPowerupBar("autoFire", 6000, "#800080", "#4B004B")
+                    var shot = autoFireShotComponent.createObject(gameArea, {
+                        "x": playerContainer.x + playerHitbox.x + playerHitbox.width / 2 - dimsFactor * 0.5,
+                        "y": playerContainer.y + playerHitbox.y
+                    })
+                    activeShots.push(shot)
+                    obj.visible = false
+                    continue
+                }
+            }
+
+            if (obj.isAsteroid && (obj.y + obj.height / 2) > playerCenterY && !obj.passed) {
+                asteroidCount++
+                obj.passed = true
+                if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - dimsFactor * 5 &&
+                    obj.x <= playerContainer.x + comboHitbox.width / 2 + dimsFactor * 5 &&
+                    obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - dimsFactor * 5 &&
+                    obj.y <= playerContainer.y + comboHitbox.height / 2 + dimsFactor * 5) {
+                    var comboDx = objCenterX - comboCenterX
+                    var comboDy = objCenterY - comboCenterY
+                    var comboDistSquared = comboDx * comboDx + comboDy * comboDy
+                    var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
+                    var basePoints = isCombo ? 2 : 1
+
+                    if (isCombo) {
+                        if (currentTime - lastDodgeTime <= 2000) {
+                            comboCount++
+                        } else {
+                            comboCount = 1
+                        }
+                        lastDodgeTime = currentTime
+                        comboActive = true
+                        comboTimer.restart()
+                        comboMeterAnimation.restart()
+                        score += basePoints * comboCount * scoreMultiplier
+                        var particle = comboParticleComponent.createObject(gameArea, {
+                            "x": obj.x,
+                            "y": obj.y,
+                            "points": basePoints * comboCount * scoreMultiplier
+                        })
+                    } else {
+                        score += basePoints * scoreMultiplier
+                        obj.dodged = true
+                    }
+                } else {
+                    score += 1 * scoreMultiplier
+                    obj.dodged = true
+                }
+
+                if (asteroidCount >= asteroidsPerLevel) {
+                    levelUp()
                 }
             }
         }
@@ -1505,316 +1689,72 @@ Item {
             }
         }
 
-        for (i = 0; i < largeAsteroidPool.length; i++) {
-            var largeObj = largeAsteroidPool[i]
-            if (largeObj.visible) {
-                largeObj.y += largeAsteroidSpeed
-                if (largeObj.y >= root.height) {
-                    largeObj.visible = false
-                }
-            }
-        }
-        for (i = 0; i < asteroidPool.length; i++) {
-            var obj = asteroidPool[i]
-            if (obj.visible) {
-                obj.y += adjustedScrollSpeed
-                if (obj.y >= root.height) {
-                    obj.visible = false
-                }
-            }
-        }
-
-        for (i = 0; i < asteroidPool.length; i++) {
-            var obj = asteroidPool[i]
-            if (obj.visible) {
-                var objCenterX = obj.x + obj.width / 2
-                var objCenterY = obj.y + obj.height / 2
-
-                if (obj.x + obj.width >= playerContainer.x - dimsFactor * 5 &&
-                    obj.x <= playerContainer.x + playerHitbox.width + dimsFactor * 5 &&
-                    obj.y + obj.height >= playerContainer.y - dimsFactor * 5 &&
-                    obj.y <= playerContainer.y + playerHitbox.height + dimsFactor * 5) {
-                    var dx = objCenterX - playerCenterX
-                    var dy = objCenterY - playerCenterY
-                    var distanceSquared = dx * dx + dy * dy
-
-                    if (distanceSquared < maxDistanceSquared) {
-                        if (obj.isAsteroid && isColliding(playerHitbox, obj) && !invincible) {
-                            shield--
-                            if (shield <= 0) {
-                                gameOver = true
-                                shield = 0
-                                flashOverlay.triggerFlash("red")
-                                comboCount = 0
-                                comboActive = false
-                                comboTimer.stop()
-                                comboMeterAnimation.stop()
-                                obj.visible = false
-                                feedback.play()
-                                continue
-                            }
-                            // Log state before and after changes
-                            flashOverlay.triggerFlash("red")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            invincible = true
-                            isGraceActive = true
-                            graceTimer.restart()
-                            obj.visible = false
-                            feedback.play()
-                            continue
-                        }
-
-                        if (obj.isPowerup && isColliding(playerHitbox, obj)) {
-                            shield = Math.min(10, shield + 1)
-                            flashOverlay.triggerFlash("blue")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isInvincibility && isColliding(playerHitbox, obj)) {
-                            invincible = true
-                            isInvincibleActive = true
-                            invincibilityTimer.restart()
-                            flashOverlay.triggerFlash("#FF69B4")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
-                            playerSpeed = basePlayerSpeed * 2
-                            isSpeedBoostActive = true
-                            speedBoostTimer.restart()
-                            flashOverlay.triggerFlash("#FFFF00")
-                            addPowerupBar("speedBoost", 6000, "#FFFF00", "#8B8B00")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isScoreMultiplier && isColliding(playerHitbox, obj)) {
-                            scoreMultiplier = 2.0
-                            scoreMultiplierElapsed = 0
-                            scoreMultiplierTimer.restart()
-                            flashOverlay.triggerFlash("#00CC00")
-                            addPowerupBar("scoreMultiplier", 10000, "#00CC00", "#006600")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isShrink && isColliding(playerHitbox, obj)) {
-                            player.width = dimsFactor * 5
-                            player.height = dimsFactor * 5
-                            playerHitbox.width = dimsFactor * 7
-                            playerHitbox.height = dimsFactor * 7
-                            isShrinkActive = true
-                            shrinkTimer.restart()
-                            flashOverlay.triggerFlash("#FFA500")
-                            addPowerupBar("shrink", 6000, "#FFA500", "#8B5A00")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isSlowMo && isColliding(playerHitbox, obj)) {
-                            if (!isSlowMoActive) {
-                                preSlowSpeed = scrollSpeed
-                                scrollSpeed = preSlowSpeed / 2
-                            }
-                            savedScrollSpeed = scrollSpeed
-                            isSlowMoActive = true
-                            slowMoTimer.restart()
-                            flashOverlay.triggerFlash("#00FFFF")
-                            addPowerupBar("slowMo", 6000, "#00FFFF", "#008B8B")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isLaserSwipe && isColliding(playerHitbox, obj)) {
-                            flashOverlay.triggerFlash("red")
-                            if (!activeLaser) {
-                                activeLaser = laserSwipeComponent.createObject(gameArea)
-                                addPowerupBar("laserSwipe", 2000, "red", "#8B0000")
-                            }
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            continue
-                        }
-
-                        if (obj.isAutoFire && isColliding(playerHitbox, obj)) {
-                            flashOverlay.triggerFlash("#800080")
-                            comboCount = 0
-                            comboActive = false
-                            comboTimer.stop()
-                            comboMeterAnimation.stop()
-                            obj.visible = false
-                            isAutoFireActive = true
-                            autoFireTimer.restart()  // Restart, not start, to reset duration
-                            shotTimer.restart()      // Restart to keep firing
-                            addPowerupBar("autoFire", 6000, "#800080", "#4B004B")  // Always add bar
-                            var shot = autoFireShotComponent.createObject(gameArea, {
-                                "x": playerContainer.x + playerHitbox.x + playerHitbox.width / 2 - dimsFactor * 0.5,
-                                "y": playerContainer.y + playerHitbox.y
-                            })
-                            activeShots.push(shot)
-                            continue
-                        }
-                    }
-                }
-
-                if (obj.isAsteroid && (obj.y + obj.height / 2) > playerCenterY && !obj.passed) {
-                    asteroidCount++
-                    obj.passed = true
-                    if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - dimsFactor * 5 &&
-                        obj.x <= playerContainer.x + comboHitbox.width / 2 + dimsFactor * 5 &&
-                        obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - dimsFactor * 5 &&
-                        obj.y <= playerContainer.y + comboHitbox.height / 2 + dimsFactor * 5) {
-                        var comboDx = objCenterX - comboCenterX
-                        var comboDy = objCenterY - comboCenterY
-                        var comboDistSquared = comboDx * comboDx + comboDy * comboDy
-                        var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
-                        var basePoints = isCombo ? 2 : 1
-                        var currentTime = Date.now()
-
-                        if (isCombo) {
-                            if (currentTime - lastDodgeTime <= 2000) {
-                                comboCount++
-                            } else {
-                                comboCount = 1
-                            }
-                            lastDodgeTime = currentTime
-                            comboActive = true
-                            comboTimer.restart()
-                            comboMeterAnimation.restart()
-                            score += basePoints * comboCount * scoreMultiplier
-                            var particle = comboParticleComponent.createObject(gameArea, {
-                                "x": obj.x,
-                                "y": obj.y,
-                                "points": basePoints * comboCount * scoreMultiplier
-                            })
-                        } else {
-                            score += basePoints * scoreMultiplier
-                            obj.dodged = true
-                        }
-                    } else {
-                        score += 1 * scoreMultiplier
-                        obj.dodged = true
-                    }
-
-                    if (asteroidCount >= asteroidsPerLevel) {
-                        levelUp()
-                    }
-                }
-            }
-        }
-
+        // Laser swipe effect
         if (activeLaser && activeLaser.visible) {
-            for (i = 0; i < asteroidPool.length; i++) {
+            for (i = asteroidPool.length - 1; i >= 0; i--) {
                 var obj = asteroidPool[i]
-                if (obj && obj.visible && obj !== activeLaser) {
-                    if (obj.y <= activeLaser.y + activeLaser.height && obj.y + obj.height >= activeLaser.y &&
-                        obj.x + obj.width >= 0 && obj.x <= root.width) {
-                        if (obj.isAsteroid) {
-                            score += 10 * scoreMultiplier
-                            var objX = obj.x
-                            var objY = obj.y
-                            obj.visible = false
-                            var particle = comboParticleComponent.createObject(gameArea, {
-                                "x": objX,
-                                "y": objY,
-                                "points": 10 * scoreMultiplier
-                            })
-                        } else {
-                            obj.visible = false
-                        }
+                if (obj && obj.visible && obj !== activeLaser &&
+                    obj.y <= activeLaser.y + activeLaser.height && obj.y + obj.height >= activeLaser.y &&
+                    obj.x + obj.width >= 0 && obj.x <= root.width) {
+                    if (obj.isAsteroid) {
+                        score += 10 * scoreMultiplier
+                        var objX = obj.x
+                        var objY = obj.y
+                        obj.visible = false
+                        var particle = comboParticleComponent.createObject(gameArea, {
+                            "x": objX,
+                            "y": objY,
+                            "points": 10 * scoreMultiplier
+                        })
+                    } else {
+                        obj.visible = false
                     }
                 }
             }
         }
 
-        if (scoreMultiplierTimer.running) {
-            scoreMultiplierElapsed += deltaTime
-        }
+        // Update timers
+        if (scoreMultiplierTimer.running) scoreMultiplierElapsed += deltaTime
+        if (isAutoFireActive) autoFireElapsed += deltaTime
 
-        if (isAutoFireActive) {
-            autoFireElapsed += deltaTime
-        }
-
-        var currentTime = Date.now()
+        // Spawning logic
         var powerupBaseChance = asteroidDensity * 0.008
-
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
             spawnLargeAsteroid()
             lastLargeAsteroidSpawn = currentTime
         }
-
         if (!paused && currentTime - lastAsteroidSpawn >= spawnCooldown && Math.random() < asteroidDensity) {
             spawnObject({isAsteroid: true})
             lastAsteroidSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.4) {
             spawnObject({isAsteroid: false, isPowerup: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.5) {
             spawnObject({isAsteroid: false, isInvincibility: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.0) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.0) {
             spawnObject({isAsteroid: false, isShrink: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.0) {
             spawnObject({isAsteroid: false, isSlowMo: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.6) {
             spawnObject({isAsteroid: false, isLaserSwipe: true})
             lastObjectSpawn = currentTime
         }
-
         if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
             spawnObject({isAsteroid: false, isAutoFire: true})
             lastObjectSpawn = currentTime
