@@ -1006,7 +1006,7 @@ Item {
                 visible: calibrating
 
                 Text {
-                    text: "v1.3\nAsteroid Dodger"
+                    text: "v1.4\nAsteroid Dodger"
                     color: "#dddddd"
                     font.family: "Fyodor"
                     font.pixelSize: dimsFactor * 12
