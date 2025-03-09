@@ -460,30 +460,32 @@ Item {
         }
     }
 
-        Timer {
-        id: autoFireTimer
-        interval: 6000  // 6000ms duration
-        running: false
-        repeat: false
-        onTriggered: {
-            isAutoFireActive = false
-            autoFireElapsed = 0
-            shotTimer.stop()
-        }
-    }
-
     Timer {
-        id: shotTimer
-        interval: 300
-        running: false
+        id: autoFireTimer
+        interval: 6000 / 30  // ~200ms per shot
+        running: isAutoFireActive && !paused
         repeat: true
+        property int shotCount: 0
         onTriggered: {
-            if (playerContainer && playerHitbox && gameArea) {
+            if (shotCount < 30) {
                 var shot = autoFireShotComponent.createObject(gameArea, {
                     "x": playerContainer.x + playerHitbox.x + playerHitbox.width / 2 - dimsFactor * 0.5,
-                    "y": playerContainer.y + playerHitbox.y  // Start at top of hitbox
+                    "y": playerContainer.y + playerHitbox.y
                 })
                 activeShots.push(shot)
+                shotCount++
+            }
+            if (shotCount >= 30) {
+                isAutoFireActive = false
+                shotCount = 0
+                stop()
+                removePowerup("autoFire")
+            }
+        }
+        onRunningChanged: {
+            if (running && !paused) {
+                addPowerupBar("autoFire", 6000, "#800080", "#4B004B")
+                shotCount = 0
             }
         }
     }
@@ -1596,15 +1598,17 @@ Item {
                 }
                 if (obj.isAutoFire && isColliding(playerHitbox, obj)) {
                     flashOverlay.triggerFlash("#800080")
-                    isAutoFireActive = true
-                    autoFireTimer.restart()
-                    shotTimer.restart()
-                    addPowerupBar("autoFire", 6000, "#800080", "#4B004B")
-                    var shot = autoFireShotComponent.createObject(gameArea, {
-                        "x": playerContainer.x + playerHitbox.x + playerHitbox.width / 2 - dimsFactor * 0.5,
-                        "y": playerContainer.y + playerHitbox.y
-                    })
-                    activeShots.push(shot)
+                    if (!isAutoFireActive) {
+                        var shot = autoFireShotComponent.createObject(gameArea, {
+                            "x": playerContainer.x + playerHitbox.x + playerHitbox.width / 2 - dimsFactor * 0.5,
+                            "y": playerContainer.y + playerHitbox.y
+                        })
+                        activeShots.push(shot)
+                        isAutoFireActive = true
+                        autoFireTimer.start()
+                    } else {
+                        autoFireTimer.restart()  // Extend duration if active
+                    }
                     obj.visible = false
                     continue
                 }
