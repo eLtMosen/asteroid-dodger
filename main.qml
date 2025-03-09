@@ -656,32 +656,20 @@ Item {
             anchors.fill: parent
             color: flashColor ? flashColor : "transparent"
             opacity: 0
-            visible: flashAnimation.running
-            SequentialAnimation {
-                id: flashAnimation
-                running: false
-                NumberAnimation {
-                    target: flashOverlay
-                    property: "opacity"
-                    from: 0.5
-                    to: 0
-                    duration: flashColor === "#8B6914" || flashColor === "#00FFFF" ? 6000 : 500
-                    easing.type: Easing.OutQuad
-                }
-                onStopped: {
-                    flashOverlay.opacity = 0
-                    flashOverlay.color = "transparent"
-                    flashColor = ""
-                }
-            }
+            visible: opacity > 0
+            property string flashColor: ""
             function triggerFlash(color) {
-                if (flashAnimation.running) {
-                    flashAnimation.complete()  // Finish current animation gracefully
-                }
                 flashColor = color
-                flashOverlay.color = color
-                opacity = 0.5
-                flashAnimation.start()
+                flashAnimation.restart()
+            }
+            NumberAnimation {
+                id: flashAnimation
+                target: flashOverlay
+                property: "opacity"
+                from: 0.5
+                to: 0
+                duration: flashOverlay.flashColor === "#8B6914" || flashOverlay.flashColor === "#00FFFF" ? 6000 : 500
+                easing.type: Easing.OutQuad
             }
         }
 
