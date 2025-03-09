@@ -136,6 +136,55 @@ Item {
         event: "press"
     }
 
+    Item {
+        id: preloader
+        anchors.fill: parent
+        visible: false  // Hidden, only for preloading
+
+        Rectangle {
+            id: preloadFlash
+            anchors.fill: parent
+            SequentialAnimation {
+                id: preloadFlashAnimation
+                NumberAnimation {
+                    target: preloadFlash
+                    property: "opacity"
+                    from: 0.5
+                    to: 0
+                    duration: 500
+                    easing.type: Easing.OutQuad
+                }
+                onStopped: {
+                    preloadFlash.opacity = 0
+                }
+            }
+        }
+
+        Image {
+            id: preloadPlayer
+            width: dimsFactor * 10
+            height: dimsFactor * 10
+            source: "file:///usr/share/asteroid-launcher/watchfaces-img/asteroid-logo.svg"
+            SequentialAnimation on opacity {
+                NumberAnimation { from: 1.0; to: 0.2; duration: 500; easing.type: Easing.InOutSine }
+                NumberAnimation { from: 0.2; to: 1.0; duration: 500; easing.type: Easing.InOutSine }
+                onStopped: {
+                    preloadPlayer.opacity = 1.0
+                }
+            }
+        }
+
+        NonGraphicalFeedback {
+            id: preloadFeedback
+            event: "short"
+        }
+
+        Component.onCompleted: {
+            preloadFlashAnimation.start()
+            preloadFeedback.play()
+        }
+    }
+
     Component {
         id: progressBarComponent
         Item {
@@ -1973,7 +2022,21 @@ Item {
 
     function finishInitialization() {
         DisplayBlanking.preventBlanking = true
-        calibrationCountdownTimer.initializationDone = true  // Signal loading is done
+        calibrationCountdownTimer.initializationDone = true
+
+        // Preload a combo particle
+        var preloadParticle = comboParticleComponent.createObject(gameArea, {
+            "x": -dimsFactor * 10,  // Offscreen
+            "y": -dimsFactor * 10,
+            "points": 1
+        })
+        preloadParticle.destroy(100)  // Destroy after 100ms to cache it
+
+        // Preload a power-up bar (mimics grace period)
+        addPowerupBar("preload", 100, "#FF69B4", "#8B374F")
+        removePowerup("preload")  // Remove immediately after adding
+
+        // Initial spawn
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
