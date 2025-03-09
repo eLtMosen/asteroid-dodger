@@ -31,6 +31,7 @@ Item {
     visible: true
 
     // --- Game Mechanics ---
+    property bool initializationComplete: false
     property bool calibrating: false
     property int calibrationTimer: 5
     property bool comboActive: false
@@ -351,9 +352,10 @@ Item {
         interval: 1000
         running: calibrating
         repeat: true
+        property bool initializationDone: false  // Track loading completion
         onTriggered: {
             calibrationTimer--
-            if (calibrationTimer <= 0) {
+            if (calibrationTimer <= 0 && initializationDone) {
                 baselineX = accelerometer.reading.x
                 calibrating = false
                 showingNow = true
@@ -932,30 +934,23 @@ Item {
                 }
             }
 
-            Column {
+            Item {
                 id: titleText
                 anchors {
-                    verticalCenter: parent.top
-                    verticalCenterOffset: root.height / 6
+                    top: parent.top
+                    topMargin: dimsFactor * 4
                     horizontalCenter: parent.horizontalCenter
                 }
-                spacing: dimsFactor * 1
                 z: 4
                 visible: calibrating
 
                 Text {
-                    text: "v1.3"
-                    color: "#bbdddddd"
-                    font.family: "Fyodor"
-                    font.pixelSize: dimsFactor * 10
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                Text {
-                    text: "Asteroid Dodger"
-                    color: "#bbdddddd"
+                    text: "v1.3\nAsteroid Dodger"
+                    color: "#dddddd"
                     font.family: "Fyodor"
                     font.pixelSize: dimsFactor * 12
                     anchors.horizontalCenter: parent.horizontalCenter
+                    horizontalAlignment: Text.AlignHCenter
                 }
             }
 
@@ -967,8 +962,7 @@ Item {
                 Column {
                     id: calibrationText
                     anchors {
-                        bottom: parent.bottom
-                        bottomMargin: dimsFactor * 20
+                        verticalCenter: parent.verticalCenter
                         horizontalCenter: parent.horizontalCenter
                     }
                     spacing: dimsFactor * 1
@@ -979,21 +973,21 @@ Item {
                     Text {
                         text: "Calibrating"
                         color: "white"
-                        font.pixelSize: dimsFactor * 10
+                        font.pixelSize: dimsFactor * 9
                         horizontalAlignment: Text.AlignHCenter
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                     Text {
                         text: "Hold your watch comfy"
                         color: "white"
-                        font.pixelSize: dimsFactor * 7
+                        font.pixelSize: dimsFactor * 6
                         horizontalAlignment: Text.AlignHCenter
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                     Text {
                         text: calibrationTimer + "s"
                         color: "white"
-                        font.pixelSize: dimsFactor * 10
+                        font.pixelSize: dimsFactor * 9
                         horizontalAlignment: Text.AlignHCenter
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -1915,23 +1909,60 @@ Item {
         ', root, "spawnTimer")
     }
 
-    Component.onCompleted: {
-        for (var i = 0; i < asteroidPoolSize; i++) {
-            var obj = objectComponent.createObject(objectContainer)
-            obj.visible = false
-            obj.y = -obj.height
-            asteroidPool.push(obj)
-        }
-        for (i = 0; i < largeAsteroidPoolSize; i++) {
-            var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
-            largeObj.visible = false
-            largeObj.y = -largeObj.height
-            largeAsteroidPool.push(largeObj)
-        }
 
+    function initializeGame() {
+        var asteroidPoolTimer = Qt.createQmlObject('
+            import QtQuick 2.15
+            Timer {
+                interval: 10  // Small chunks for responsiveness
+                repeat: true
+                running: true
+                property int index: 0
+                onTriggered: {
+                    if (index < asteroidPoolSize) {
+                        var obj = objectComponent.createObject(objectContainer)
+                        obj.visible = false
+                        obj.y = -obj.height
+                        asteroidPool.push(obj)
+                        index++
+                    } else {
+                        stop()
+                        destroy()
+                        initializeLargeAsteroids()
+                    }
+                }
+            }
+        ', root, "asteroidPoolTimer")
+    }
+
+    function initializeLargeAsteroids() {
+        var largeAsteroidPoolTimer = Qt.createQmlObject('
+            import QtQuick 2.15
+            Timer {
+                interval: 10
+                repeat: true
+                running: true
+                property int index: 0
+                onTriggered: {
+                    if (index < largeAsteroidPoolSize) {
+                        var largeObj = largeAsteroidComponent.createObject(largeAsteroidContainer)
+                        largeObj.visible = false
+                        largeObj.y = -largeObj.height
+                        largeAsteroidPool.push(largeObj)
+                        index++
+                    } else {
+                        stop()
+                        destroy()
+                        finishInitialization()
+                    }
+                }
+            }
+        ', root, "largeAsteroidPoolTimer")
+    }
+
+    function finishInitialization() {
         DisplayBlanking.preventBlanking = true
-
-        calibrating = true
+        calibrationCountdownTimer.initializationDone = true  // Signal loading is done
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
@@ -1954,5 +1985,11 @@ Item {
                 }
             }
         ', root, "spawnTimer")
+    }
+
+    // Start calibration and initialization immediately
+    Component.onCompleted: {
+        calibrating = true  // Show calibration screen instantly
+        initializeGame()    // Start async loading
     }
 }
