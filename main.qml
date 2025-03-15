@@ -64,7 +64,7 @@ Item {
     property var activePowerups: []
     property var activeShots: []  // New: Track AutoFire shots
     property int asteroidCount: 0
-    property real asteroidDensity: 0.18 + (level - 1) * 0.06
+    property real asteroidDensity: 0.2 + (level - 1) * 0.1
     property var asteroidPool: []
     property int asteroidPoolSize: 40
     property int asteroidsPerLevel: 100
@@ -1706,7 +1706,7 @@ Item {
             spawnObject({isAsteroid: true})
             lastAsteroidSpawn = currentTime
         }
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 2.4) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 2.0) {
             spawnObject({isAsteroid: false, isPowerup: true})
             lastObjectSpawn = currentTime
         }
@@ -1803,7 +1803,7 @@ Item {
     function levelUp() {
         asteroidCount = 0
         level++
-        scrollSpeed += 0.1
+        scrollSpeed += 0.05
         savedScrollSpeed = scrollSpeed
         flashOverlay.triggerFlash("#8B6914")
     }
@@ -1815,7 +1815,7 @@ Item {
         asteroidCount = 0
         scrollSpeed = 1.6
         savedScrollSpeed = scrollSpeed
-        asteroidDensity = 0.18
+        asteroidDensity = 0.2
         gameOver = false
         paused = false
         playerHit = false
