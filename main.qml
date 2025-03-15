@@ -315,11 +315,6 @@ Item {
             invincible = false
             removePowerup("invincibility")
         }
-        onRunningChanged: {
-            if (running && !paused) {
-                addPowerupBar("invincibility", 10000, "#FF69B4", "#8B374F")
-            }
-        }
     }
 
     Timer {
@@ -1490,6 +1485,7 @@ Item {
                     isInvincibleActive = true
                     invincibilityTimer.restart()
                     flashOverlay.triggerFlash("#FF69B4")
+                    addPowerupBar("invincible", 10000, "#FF69B4", "#8B374F")
                     obj.visible = false
                     continue
                 }
@@ -1540,7 +1536,6 @@ Item {
                     flashOverlay.triggerFlash("red")
                     if (!activeLaser) {
                         activeLaser = laserSwipeComponent.createObject(gameArea)
-                        addPowerupBar("laserSwipe", 2000, "red", "#8B0000")
                     }
                     obj.visible = false
                     continue
