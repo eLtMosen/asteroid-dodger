@@ -1416,10 +1416,6 @@ Item {
     }
 
     function updateGame(deltaTime) {
-        if (!playerContainer || !playerHitbox || !gameArea) {
-            console.log("Critical components missing, skipping update: playerContainer=", playerContainer, "playerHitbox=", playerHitbox, "gameArea=", gameArea)
-            return
-        }
 
         var adjustedScrollSpeed = scrollSpeed * deltaTime * 60
         var largeAsteroidSpeed = adjustedScrollSpeed / 3
@@ -1429,7 +1425,8 @@ Item {
         var comboCenterX = playerContainer.x + comboHitbox.x + comboHitbox.width / 2
         var comboCenterY = playerContainer.y + comboHitbox.y + comboHitbox.height / 2
         var maxDistanceSquared = (playerHitbox.width + dimsFactor * 5) * (playerHitbox.width + dimsFactor * 5)
-        var comboDistanceSquared = (comboHitbox.width + dimsFactor * 5) * (comboHitbox.width + dimsFactor * 5)
+        var comboDetectionSize = dimsFactor * 12  // New variable for detection area
+        var comboDistanceSquared = (comboDetectionSize + dimsFactor * 5) * (comboDetectionSize + dimsFactor * 5)
 
         // Update shots
         for (var i = activeShots.length - 1; i >= 0; i--) {
@@ -1665,16 +1662,16 @@ Item {
                 if (obj.isAsteroid && (obj.y + obj.height / 2) > playerCenterY && !obj.passed) {
                     asteroidCount++
                     obj.passed = true
-                    if (obj.x + obj.width >= playerContainer.x - comboHitbox.width / 2 - dimsFactor * 5 &&
-                        obj.x <= playerContainer.x + comboHitbox.width / 2 + dimsFactor * 5 &&
-                        obj.y + obj.height >= playerContainer.y - comboHitbox.height / 2 - dimsFactor * 5 &&
-                        obj.y <= playerContainer.y + comboHitbox.height / 2 + dimsFactor * 5) {
-                        var comboDx = objCenterX - comboCenterX
-                        var comboDy = objCenterY - comboCenterY
-                        var comboDistSquared = comboDx * comboDx + comboDy * comboDy
-                        var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
-                        var basePoints = isCombo ? 2 : 1
-                        var currentTime = Date.now()
+                        if (obj.x + obj.width >= playerContainer.x - comboDetectionSize / 2 - dimsFactor * 5 &&
+                            obj.x <= playerContainer.x + comboDetectionSize / 2 + dimsFactor * 5 &&
+                            obj.y + obj.height >= playerContainer.y - comboDetectionSize / 2 - dimsFactor * 5 &&
+                            obj.y <= playerContainer.y + comboDetectionSize / 2 + dimsFactor * 5) {
+                            var comboDx = objCenterX - comboCenterX
+                            var comboDy = objCenterY - comboCenterY
+                            var comboDistSquared = comboDx * comboDx + comboDy * comboDy
+                            var isCombo = comboDistSquared < comboDistanceSquared && isColliding(comboHitbox, obj)
+                            var basePoints = isCombo ? 2 : 1
+                            var currentTime = Date.now()
 
                         if (isCombo) {
                             if (currentTime - lastDodgeTime <= 2000) {
