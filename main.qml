@@ -1834,6 +1834,7 @@ Item {
         isSlowMoActive = false
         isSpeedBoostActive = false
         isShrinkActive = false
+        isAutoFireActive = false  // Reset autofire state
         player.width = dimsFactor * 10
         player.height = dimsFactor * 10
         playerHitbox.width = dimsFactor * 14
@@ -1847,10 +1848,22 @@ Item {
         gameOverScreen.opacity = 0
         lastFrameTime = 0
         flashOverlay.opacity = 0
-        flashOverlay.flashColor = ""  // Reset property, let binding set color
-        flashAnimation.stop()  // Ensure animation is stopped
+        flashOverlay.flashColor = ""
+        flashAnimation.stop()
 
-        for (var i = 0; i < asteroidPool.length; i++) {
+        // Stop autofire timer and reset shot count
+        autoFireTimer.stop()
+        autoFireTimer.shotCount = 0
+
+        // Clear active shots
+        for (var i = 0; i < activeShots.length; i++) {
+            if (activeShots[i]) {
+                activeShots[i].destroy()
+            }
+        }
+        activeShots = []
+
+        for (i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
             asteroidPool[i].y = -asteroidPool[i].height - (Math.random() * dimsFactor * 28)
             asteroidPool[i].x = Math.random() * (root.width - asteroidPool[i].width)
