@@ -941,7 +941,7 @@ Item {
                 id: titleText
                 anchors {
                     top: parent.top
-                    topMargin: dimsFactor * 4
+                    topMargin: dimsFactor * 10
                     horizontalCenter: parent.horizontalCenter
                 }
                 z: 4
@@ -951,7 +951,7 @@ Item {
                     text: "v1.5\nAsteroid Dodger"
                     color: "#dddddd"
                     font.family: "Fyodor"
-                    font.pixelSize: dimsFactor * 12
+                    font.pixelSize: dimsFactor * 15
                     anchors.horizontalCenter: parent.horizontalCenter
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -965,7 +965,7 @@ Item {
                 Column {
                     id: calibrationText
                     anchors {
-                        verticalCenter: parent.verticalCenter
+                        top: parent.verticalCenter
                         horizontalCenter: parent.horizontalCenter
                     }
                     spacing: dimsFactor * 1
