@@ -1628,7 +1628,6 @@ Item {
                             flashOverlay.triggerFlash("red")
                             if (!activeLaser) {
                                 activeLaser = laserSwipeComponent.createObject(gameArea)
-                                addPowerupBar("laserSwipe", 2000, "red", "#8B0000")
                             }
                             comboCount = 0
                             comboActive = false
@@ -1738,7 +1737,7 @@ Item {
         }
 
         var currentTime = Date.now()
-        var powerupBaseChance = asteroidDensity * 0.0015
+        var powerupBaseChance = asteroidDensity * 0.002
 
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 3) {
             spawnLargeAsteroid()
