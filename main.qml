@@ -315,6 +315,11 @@ Item {
             invincible = false
             removePowerup("invincibility")
         }
+        onRunningChanged: {
+            if (running && !paused) {
+                addPowerupBar("invincible", 10000, "#FF69B4", "#8B374F")
+            }
+        }
     }
 
     Timer {
@@ -653,10 +658,14 @@ Item {
             opacity: 0
             visible: opacity > 0
             property string flashColor: ""
+
             function triggerFlash(color) {
                 flashColor = color
-                flashAnimation.restart()
+                opacity = 0  // Ensure starting point
+                flashAnimation.stop()  // Fully stop any running animation
+                flashAnimation.start()  // Start fresh
             }
+
             NumberAnimation {
                 id: flashAnimation
                 target: flashOverlay
@@ -1838,9 +1847,8 @@ Item {
         gameOverScreen.opacity = 0
         lastFrameTime = 0
         flashOverlay.opacity = 0
-        flashOverlay.color = "transparent"
-        flashColor = ""
-        if (flashAnimation.running) flashAnimation.stop()
+        flashOverlay.flashColor = ""  // Reset property, let binding set color
+        flashAnimation.stop()  // Ensure animation is stopped
 
         for (var i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
