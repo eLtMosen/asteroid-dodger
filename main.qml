@@ -1561,7 +1561,7 @@ Item {
                             continue
                         }
 
-                        if (obj.isSpeedBoost && isColliding(playerHitbox, obj) && !isSpeedBoostActive) {
+                        if (obj.isSpeedBoost && isColliding(playerHitbox, obj)) {
                             playerSpeed = basePlayerSpeed * 2
                             isSpeedBoostActive = true
                             speedBoostTimer.restart()
