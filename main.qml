@@ -64,7 +64,7 @@ Item {
     property var activePowerups: []
     property var activeShots: []  // New: Track AutoFire shots
     property int asteroidCount: 0
-    property real asteroidDensity: 0.2 + (level - 1) * 0.1
+    property real asteroidDensity: 0.2 + (level - 1) * 0.2
     property var asteroidPool: []
     property int asteroidPoolSize: 40
     property int asteroidsPerLevel: 100
@@ -1697,7 +1697,7 @@ Item {
         if (isAutoFireActive) autoFireElapsed += deltaTime
 
         // Spawning logic
-        var powerupBaseChance = asteroidDensity * 0.002
+        var powerupBaseChance = asteroidDensity * 0.001
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 3) {
             spawnLargeAsteroid()
             lastLargeAsteroidSpawn = currentTime
@@ -1815,7 +1815,7 @@ Item {
         asteroidCount = 0
         scrollSpeed = 1.6
         savedScrollSpeed = scrollSpeed
-        asteroidDensity = 0.2
+        asteroidDensity = 0.18
         gameOver = false
         paused = false
         playerHit = false
@@ -1833,7 +1833,7 @@ Item {
         isSlowMoActive = false
         isSpeedBoostActive = false
         isShrinkActive = false
-        isAutoFireActive = false  // Reset autofire state
+        isAutoFireActive = false
         player.width = dimsFactor * 10
         player.height = dimsFactor * 10
         playerHitbox.width = dimsFactor * 14
@@ -1849,10 +1849,7 @@ Item {
         flashOverlay.opacity = 0
         flashOverlay.flashColor = ""
         flashAnimation.stop()
-        invincible = false
-        isInvincibleActive = false
 
-        // Stop autofire timer and reset shot count
         autoFireTimer.stop()
         autoFireTimer.shotCount = 0
 
@@ -1864,23 +1861,33 @@ Item {
         }
         activeShots = []
 
+        // Clear active laser
+        if (activeLaser) {
+            activeLaser.destroy()
+            activeLaser = null
+        }
+
+        // Clear asteroid pool and move off-screen
         for (i = 0; i < asteroidPool.length; i++) {
             asteroidPool[i].visible = false
-            asteroidPool[i].y = -asteroidPool[i].height - (Math.random() * dimsFactor * 28)
+            asteroidPool[i].y = -asteroidPool[i].height - dimsFactor * 28  // Force off-screen
             asteroidPool[i].x = Math.random() * (root.width - asteroidPool[i].width)
             asteroidPool[i].passed = false
             asteroidPool[i].dodged = false
         }
+
+        // Clear large asteroid pool and move off-screen
         for (i = 0; i < largeAsteroidPool.length; i++) {
             largeAsteroidPool[i].visible = false
-            largeAsteroidPool[i].y = -largeAsteroidPool[i].height - (Math.random() * dimsFactor * 28)
+            largeAsteroidPool[i].y = -largeAsteroidPool[i].height - dimsFactor * 28  // Force off-screen
             largeAsteroidPool[i].x = Math.random() * (root.width - largeAsteroidPool[i].width)
         }
 
+        // Delay spawn to ensure clear
         var spawnTimer = Qt.createQmlObject('
             import QtQuick 2.15
             Timer {
-                interval: 200
+                interval: 50  // Short delay to let game loop clear
                 repeat: true
                 running: true
                 property int count: 0
