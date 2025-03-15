@@ -32,10 +32,9 @@ Item {
 
     // --- Game Mechanics ---
     property bool calibrating: false
-    property int calibrationTimer: 5
+    property int calibrationTimer: 4
     property bool comboActive: false
     property int comboCount: 0
-    property real closePassThreshold: dimsFactor * 10
     property bool debugMode: false
     property bool gameOver: false
     property bool invincible: false
@@ -63,7 +62,7 @@ Item {
     property var activePowerups: []
     property var activeShots: []  // New: Track AutoFire shots
     property int asteroidCount: 0
-    property real asteroidDensity: 0.15 + (level - 1) * 0.05
+    property real asteroidDensity: 0.18 + (level - 1) * 0.05
     property var asteroidPool: []
     property int asteroidPoolSize: 40
     property int asteroidsPerLevel: 100
@@ -777,8 +776,10 @@ Item {
                 id: levelNumber
                 text: level
                 color: "#dddddd"
-                font.pixelSize: dimsFactor * 9
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 9
+                    family: "Fyodor"
+                }
                 anchors {
                     top: root.top
                     horizontalCenter: parent.horizontalCenter
@@ -821,8 +822,10 @@ Item {
                 id: shieldText
                 text: shield === 1 ? "❤️" : shield
                 color: shield === 1 ? "red" : "#FFFFFF"
-                font.pixelSize: shield === 1 ? dimsFactor * 6 : dimsFactor * 8
-                font.family: "Fyodor"
+                font {
+                    pixelSize: shield === 1 ? dimsFactor * 6 : dimsFactor * 8
+                    family: "Fyodor"
+                }
                 anchors {
                     bottom: parent.bottom
                     horizontalCenter: parent.horizontalCenter
@@ -927,8 +930,10 @@ Item {
                     id: scoreText
                     text: score
                     color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd"
-                    font.pixelSize: dimsFactor * 5
-                    font.bold: scoreMultiplierTimer.running
+                    font {
+                        pixelSize: dimsFactor * 5
+                        bold: scoreMultiplierTimer.running
+                    }
                 }
             }
 
@@ -946,15 +951,19 @@ Item {
                 Text {
                     text: "v1.3"
                     color: "#bbdddddd"
-                    font.family: "Fyodor"
-                    font.pixelSize: dimsFactor * 10
+                    font {
+                        family: "Fyodor"
+                        pixelSize: dimsFactor * 10
+                    }
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
                     text: "Asteroid Dodger"
                     color: "#bbdddddd"
-                    font.family: "Fyodor"
-                    font.pixelSize: dimsFactor * 12
+                    font {
+                        family: "Fyodor"
+                        pixelSize: dimsFactor * 12
+                    }
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -1019,8 +1028,10 @@ Item {
                 id: nowText
                 text: "NOW"
                 color: "white"
-                font.pixelSize: dimsFactor * 24
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 24
+                    family: "Fyodor"
+                }
                 anchors.centerIn: parent
                 visible: showingNow
                 opacity: 0
@@ -1039,8 +1050,10 @@ Item {
                 id: surviveText
                 text: "SURVIVE"
                 color: "orange"
-                font.pixelSize: dimsFactor * 24
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 24
+                    family: "Fyodor"
+                }
                 anchors.centerIn: parent
                 visible: showingSurvive
                 opacity: 0
@@ -1059,8 +1072,10 @@ Item {
                 id: pauseText
                 text: "Paused"
                 color: "white"
-                font.pixelSize: dimsFactor * 22
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 22
+                    family: "Fyodor"
+                }
                 anchors.centerIn: parent
                 opacity: 0
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
@@ -1133,8 +1148,10 @@ Item {
                 text: "Debug"
                 color: "white"
                 opacity: debugMode ? 1 : 0.5
-                font.pixelSize: dimsFactor * 10
-                font.bold: debugMode
+                font {
+                    pixelSize: dimsFactor * 10
+                    bold: debugMode
+                }
                 anchors {
                     bottom: pauseText.top
                     horizontalCenter: parent.horizontalCenter
@@ -1181,8 +1198,10 @@ Item {
                     id: gameOverText
                     text: "Game Over!"
                     color: "red"
-                    font.pixelSize: Math.round(dimsFactor * 8 * 1.2)
-                    font.bold: true
+                    font {
+                        pixelSize: Math.round(dimsFactor * 8 * 1.2)
+                        bold: true
+                    }
                     horizontalAlignment: Text.AlignHCenter
                 }
 
@@ -1225,8 +1244,10 @@ Item {
                     Text {
                         text: "Die Again"
                         color: "white"
-                        font.pixelSize: Math.round(dimsFactor * 6 * 1.2)
-                        font.bold: true
+                        font {
+                            pixelSize: Math.round(dimsFactor * 6 * 1.2)
+                            bold: true
+                        }
                         anchors.centerIn: parent
                     }
 
@@ -1338,8 +1359,10 @@ Item {
                     if (isAutoFire) return "#800080"
                     return "#0087ff"
                 }
-                font.pixelSize: dimsFactor * 6
-                font.bold: true
+                font {
+                    pixelSize: dimsFactor * 6
+                    bold: true
+                }
                 anchors.centerIn: parent
             }
         }
@@ -1718,9 +1741,9 @@ Item {
         }
 
         var currentTime = Date.now()
-        var powerupBaseChance = asteroidDensity * 0.005
+        var powerupBaseChance = asteroidDensity * 0.002
 
-        if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
+        if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 3) {
             spawnLargeAsteroid()
             lastLargeAsteroidSpawn = currentTime
         }
@@ -1730,17 +1753,17 @@ Item {
             lastAsteroidSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.4) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.8) {
             spawnObject({isAsteroid: false, isPowerup: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.4) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.3) {
             spawnObject({isAsteroid: false, isInvincibility: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.6) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.4) {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
             lastObjectSpawn = currentTime
         }
@@ -1750,7 +1773,7 @@ Item {
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.0) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isShrink: true})
             lastObjectSpawn = currentTime
         }
@@ -1760,12 +1783,12 @@ Item {
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.6) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.4) {
             spawnObject({isAsteroid: false, isLaserSwipe: true})
             lastObjectSpawn = currentTime
         }
 
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.6) {
             spawnObject({isAsteroid: false, isAutoFire: true})
             lastObjectSpawn = currentTime
         }
