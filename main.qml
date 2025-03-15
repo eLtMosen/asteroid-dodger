@@ -62,7 +62,7 @@ Item {
     property var activePowerups: []
     property var activeShots: []  // New: Track AutoFire shots
     property int asteroidCount: 0
-    property real asteroidDensity: 0.18 + (level - 1) * 0.05
+    property real asteroidDensity: 0.18 + (level - 1) * 0.06
     property var asteroidPool: []
     property int asteroidPoolSize: 40
     property int asteroidsPerLevel: 100
@@ -1741,7 +1741,7 @@ Item {
         }
 
         var currentTime = Date.now()
-        var powerupBaseChance = asteroidDensity * 0.002
+        var powerupBaseChance = asteroidDensity * 0.0015
 
         if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 3) {
             spawnLargeAsteroid()
