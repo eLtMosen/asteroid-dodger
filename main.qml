@@ -315,11 +315,6 @@ Item {
             invincible = false
             removePowerup("invincibility")
         }
-        onRunningChanged: {
-            if (running && !paused) {
-                addPowerupBar("invincible", 10000, "#FF69B4", "#8B374F")
-            }
-        }
     }
 
     Timer {
@@ -1383,13 +1378,17 @@ Item {
         var existingIndex = activePowerups.findIndex(function(p) { return p.type === type })
         if (existingIndex !== -1) {
             var existing = activePowerups[existingIndex]
-            if (existing.bar) {
+            if (existing.bar && existing.bar.parent) {
                 existing.bar.progress = 1.0
+                existing.bar.duration = duration
+                existing.bar.fillColor = color
+                existing.bar.bgColor = bgColor
                 existing.bar.startTimer()
+                return
             }
-            return
+            // If bar is destroyed or unparented, remove stale entry
+            activePowerups.splice(existingIndex, 1)
         }
-
         var bar = progressBarComponent.createObject(powerupBars, {
             "fillColor": color,
             "bgColor": bgColor,
@@ -1850,6 +1849,8 @@ Item {
         flashOverlay.opacity = 0
         flashOverlay.flashColor = ""
         flashAnimation.stop()
+        invincible = false
+        isInvincibleActive = false
 
         // Stop autofire timer and reset shot count
         autoFireTimer.stop()
