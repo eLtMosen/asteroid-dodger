@@ -823,8 +823,10 @@ Item {
                 id: levelNumber
                 text: level
                 color: "#dddddd"
-                font.pixelSize: dimsFactor * 9
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 9
+                    family: "Fyodor"
+                }
                 anchors {
                     top: root.top
                     horizontalCenter: parent.horizontalCenter
@@ -867,8 +869,10 @@ Item {
                 id: shieldText
                 text: shield === 1 ? "❤️" : shield
                 color: shield === 1 ? "red" : "#FFFFFF"
-                font.pixelSize: shield === 1 ? dimsFactor * 8 : dimsFactor * 8  // Static size
-                font.family: "Fyodor"
+                font {
+                    pixelSize: shield === 1 ? dimsFactor * 8 : dimsFactor * 8  // Static size
+                    family: "Fyodor"
+                }
                 anchors {
                     bottom: parent.bottom
                     horizontalCenter: parent.horizontalCenter
@@ -932,8 +936,10 @@ Item {
                     id: scoreText
                     text: score
                     color: scoreMultiplierTimer.running ? "#00CC00" : "#dddddd"
-                    font.pixelSize: dimsFactor * 5
-                    font.bold: scoreMultiplierTimer.running
+                    font {
+                        pixelSize: dimsFactor * 5
+                        bold: scoreMultiplierTimer.running
+                    }
                 }
             }
 
@@ -950,8 +956,10 @@ Item {
                 Text {
                     text: "v1.5\nAsteroid Dodger"
                     color: "#dddddd"
-                    font.family: "Fyodor"
-                    font.pixelSize: dimsFactor * 15
+                    font {
+                        family: "Fyodor"
+                        pixelSize: dimsFactor * 15
+                    }
                     anchors.horizontalCenter: parent.horizontalCenter
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -1016,8 +1024,10 @@ Item {
                 id: nowText
                 text: "NOW"
                 color: "white"
-                font.pixelSize: dimsFactor * 24
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 24
+                    family: "Fyodor"
+                }
                 anchors.centerIn: parent
                 visible: showingNow
                 opacity: 0
@@ -1036,8 +1046,10 @@ Item {
                 id: surviveText
                 text: "SURVIVE"
                 color: "orange"
-                font.pixelSize: dimsFactor * 24
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 24
+                    family: "Fyodor"
+                }
                 anchors.centerIn: parent
                 visible: showingSurvive
                 opacity: 0
@@ -1056,8 +1068,10 @@ Item {
                 id: pauseText
                 text: "Paused"
                 color: "white"
-                font.pixelSize: dimsFactor * 22
-                font.family: "Fyodor"
+                font {
+                    pixelSize: dimsFactor * 22
+                    family: "Fyodor"
+                }
                 anchors.centerIn: parent
                 opacity: 0
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
@@ -1130,8 +1144,10 @@ Item {
                 text: "Debug"
                 color: "white"
                 opacity: debugMode ? 1 : 0.5
-                font.pixelSize: dimsFactor * 10
-                font.bold: debugMode
+                font {
+                    pixelSize: dimsFactor * 10
+                    bold: debugMode
+                }
                 anchors {
                     bottom: pauseText.top
                     horizontalCenter: parent.horizontalCenter
@@ -1178,8 +1194,10 @@ Item {
                     id: gameOverText
                     text: "Game Over!"
                     color: "red"
-                    font.pixelSize: Math.round(dimsFactor * 8 * 1.2)
-                    font.bold: true
+                    font {
+                        pixelSize: Math.round(dimsFactor * 8 * 1.2)
+                        bold: true
+                    }
                     horizontalAlignment: Text.AlignHCenter
                 }
 
@@ -1222,8 +1240,10 @@ Item {
                     Text {
                         text: "Die Again"
                         color: "white"
-                        font.pixelSize: Math.round(dimsFactor * 6 * 1.2)
-                        font.bold: true
+                        font {
+                            pixelSize: Math.round(dimsFactor * 6 * 1.2)
+                            bold: true
+                        }
                         anchors.centerIn: parent
                     }
 
@@ -1335,8 +1355,10 @@ Item {
                     if (isAutoFire) return "#800080"
                     return "#0087ff"
                 }
-                font.pixelSize: dimsFactor * 6
-                font.bold: true
+                font {
+                    pixelSize: dimsFactor * 6
+                    bold: true
+                }
                 anchors.centerIn: parent
             }
         }
