@@ -211,7 +211,7 @@ Item {
             if (!paused) {
                 var deltaX = (accelerometer.reading.x - baselineX) * -2
                 var newX = playerContainer.x + deltaX * playerSpeed
-                playerContainer.x = Math.max(0, Math.min(root.width - player.width, newX))
+                playerContainer.x = Math.max(player.width / 2, Math.min(root.width - player.width / 2, newX))
             }
             var currentFps = deltaTime > 0 ? 1 / deltaTime : 60
             lastFps = currentFps
