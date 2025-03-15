@@ -823,7 +823,7 @@ Item {
                 text: shield === 1 ? "❤️" : shield
                 color: shield === 1 ? "red" : "#FFFFFF"
                 font {
-                    pixelSize: shield === 1 ? dimsFactor * 6 : dimsFactor * 8
+                    pixelSize: shield === 1 ? dimsFactor * 8 : dimsFactor * 8  // Static size
                     family: "Fyodor"
                 }
                 anchors {
@@ -832,47 +832,6 @@ Item {
                 }
                 z: 4
                 visible: !gameOver && !calibrating && !showingNow && !showingSurvive
-
-                SequentialAnimation {
-                    running: shield === 1 && !root.paused && !gameOver
-                    loops: Animation.Infinite
-                    ParallelAnimation {
-                        ColorAnimation {
-                            target: shieldText
-                            property: "color"
-                            from: "white"
-                            to: "#00FFFF"
-                            duration: 500
-                            easing.type: Easing.InOutSine
-                        }
-                        NumberAnimation {
-                            target: shieldText
-                            property: "font.pixelSize"
-                            from: dimsFactor * 6
-                            to: dimsFactor * 8
-                            duration: 500
-                            easing.type: Easing.InOutSine
-                        }
-                    }
-                    ParallelAnimation {
-                        ColorAnimation {
-                            target: shieldText
-                            property: "color"
-                            from: "#00FFFF"
-                            to: "white"
-                            duration: 500
-                            easing.type: Easing.InOutSine
-                        }
-                        NumberAnimation {
-                            target: shieldText
-                            property: "font.pixelSize"
-                            from: dimsFactor * 8
-                            to: dimsFactor * 6
-                            duration: 500
-                            easing.type: Easing.InOutSine
-                        }
-                    }
-                }
             }
 
             Item {
