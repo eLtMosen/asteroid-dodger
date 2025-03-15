@@ -33,7 +33,7 @@ Item {
     // --- Game Mechanics ---
     property bool initializationComplete: false
     property bool calibrating: false
-    property int calibrationTimer: 5
+    property int calibrationTimer: 4
     property bool comboActive: false
     property int comboCount: 0
     property real closePassThreshold: dimsFactor * 10
@@ -64,7 +64,7 @@ Item {
     property var activePowerups: []
     property var activeShots: []  // New: Track AutoFire shots
     property int asteroidCount: 0
-    property real asteroidDensity: 0.08 + (level - 1) * 0.02
+    property real asteroidDensity: 0.18 + (level - 1) * 0.06
     property var asteroidPool: []
     property int asteroidPoolSize: 40
     property int asteroidsPerLevel: 100
@@ -1667,8 +1667,8 @@ Item {
         if (isAutoFireActive) autoFireElapsed += deltaTime
 
         // Spawning logic
-        var powerupBaseChance = asteroidDensity * 0.008
-        if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 2) {
+        var powerupBaseChance = asteroidDensity * 0.002
+        if (!paused && currentTime - lastLargeAsteroidSpawn >= spawnCooldown && Math.random() < largeAsteroidDensity / 3) {
             spawnLargeAsteroid()
             lastLargeAsteroidSpawn = currentTime
         }
@@ -1676,11 +1676,11 @@ Item {
             spawnObject({isAsteroid: true})
             lastAsteroidSpawn = currentTime
         }
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.4) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 2.4) {
             spawnObject({isAsteroid: false, isPowerup: true})
             lastObjectSpawn = currentTime
         }
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.5) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.4) {
             spawnObject({isAsteroid: false, isInvincibility: true})
             lastObjectSpawn = currentTime
         }
@@ -1688,7 +1688,7 @@ Item {
             spawnObject({isAsteroid: false, isSpeedBoost: true})
             lastObjectSpawn = currentTime
         }
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.0) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isScoreMultiplier: true})
             lastObjectSpawn = currentTime
         }
@@ -1700,11 +1700,11 @@ Item {
             spawnObject({isAsteroid: false, isSlowMo: true})
             lastObjectSpawn = currentTime
         }
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.6) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.4) {
             spawnObject({isAsteroid: false, isLaserSwipe: true})
             lastObjectSpawn = currentTime
         }
-        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 1.2) {
+        if (!paused && currentTime - lastObjectSpawn >= spawnCooldown && Math.random() < powerupBaseChance * 0.8) {
             spawnObject({isAsteroid: false, isAutoFire: true})
             lastObjectSpawn = currentTime
         }
@@ -1785,14 +1785,13 @@ Item {
         asteroidCount = 0
         scrollSpeed = 1.6
         savedScrollSpeed = scrollSpeed
-        asteroidDensity = 0.08
+        asteroidDensity = 0.18
         gameOver = false
         paused = false
         playerHit = false
         invincible = false
         playerSpeed = basePlayerSpeed
         calibrating = false
-        calibrationTimer = 5
         showingNow = false
         showingSurvive = false
         comboCount = 0
